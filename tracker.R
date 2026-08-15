@@ -8,8 +8,8 @@ SUPABASE_KEY <- "sb_publishable_pflU44StAqW5XTy94LsuJA_p_zMRtVv"   # anon public
 )
 
 set_student <- function(id) {
-  if (missing(id) || !nzchar(id) || id == "학번입력") {
-    stop("첫 청크의 set_student()에 본인 학번을 입력하세요.", call. = FALSE)
+  if (missing(id) || !nzchar(id) || id == "ID 입력") {
+    stop("첫 청크의 set_student()에 본인 ID를 입력하세요.", call. = FALSE)
   }
   .tracker_env$student_id <- id
   invisible(id)
@@ -63,3 +63,15 @@ track <- function(exercise_id, expr, chapter = NA_character_) {
 }
 
 `%||%` <- function(a, b) if (is.null(a)) b else a
+
+classify_error <- function(msg) {
+  if (grepl("could not find function", msg)) return("함수없음")
+  if (grepl("object .* not found", msg))     return("객체없음")
+  if (grepl("cannot open|No such file", msg)) return("파일경로")
+  if (grepl("unused argument|argument", msg)) return("인수오류")
+  if (grepl("undefined columns|subscript", msg)) return("인덱싱")
+  if (grepl("missing value|NA/NaN", msg))    return("결측값")
+  if (grepl("levels|factor", msg))           return("factor수준")
+  if (grepl("non-numeric|invalid 'type'", msg)) return("자료형")
+  "기타"
+}
