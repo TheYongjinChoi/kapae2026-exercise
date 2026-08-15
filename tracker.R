@@ -8,6 +8,9 @@ SUPABASE_KEY <- "sb_publishable_pflU44StAqW5XTy94LsuJA_p_zMRtVv"   # anon public
 )
 
 set_student <- function(id) {
+  if (missing(id) || !nzchar(id) || id == "학번입력") {
+    stop("첫 청크의 set_student()에 본인 학번을 입력하세요.", call. = FALSE)
+  }
   .tracker_env$student_id <- id
   invisible(id)
 }
