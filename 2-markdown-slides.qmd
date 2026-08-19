@@ -1,0 +1,154 @@
+---
+format: 
+  revealjs:
+    theme: ["theme/q-theme.scss"]
+    html-math-method: mathjax
+    embed-resources: true
+
+    footer: "2026년 한국해양과학기술원 세미나 「Quarto와 마크다운을 활용한 데이터 분석 및 연구보고서 작성」"
+    logo: images/LSHTM_Logo_Black.png
+    slide-number: "c/t"
+    transition: fade
+    transition-speed: fast
+    highlight-style: github
+
+    code-line-numbers: false
+    height: 1080
+    width: 1920
+
+lang: ko
+---
+
+<h1> <br>마크다운과 Quarto </h1>
+
+<h2> 2강 </h2>
+
+<hr>
+
+<h3> 최용진, London School of Hygiene &amp; Tropical Medicine </h3>
+
+<h4> <br>2026-08-19 </h4>
+<br>
+
+## 마크다운이란?
+
+<br>
+
+<h3>정의</h3>
+
+- 평문(plain text)에 몇 가지 기호를 더해 문서 구조를 표시하는 규칙
+- `**굵게**`, `# 제목`처럼 기호가 그대로 보이는 상태로 저장
+- 워드와 달리 파일 자체가 텍스트이므로 검색, 비교, 버전 관리가 가능
+- 저장 형식이 아니라 표시 규칙이므로 HTML, PDF, Word 어디로든 변환
+
+## Quarto란?
+
+<br>
+
+- 마크다운 문서 안에 실행되는 코드를 넣고 결과까지 함께 담는 도구
+- R, Python, Julia를 같은 문서에서 실행
+- 하나의 원고에서 보고서, 논문, 슬라이드, 웹사이트를 생성
+- RStudio의 R Markdown을 언어 중립적으로 확장한 후속 도구
+
+## 문서의 세 부분
+
+::: {.columns}
+::: {.column width="48%"}
+
+- YAML 헤더: 문서의 형식과 설정
+- 본문: 마크다운으로 쓰는 서술
+- 코드 청크: 실행되는 코드와 결과
+
+:::
+::: {.column width="52%"}
+
+```` markdown
+---
+title: "백신 신뢰도 국가 비교"
+format: html
+---
+
+## 배경
+
+본문은 마크다운으로 작성
+
+```{{r}}
+mean(df$vci)
+```
+````
+
+:::
+:::
+
+## YAML 헤더
+
+`---` 사이에 `키: 값` 형태로 기술. 콜론 뒤 공백과 두 칸 들여쓰기가 규칙
+
+``` yaml
+---
+title: "해양 관측 데이터 분석"
+author: "홍길동"
+date: today
+lang: ko
+format:
+  html:
+    toc: true
+    number-sections: true
+    embed-resources: true
+---
+```
+
+- `lang: ko`가 없으면 목차와 그림 번호가 영문으로 표시
+- `embed-resources: true`는 그림까지 파일 하나에 포함
+
+## 출력 형식
+
+| 형식 | 지정 | 쓰임 |
+|---|---|---|
+| HTML | `format: html` | 웹 보고서, 강의노트 |
+| PDF | `format: pdf` | 투고 원고, 인쇄물 |
+| Word | `format: docx` | 공저자 검토, 학술지 제출 |
+| 슬라이드 | `format: revealjs` | 발표 자료 |
+
+<br>
+
+- 같은 원고에서 여러 형식을 동시에 생성
+- PDF는 `quarto install tinytex`가 선행되어야 함
+
+## 마크다운 문법: 글
+
+| 기능 | 문법 |
+|---|---|
+| 제목 | `# 1수준`, `## 2수준` |
+| 문단 | 빈 줄로 구분 |
+| 줄바꿈 | 줄 끝에 `\` |
+| 강조 | `**굵게**`, `*기울임*` |
+| 목록 | `- 항목`, `1. 항목` |
+| 인용 | `> 인용` |
+
+## 마크다운 문법: 요소
+
+| 기능 | 문법 |
+|---|---|
+| 링크 | `[글자](주소)` |
+| 이미지 | `![캡션](경로){#fig-이름}` |
+| 표 | `\| 칸 \| 칸 \|` + 구분선 |
+| 수식 | `$인라인$`, `$$별행$$` |
+| 콜아웃 | `::: {.callout-note}` … `:::` |
+| 상호참조 | `@fig-`, `@tbl-`, `@sec-` |
+
+## 워드 방식과의 대응
+
+| 작업 | 워드 | Quarto |
+|---|---|---|
+| 서식 지정 | 도구 모음 클릭 | 기호 입력 |
+| 그림·표 번호 | 직접 관리 | 라벨로 자동 부여 |
+| 형식 변경 | 새 문서로 작성 | `format` 변경 |
+| 결과 삽입 | 복사해 붙여넣기 | 코드가 생성 |
+| 이력 관리 | 파일명에 날짜 | 텍스트 차이 비교 |
+
+## 실습: 첫 Quarto 문서 만들기 {background-color="#fdf0e6" .practical}
+
+이제 직접 해볼 차례입니다
+
+<br/>강의노트의 "세션별 슬라이드 및 실습문제 모음" 페이지에서 `exercise-02.qmd`를 내려받아 Part 1과 Part 2를 수행해보세요.

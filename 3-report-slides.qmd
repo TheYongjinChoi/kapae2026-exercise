@@ -1,0 +1,154 @@
+---
+format: 
+  revealjs:
+    theme: ["theme/q-theme.scss"]
+    html-math-method: mathjax
+    embed-resources: true
+
+    footer: "2026년 한국해양과학기술원 세미나 「Quarto와 마크다운을 활용한 데이터 분석 및 연구보고서 작성」 강의노트"
+    logo: images/LSHTM_Logo_Black.png
+    slide-number: "c/t"
+    transition: fade
+    transition-speed: fast
+    highlight-style: github
+
+    code-line-numbers: false
+    height: 1080
+    width: 1920
+
+lang: ko
+---
+
+<h1> <br>보고서 작성을 위한<br>마크다운 활용 </h1>
+
+<h2> 3강 </h2>
+
+<hr>
+
+<h3> 최용진, London School of Hygiene &amp; Tropical Medicine </h3>
+
+<h4> <br>2026-08-03 </h4>
+<br>
+
+## YAML 헤더 설정
+
+``` yaml
+format:
+  html:
+    toc: true              # 목차
+    number-sections: true  # 절 번호
+    code-fold: true        # 코드 접기
+    theme: cosmo           # 테마
+    embed-resources: true  # 파일 하나로 묶기
+```
+
+<br>
+
+- `code-fold`는 분석 과정을 남기되 결과를 먼저 보이는 용도
+- `embed-resources`가 없으면 별도 폴더가 함께 생성되어 메일 첨부 시 그림 손실
+
+## 한 파일에서 여러 형식
+
+``` yaml
+format:
+  html: default
+  docx: default
+  pdf:
+    documentclass: article
+    papersize: a4
+```
+
+<br>
+
+- `quarto render report.qmd`로 선언된 형식 모두 생성
+- 하나만 필요하면 `--to docx`로 지정
+
+## PDF와 한글
+
+``` yaml
+format:
+  pdf:
+    pdf-engine: xelatex
+    mainfont: "Noto Serif CJK KR"
+    monofont: "D2Coding"
+    geometry: margin=2.5cm
+```
+
+<br>
+
+- LaTeX 필요. `quarto install tinytex`로 설치
+- `xelatex` 누락 시 한글이 통째로 빠진 PDF 생성
+- 글꼴 이름은 파일명이 아니라 시스템 등록 이름
+
+## Word 참조 문서
+
+기본 서식 파일을 꺼내 워드에서 스타일을 수정한 뒤 연결
+
+``` bash
+quarto pandoc -o custom.docx \
+  --print-default-data-file reference.docx
+```
+
+``` yaml
+format:
+  docx:
+    reference-doc: custom.docx
+```
+
+<br>
+
+- 수정 대상은 문서 내용이 아니라 Heading 1, Body Text 등의 스타일 정의
+
+## 인용문헌 연결
+
+``` yaml
+bibliography: references.bib
+csl: apa.csl
+link-citations: true
+```
+
+| 입력 | 결과 |
+|---|---|
+| `[@wager2018]` | (Wager & Athey, 2018) |
+| `@wager2018` | Wager and Athey (2018) |
+| `[-@wager2018]` | (2018) |
+| `[@wager2018, p. 1231]` | (Wager & Athey, 2018, p. 1231) |
+
+## 상호참조
+
+| 대상 | 라벨 | 참조 |
+|---|---|---|
+| 그림 | `#fig-이름` | `@fig-이름` |
+| 표 | `#tbl-이름` | `@tbl-이름` |
+| 수식 | `#eq-이름` | `@eq-이름` |
+| 절 | `#sec-이름` | `@sec-이름` |
+
+<br>
+
+- 본문 순서를 바꿔도 번호는 다시 매겨짐
+- 참고문헌 위치 지정은 `::: {#refs} :::`
+
+## 결과 확인 시 주의점
+
+<br>
+
+- 결과에 `?fig-vci`처럼 물음표 표시 → 해당 라벨이 없음
+- 접두사가 `fig-`, `tbl-`가 아니면 번호 미부여
+- 캡션이 없으면 라벨이 있어도 번호 미부여
+- 절 참조는 `number-sections: true`가 전제
+- 렌더링 실패 시 YAML 들여쓰기부터 확인
+
+## 정리
+
+<br>
+
+- YAML 헤더가 형식별 세부 설정을 담당
+- 하나의 원고에서 HTML, Word, PDF를 동시에 생성
+- 인용과 상호참조는 라벨로 관리되어 순서 변경에 영향받지 않음
+- 한글 PDF는 엔진과 글꼴 지정이 전제 조건
+
+## 실습: 분석 보고서 만들기 {background-color="#fdf0e6" .practical}
+
+이제 직접 해볼 차례입니다
+
+<br/>강의노트의 "세션별 슬라이드 및 실습문제 모음" 페이지에서 실습 코드를 내려받아 수행해보세요.

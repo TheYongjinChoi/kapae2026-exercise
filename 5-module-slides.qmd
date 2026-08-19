@@ -1,0 +1,226 @@
+---
+format: 
+  revealjs:
+    theme: ["theme/q-theme.scss"]
+    html-math-method: mathjax
+    embed-resources: true
+
+    footer: "2026년 한국해양과학기술원 세미나 「Quarto와 마크다운을 활용한 데이터 분석 및 연구보고서 작성」 강의노트"
+    logo: images/LSHTM_Logo_Black.png
+    slide-number: "c/t"
+    transition: fade
+    transition-speed: fast
+    highlight-style: github
+
+    code-line-numbers: false
+    height: 1080
+    width: 1920
+
+lang: ko
+---
+
+<h1> <br>모듈화 코딩 </h1>
+
+<h2> 5강 </h2>
+
+<hr>
+
+<h3> 최용진, London School of Hygiene &amp; Tropical Medicine </h3>
+
+<h4> <br>2026-08-03 </h4>
+<br>
+
+## 파일 하나가 커질 때
+
+Wilson et al. (2017). Good enough practices in scientific computing
+
+- 문서가 길어지면 수정 위치를 찾는 시간이 증가
+- 오탈자 하나에도 전체가 재실행
+- 공저자와 같은 파일을 고치면 병합 충돌
+- 전처리를 복사해 재사용하는 순간 두 벌의 코드가 분기
+
+## 한 파일은 한 가지 일
+
+| 상황 | 한 파일에 둘 때 | 나눌 때 |
+|---|---|---|
+| 오탈자 수정 | 전체 재실행 | 해당 문서만 재실행 |
+| 전처리 재사용 | 복사 | `source()`로 공유 |
+| 공동 작업 | 충돌 | 절별 파일 분담 |
+| 무거운 모형 | 렌더링마다 재적합 | 저장 후 불러오기 |
+| 국가별 보고서 | 파일 복제 | 매개변수 반복 |
+
+## 청크에 이름 붙이기
+
+```` markdown
+```{{r}}
+#| label: load-data
+```
+
+```{{r}}
+#| label: fig-balance
+```
+````
+
+<br>
+
+- 렌더링 실패 시 청크 이름으로 위치를 특정
+- 하이픈 사용, 문서 내 중복 불가
+- 동사로 시작하는 이름이 일관적. `chunk1`은 오류 추적에 무용
+- 캐시가 라벨 기준으로 저장되므로 잦은 개명은 부적절
+
+## 문서 나누기: `include`
+
+``` markdown
+{{{< include sections/01-overview.qmd >}}}
+
+{{{< include sections/02-loss.qmd >}}}
+```
+
+<br>
+
+- 조각 파일에는 YAML 헤더를 두지 않음
+- 앞뒤로 빈 줄 필요. 경로는 본 파일 기준
+- `_`로 시작하는 이름이나 별도 폴더에 배치
+- 라벨은 합쳐진 문서 전체에서 유일해야 함
+
+## 계산은 스크립트로
+
+::: {.columns}
+::: {.column width="50%"}
+
+``` r
+# R/functions.R
+prep_data <- function(path) {
+  readr::read_csv(path) |>
+    dplyr::filter(!is.na(vci))
+}
+```
+
+:::
+::: {.column width="50%"}
+
+``` r
+#| label: setup
+#| include: false
+
+source("R/functions.R")
+df <- prep_data("data/vci.csv")
+```
+
+:::
+:::
+
+<br>
+
+- 두 번 이상 쓰는 코드가 함수로 분리할 기준
+- 무거운 계산은 `saveRDS()`로 저장하고 문서에서는 `readRDS()`로 호출
+
+## `cache`와 `freeze`
+
+| 구분 | `cache: true` | `freeze: auto` |
+|---|---|---|
+| 단위 | 청크 | 문서 |
+| 판단 기준 | 청크 코드 변경 | 파일 변경 |
+| 주된 용도 | 작업 중 속도 | 여러 문서 프로젝트 |
+
+<br>
+
+- 두 방식 모두 데이터 파일 변경은 감지하지 못함
+- 데이터 교체 시 `_cache`, `_freeze` 폴더 삭제 후 재렌더링
+
+## 프로젝트로 묶기
+
+::: {.columns}
+::: {.column width="45%"}
+
+``` yaml
+# _quarto.yml
+project:
+  type: book
+  output-dir: _output
+
+format:
+  html:
+    theme: cosmo
+
+execute:
+  freeze: auto
+```
+
+:::
+::: {.column width="55%"}
+
+```
+project/
+├── _quarto.yml
+├── index.qmd
+├── sections/
+├── R/          # 함수 정의
+├── scripts/    # 무거운 계산
+├── data/       # 원자료
+└── outputs/    # 저장 결과
+```
+
+:::
+:::
+
+<br>
+
+- 손으로 쓴 것과 만들어진 것을 분리. 후자는 삭제 후 복구 가능해야 함
+
+## 경로 다루기
+
+<br>
+
+- 작업 디렉터리는 렌더링 시 문서 위치, 콘솔 작업 시 프로젝트 최상위
+- `here::here("data", "vci.csv")`로 두 경우 모두 대응
+- `setwd()` 사용은 부적절
+- 절대 경로는 다른 컴퓨터에서 실패
+- 대소문자는 Linux 서버에서만 구분되어 문제가 뒤늦게 발견
+
+## 같은 문서를 여러 번 찍기
+
+``` yaml
+params:
+  country: "KR"
+  year: 2025
+```
+
+``` r
+for (cc in c("KR", "GB", "US")) {
+  quarto::quarto_render(
+    "report.qmd",
+    execute_params = list(country = cc),
+    output_file = paste0("report-", tolower(cc), ".html")
+  )
+}
+```
+
+<br>
+
+- 대화형 세션에는 `params`가 존재하지 않으므로 기본값을 별도 지정
+
+## 재현성 점검
+
+<br>
+
+- `renv::init()`으로 패키지 버전 고정, 협업자는 `renv::restore()`
+- 무작위 절차에는 `set.seed()`
+- 원자료는 읽기 전용. 전처리 결과는 별도 폴더에 저장
+- `_cache`, `_freeze`, `_output` 삭제 후 전체 렌더링으로 최종 확인
+- 절대 경로와 개인 폴더 이름 잔존 여부 확인
+
+## 정리
+
+<br>
+
+- 서술은 문서에, 계산은 스크립트에, 설정은 프로젝트 파일에 배치
+- 라벨과 `include`로 긴 문서를 관리 가능한 단위로 분할
+- 재실행을 줄이는 장치는 코드 변경만 감지한다는 한계를 가짐
+- 최종 확인의 기준은 빈 상태에서의 전체 재현
+
+## 실습: 프로젝트 구조 만들기 {background-color="#fdf0e6" .practical}
+
+이제 직접 해볼 차례입니다
+
+<br/>강의노트의 "세션별 슬라이드 및 실습문제 모음" 페이지에서 `exercise-05.qmd`를 내려받아 Part 1과 Part 2를 수행해보세요.

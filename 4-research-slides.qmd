@@ -1,0 +1,188 @@
+---
+format: 
+  revealjs:
+    theme: ["theme/q-theme.scss"]
+    html-math-method: mathjax
+    embed-resources: true
+
+    footer: "2026년 한국해양과학기술원 세미나 「Quarto와 마크다운을 활용한 데이터 분석 및 연구보고서 작성」 강의노트"
+    logo: images/LSHTM_Logo_Black.png
+    slide-number: "c/t"
+    transition: fade
+    transition-speed: fast
+    highlight-style: github
+
+    code-line-numbers: false
+    height: 1080
+    width: 1920
+
+lang: ko
+---
+
+<h1> <br>데이터 분석과 슬라이드 작성을 위한<br>마크다운 활용 </h1>
+
+<h2> 4강 </h2>
+
+<hr>
+
+<h3> 최용진, London School of Hygiene &amp; Tropical Medicine </h3>
+
+<h4> <br>2026-08-19 </h4>
+<br>
+
+## 코드 청크
+
+실행되는 코드와 결과를 문서에 함께 수록
+
+```` markdown
+```{{r}}
+#| label: fig-trend
+#| fig-cap: "연도별 추이"
+#| echo: false
+#| fig-width: 7
+
+plot(x)
+```
+````
+
+<br>
+
+- 중괄호가 있는 블록만 실행. `` ``` r ``은 표시 전용
+- 옵션은 `#|`로 시작하며 콜론 뒤 공백이 필요
+
+## 자주 쓰는 청크 옵션
+
+| 옵션 | 하는 일 |
+|---|---|
+| `label` | 청크 이름. 그림은 `fig-`, 표는 `tbl-` |
+| `echo: false` | 코드 숨김, 결과 표시 |
+| `include: false` | 코드와 결과 모두 숨김 |
+| `eval: false` | 실행 없이 코드만 표시 |
+| `warning`, `message` | 경고와 메시지 표시 여부 |
+| `cache: true` | 결과 저장 후 재사용 |
+
+## 문서 전체에 적용
+
+``` yaml
+execute:
+  echo: true
+  warning: false
+  message: false
+```
+
+<br>
+
+- 개별 청크 옵션이 전역 설정보다 우선
+- 투고용 원고는 `echo: false`, 강의자료는 `echo: true` 또는 `code-fold: true`
+- 같은 파일에서 두 산출물이 파생
+
+## 인라인 코드로 수치 보고
+
+본문의 숫자를 코드가 채우는 방식
+
+```` markdown
+분석 표본은 `r knitr::inline_expr("n_total")`명이며,
+처치효과는 `r knitr::inline_expr("round(est, 3)")`입니다.
+````
+
+<br>
+
+- 데이터 수정 후 다시 렌더링하면 본문 수치도 함께 갱신
+- 계산은 앞선 청크에서 수행하고 본문에서는 이름만 호출
+- 자릿수 규칙은 본문과 표에서 통일
+
+## 그래프 출력
+
+```` markdown
+```{{r}}
+#| label: fig-vci
+#| fig-cap: "연도별 백신 신뢰도"
+#| fig-width: 7
+#| fig-height: 3.5
+
+ggplot(df, aes(year, vci, colour = group)) +
+  geom_line()
+```
+
+@fig-vci 에서 2021년 이후 회복이 관찰됨
+````
+
+
+## 표
+
+```` markdown
+```{{r}}
+#| label: tbl-desc
+#| tbl-cap: "집단별 기술통계"
+
+df |>
+  group_by(group) |>
+  summarise(n = n(), mean = mean(vci)) |>
+  kable(digits = 2)
+```
+````
+
+<br>
+
+- 데이터프레임을 그대로 출력하면 콘솔 형태로 표시. `kable()` 등을 경유
+- 회귀 결과표는 `modelsummary`, 복잡한 서식은 `gt`
+- 캡션은 청크 옵션과 함수 인수 중 한쪽으로 통일
+
+## 여러 언어와 다이어그램
+
+::: {.columns}
+::: {.column width="50%"}
+
+`.panel-tabset`으로 R과 Python 병렬 제시
+
+```` markdown
+::: {.panel-tabset}
+
+## R
+
+## Python
+
+:::
+````
+
+:::
+::: {.column width="50%"}
+
+흐름도와 인과 그래프는 코드로 작성
+
+```` markdown
+```{{mermaid}}
+flowchart TD
+  A[Raw data] --> B[Analytic sample]
+```
+````
+
+:::
+:::
+
+<br>
+
+- 표본 수가 바뀌어도 그림 편집기를 열 필요가 없음
+
+# 발표 슬라이드
+
+## YAML 헤더
+
+``` yaml
+format:
+  revealjs:
+    slide-number: true
+    embed-resources: true
+```
+
+<br>
+
+- `#`은 구획 슬라이드, `##`은 개별 슬라이드
+- 그림은 `base_size`를 키우고 화면 비율에 맞춰 크기 조정
+- 원고와 슬라이드가 같은 분석 스크립트를 공유 가능
+
+## 실습: 분석 결과가 들어간 슬라이드 만들기 {background-color="#fdf0e6" .practical}
+
+이제 직접 해볼 차례입니다
+
+<br/>강의노트의 "세션별 슬라이드 및 실습문제 모음" 페이지에서 실습 코드를 내려받아 과제를 수행해보세요.

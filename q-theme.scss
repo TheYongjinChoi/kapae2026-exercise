@@ -1,0 +1,208 @@
+/*-- scss:defaults --*/
+
+// 영문 폰트 (Light 300 추가)
+@import url("https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400;1,700&display=swap");
+
+// 한글 폰트 (가변 · 다이나믹 서브셋)
+@import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css");
+
+// 코드 폰트
+@import url("https://fonts.googleapis.com/css2?family=Fira+Mono:wght@400;700&display=swap");
+
+
+// ── 굵기 사다리 ────────────────────────────────
+// Lato와 Pretendard가 공유하는 네 단계만 사용
+// (Lato에는 200/500/600/800이 없음)
+$w-light:   300;
+$w-regular: 400;
+$w-bold:    700;
+$w-black:   900;
+
+// ── 폰트 스택 ─────────────────────────────────
+$ff-base:
+  "Lato",
+  "Pretendard Variable",
+  Pretendard,
+  sans-serif;
+
+$font-family-sans-serif: $ff-base !default;
+$font-family-serif:      $ff-base !default;
+$font-family-monospace:  "Fira Mono", monospace !default;
+
+// Reveal.js heading
+$presentation-heading-font: $ff-base !default;
+$presentation-heading-font-weight: $w-black !default;
+$presentation-heading-line-height: 1.15 !default;
+$presentation-heading-letter-spacing: -0.03em !default;
+
+// colors
+$body-bg: #fff !default;
+$body-color: #000 !default;
+$link-color: #00008b !default;
+
+$code-block-bg: #f2f2f2 !default;
+$code-block-font-size: 0.7em !default;
+
+$presentation-font-smaller: 0.7rem !default;
+
+
+/*-- scss:rules --*/
+
+// 전체 슬라이드 본문
+.reveal {
+  font-family: $ff-base;
+  font-synthesis: none;   // 없는 굵기를 브라우저가 합성하지 않도록
+}
+
+// ── 제목: 공통 서체 ────────────────────────────
+.reveal h1,
+.reveal h2,
+.reveal h3,
+.reveal h4 {
+  font-family: $ff-base;
+  line-height: 1.15;
+}
+
+// ── 제목: 단계별 ──────────────────────────────
+// 굵기가 네 단계뿐이므로 h3/h4는 크기와 색으로 구분
+.reveal h1 {
+  font-size: 3.4em;
+  font-weight: $w-black;
+  letter-spacing: -0.03em;
+}
+
+.reveal h2 {
+  font-size: 2.2em;
+  font-weight: $w-bold;
+  letter-spacing: -0.02em;
+}
+
+.reveal h3 {
+  font-size: 1.7em;
+  font-weight: $w-regular;
+  letter-spacing: -0.01em;
+}
+
+.reveal h4 {
+  font-size: 1.3em;
+  font-weight: $w-regular;
+  letter-spacing: 0;
+  color: #555;
+}
+
+// ── 본문 ─────────────────────────────────────
+.reveal p,
+.reveal li,
+.reveal td {
+  font-weight: $w-light;
+}
+
+// Light 본문에서는 강조가 Bold까지 올라가야 눈에 띔
+.reveal strong,
+.reveal b {
+  font-weight: $w-bold;
+}
+
+// ── 표지 ─────────────────────────────────────
+.reveal #title-slide h1 {
+  font-size: 1.9em;          // 2.4em은 한글 제목에서 넘침
+  font-weight: $w-black;
+  line-height: 1.06;
+  letter-spacing: -0.04em;
+}
+
+.reveal #title-slide .subtitle {
+  font-size: 1.1em;
+  font-weight: $w-bold;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.reveal #title-slide .author,
+.reveal #title-slide .date {
+  font-size: 26px;           // 34px은 긴 소속명에서 넘침
+  font-weight: $w-bold;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+  max-width: 100%;
+  overflow-wrap: break-word;
+}
+
+// ── 한글 줄바꿈 ───────────────────────────────
+.reveal h1:lang(ko),
+.reveal h2:lang(ko),
+.reveal h3:lang(ko),
+.reveal h4:lang(ko),
+.reveal p:lang(ko),
+.reveal li:lang(ko) {
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+// ── 코드 ─────────────────────────────────────
+.reveal code,
+.reveal pre {
+  font-family: "Fira Mono", monospace;
+}
+
+// 인라인 코드 색상: 남색
+.reveal :not(pre) > code {
+  color: #00008b;
+  background-color: transparent;
+  font-weight: $w-regular;   // Light 본문에 묻히지 않도록
+}
+
+// ── 푸터 ─────────────────────────────────────
+.reveal .footer {
+  font-weight: $w-light;
+}
+
+.step-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  width: 1.15em;
+  height: 1.15em;
+  margin-right: 0.18em;
+
+  border: 0.08em solid #111;
+  border-radius: 50%;
+  background: #fff;
+
+  font-weight: 700;
+  font-size: 0.82em;
+  line-height: 1;
+
+  vertical-align: middle;
+  transform: translateY(-0.03em);
+}
+
+// ── 2차 최적화 그래프 ─────────────────────────────────────
+.reveal .hessian-plot {
+  position: absolute;
+  right: 0;
+  bottom: -5em;
+  width: 80%;
+  height: 70%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+.reveal .hessian-plot .cell,
+.reveal .hessian-plot .cell-output-display,
+.reveal .hessian-plot figure,
+.reveal .hessian-plot .quarto-figure {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+
+.reveal .hessian-plot img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain;
+  object-position: right bottom;
+  margin: 0;
+}
