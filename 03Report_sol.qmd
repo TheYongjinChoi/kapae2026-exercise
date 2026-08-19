@@ -1,0 +1,325 @@
+---
+title: "실습 #3. 분석 결과가 들어간 보고서 만들기"
+author: "최용진"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    code-fold: show
+    embed-resources: true
+lang: ko
+execute:
+  warning: false
+  message: false
+  cache: true
+---
+
+이 실습의 목표는 표와 그림을 코드로 만들고, 번호와 인용이 자동으로 관리되는 보고서를 완성하는 것입니다. 이전 실습에서 다룬 분석 흐름을 그대로 쓰되, 이번에는 결과를 문서에 싣는 방식에 초점을 둡니다.
+
+***
+
+<br>
+
+# Initial setting
+
+패키지를 불러오고 결과물 폴더와 색상을 한 번만 정의합니다.
+
+```{r}
+if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
+
+pacman::p_load(
+  tidyverse,
+  here,
+  MatchIt,
+  knitr,
+  modelsummary
+)
+
+dir.create(here("output"), showWarnings = FALSE)
+out <- "output/"
+
+palettes <- list(
+  clr2 = c("#477A95", "#883A3C"),
+  clr3 = c("#477A95", "#6FC14F", "#883A3C")
+)
+
+theme_set(
+  theme_minimal(base_size = 13) +
+    theme(
+      panel.grid.minor = element_blank(),
+      plot.title = element_text(face = "bold")
+    )
+)
+
+options(scipen = 999)
+set.seed(20260731)
+```
+
+<br>
+
+# Data preparation
+
+`lalonde` 데이터를 불러와 분석에 사용할 `df`를 만듭니다. 이 절은 실행만 하면 됩니다.
+
+```{r}
+data("lalonde", package = "MatchIt")
+
+df <- lalonde |>
+  mutate(
+    group    = factor(treat, levels = c(0, 1),
+                      labels = c("Control", "Treated")),
+    employed = as.integer(re78 > 0)
+  ) |>
+  select(group, treat, re78, employed, age, educ, race, re74, re75)
+
+dim(df)
+count(df, group)
+```
+
+<br>
+
+# Part 1. 표에 캡션과 라벨 붙이기
+
+## Task 1. 기술통계표 만들기
+
+`group`별 평균을 계산해 `kable()`로 표를 만듭니다. 청크 옵션에 `label`과 `tbl-cap`을 넣어야 표 번호가 붙고 본문에서 참조할 수 있습니다.
+
+- `label: tbl-desc`: 표 라벨. 반드시 `tbl-`로 시작
+- `tbl-cap`: 표 캡션. 이것이 없으면 라벨이 있어도 번호가 붙지 않음
+- `digits`: 소수점 자릿수
+
+```{r}
+#| label: tbl-desc
+#| tbl-cap: "집단별 기술통계"
+
+df |>
+  group_by(group) |>
+  summarise(
+    n        = n(),
+    age      = mean(age),
+    educ     = mean(educ),
+    re78     = mean(re78),
+    employed = mean(employed)
+  ) |>
+  kable(digits = 2)
+```
+
+본문에서 `@tbl-desc`로 참조합니다. @tbl-desc 에 집단별 평균을 정리했습니다.
+
+**결과 읽는 법.** 표 위에 "표 1: 집단별 기술통계"가 붙고, 본문의 `@tbl-desc`가 "표 1"로 바뀌면 성공입니다. 본문에 `?tbl-desc`처럼 물음표가 나온다면 라벨 이름이 일치하지 않는 것입니다.
+
+<br>
+
+## Task 2. 회귀 결과표 만들기
+
+세 개의 OLS 모형을 추정하고 `modelsummary()`로 표를 만듭니다.
+
+$$
+\text{re78}_i = \beta_0 + \beta_1 \text{treat}_i + \mathbf{x}_i'\boldsymbol{\gamma} + \varepsilon_i
+$$
+
+- `gof_map`: 표 아래에 표시할 적합도 지표
+- `stars = TRUE`: 유의수준 별표 표시
+- `output`: 파일로 저장할 경로
+
+```{r}
+#| label: tbl-est
+#| tbl-cap: "처치효과 추정 결과"
+
+m1 <- lm(re78 ~ treat, data = df)
+m2 <- lm(re78 ~ treat + age + educ + race, data = df)
+m3 <- lm(re78 ~ treat + age + educ + race + re74 + re75, data = df)
+
+models <- list("(1) 단순" = m1, "(2) 인구학적 변수" = m2, "(3) 사전소득 포함" = m3)
+
+modelsummary(
+  models,
+  stars = TRUE,
+  gof_map = c("nobs", "r.squared")
+)
+```
+
+같은 표를 Word 파일로도 저장합니다.
+
+```{r}
+modelsummary(
+  models,
+  stars = TRUE,
+  gof_map = c("nobs", "r.squared"),
+  output = paste0(out, "tbl02_estimates.docx")
+)
+```
+
+**결과 읽는 법.** `treat` 행의 계수가 세 모형에서 어떻게 달라지는지 봅니다. 공변량을 넣을수록 추정치가 이동한다면 단순 비교에 교란이 있었다는 뜻입니다. `output/tbl02_estimates.docx`가 생성되었는지도 확인합니다.
+
+::: {.callout-warning}
+## 캡션을 두 번 붙이지 않기
+
+`modelsummary(title = ...)`와 청크 옵션 `tbl-cap`을 동시에 쓰면 캡션이 두 번 나오거나 상호참조가 어긋납니다. 한쪽으로 통일합니다.
+:::
+
+<br>
+
+# Part 2. 그림에 캡션과 라벨 붙이기
+
+## Task 3. 결과변수 분포 그리기
+
+집단별 1978년 소득 평균을 신뢰구간과 함께 그립니다. 그림도 표와 같은 방식으로 `label`과 `fig-cap`을 청크 옵션에 넣습니다.
+
+- `label: fig-outcome`: 반드시 `fig-`로 시작
+- `fig-width`, `fig-height`: 그림 캔버스 크기(인치)
+- `fig-align`: 정렬
+
+```{r}
+#| label: fig-outcome
+#| fig-cap: "집단별 1978년 실질소득"
+#| fig-width: 6
+#| fig-height: 4
+#| fig-align: center
+
+p_bar <- df |>
+  ggplot(aes(x = group, y = re78, fill = group)) +
+  stat_summary(fun = mean, geom = "col", width = 0.55) +
+  stat_summary(fun.data = mean_cl_normal, geom = "errorbar", width = 0.12) +
+  scale_fill_manual(values = palettes$clr2, guide = "none") +
+  scale_y_continuous(labels = scales::comma) +
+  labs(x = NULL, y = "1978년 실질소득 (USD)")
+
+p_bar
+
+ggsave(paste0(out, "fig01_outcome_bar.png"), p_bar,
+       width = 6, height = 4, dpi = 300, bg = "white")
+```
+
+@fig-outcome 에서 두 집단의 평균 차이를 확인할 수 있습니다.
+
+**결과 읽는 법.** 그림 아래에 "그림 1: 집단별 1978년 실질소득"이 붙는지, 본문의 `@fig-outcome`이 "그림 1"로 바뀌는지 확인합니다. 오차막대가 겹친다면 평균 차이가 통계적으로 뚜렷하지 않다는 신호입니다.
+
+<br>
+
+## Task 4. 인라인 코드로 본문 수치 채우기
+
+본문에 숫자를 직접 타이핑하는 대신 코드로 불러옵니다. 계산은 앞선 청크에서 하고 본문에서는 이름만 부릅니다.
+
+```{r}
+#| include: false
+
+n_total <- nrow(df)
+est_m3  <- coef(m3)["treat"]
+ci_m3   <- confint(m3)["treat", ]
+```
+
+원문은 다음과 같이 씁니다.
+
+```` markdown
+분석 표본은 `r knitr::inline_expr("n_total")`명이며,
+공변량을 통제한 처치효과는 `r knitr::inline_expr("round(est_m3, 1)")`달러입니다.
+````
+
+결과: 분석 표본은 `r n_total`명이며, 공변량을 통제한 처치효과는 `r round(est_m3, 1)`달러(95% 신뢰구간 `r round(ci_m3[1], 1)`–`r round(ci_m3[2], 1)`)입니다.
+
+**결과 읽는 법.** 데이터를 수정하고 다시 렌더링했을 때 이 문장의 숫자가 함께 바뀌면 성공입니다. 표와 본문의 자릿수 규칙은 문서 전체에서 통일합니다.
+
+<br>
+
+# Part 3. 인용문헌 연결하기
+
+## Task 5. `.bib` 파일의 구조 이해하기
+
+인용을 자동으로 처리하려면 문헌 정보를 담은 `.bib` 파일이 필요합니다. Zotero나 Mendeley에서 내보낼 수 있고, 직접 적어도 됩니다. 아래는 이 데이터의 원 논문을 BibTeX 형식으로 적은 예시입니다.
+
+``` bibtex
+@article{lalonde1986,
+  title = {Evaluating the Econometric Evaluations of Training Programs
+           with Experimental Data},
+  author = {LaLonde, Robert J.},
+  journal = {American Economic Review},
+  volume = {76},
+  number = {4},
+  pages = {604--620},
+  year = {1986}
+}
+```
+
+- `@article`: 문헌 종류. 단행본은 `@book`, 보고서는 `@techreport`
+- `lalonde1986`: 인용 키. 본문에서 이 이름을 부름
+- 나머지 항목: 참고문헌 목록에 표시될 서지 정보
+
+이 내용을 `references.bib`라는 이름으로 프로젝트 폴더에 저장한 뒤, 문서 YAML에 연결합니다.
+
+``` yaml
+bibliography: references.bib
+csl: apa.csl            # 인용 양식(선택)
+link-citations: true    # 본문 인용을 목록과 연결(선택)
+```
+
+<br>
+
+## Task 6. 본문에서 인용하기
+
+본문에서는 인용 키 앞에 `@`를 붙입니다. 대괄호의 유무에 따라 표시 형태가 달라집니다.
+
+```` markdown
+이 데이터는 직업훈련 프로그램의 효과를 다룬 연구에서 사용되었습니다 [@lalonde1986].
+
+@lalonde1986 는 실험 데이터와 관측 데이터의 추정치를 비교했습니다.
+
+추정 방법의 차이는 이후 논의로 이어졌습니다 [@lalonde1986, p. 610].
+````
+
+| 입력 | 결과 형태 |
+|---|---|
+| `[@lalonde1986]` | (LaLonde, 1986) |
+| `@lalonde1986` | LaLonde (1986) |
+| `[-@lalonde1986]` | (1986) |
+| `[@lalonde1986; @heckman1997]` | (LaLonde, 1986; Heckman et al., 1997) |
+| `[@lalonde1986, p. 610]` | (LaLonde, 1986, p. 610) |
+
+**결과 읽는 법.** 렌더링하면 문서 맨 아래에 참고문헌 목록이 자동으로 생성됩니다. 본문에서 인용한 문헌만 목록에 들어가고, 순서와 서식은 CSL 파일이 정합니다. 인용이 `[@lalonde1986]` 그대로 표시된다면 `.bib` 경로나 인용 키가 맞지 않는 것입니다.
+
+::: {.callout-note collapse="true"}
+## 참고문헌 위치 지정하기
+
+목록은 기본적으로 문서 끝에 붙습니다. 부록보다 앞에 두고 싶다면 그 자리에 나눔선을 둡니다.
+
+``` markdown
+## 참고문헌
+
+::: {#refs}
+:::
+
+## 부록
+```
+
+학술지 서식이 필요하면 Zotero Style Repository에서 해당 학술지의 CSL 파일을 받아 같은 폴더에 두고 `csl:` 값을 바꿉니다.
+:::
+
+<br>
+
+# Part 4. 여러 형식으로 내보내기 (선택사항)
+
+## Task 7. HTML과 Word 동시 생성
+
+YAML의 `format` 아래에 `docx`를 추가하고 렌더링합니다.
+
+``` yaml
+format:
+  html:
+    toc: true
+    embed-resources: true
+  docx: default
+```
+
+``` bash
+quarto render 03Report.qmd
+```
+
+**결과 읽는 법.** 두 파일이 함께 생성되고, 표 번호와 그림 번호가 양쪽에서 동일하게 매겨집니다. Word 파일에서 서식을 바꾸고 싶다면 참조 문서를 지정합니다.
+
+``` bash
+quarto pandoc -o custom.docx --print-default-data-file reference.docx
+```
+
+<br>
