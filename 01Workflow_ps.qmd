@@ -1,0 +1,190 @@
+---
+title: "실습 #1. 데이터 분석 스크립트 구조화"
+author: "최용진"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    code-fold: show
+    embed-resources: true
+execute:
+  warning: false
+  message: false
+  cache: true
+---
+
+<!-- 첫 번째 실습에서는 제공된 HTML 문서를 참고하여 Quarto와 Markdown으로 동일한 문서를 만들어 보겠습니다. 제공된 HTML 문서에는 Markdown으로 작성된 설명과 R 코드가 함께 포함되어 있습니다. 새로운 내용을 직접 작성할 필요는 없습니다. HTML 문서의 내용을 순서대로 Quarto 문서에 옮겨 작성하고, 각 코드 청크를 실행하면 됩니다. 작업을 마친 후에는 Quarto 문서 전체를 렌더링하여 제공된 HTML 문서와 비교해 보세요. -->
+
+이 문서는 Quarto를 활용하여 데이터 분석 흐름을 크게 **“초기 설정 → 데이터 준비 → 데이터 리뷰 → 추정”**의 네 단계로 나누어 작성한 예시입니다. 각 단계에서 생성되는 결과물은 모두 output/ 폴더로 내보냅니다.
+
+***
+
+
+<!--
+과제 1. 초기 설정
+
+1. 1수준 헤딩으로 "Initial setting"을 입력합니다.
+   1. - 1수준 헤딩은 문장 앞에 `#`을 하나 입력하여 만듭니다.
+2. 제공된 HTML 문서에서 해당 헤딩 아래의 설명을 찾아 복사하여 붙여 넣습니다.
+3. R 코드 블록을 만들고, HTML 문서에 제시된 코드를 코드 블록 안에 붙여 넣습니다.
+4. 코드 블록 안의 코드를 실행하고 결과를 확인합니다. 아래 Positron 단축키를 활용하면 간편하게 실행할 수 있습니다.
+   1. R 코드 청크 삽입
+      1. Windows: Ctrl + Alt + I
+      2. macOS: Option + Command + I
+   2. 현재 코드 줄 또는 선택한 코드 실행
+      1. Windows: Ctrl + Enter
+      2. macOS: Command + Return
+   3. 현재 코드 청크 전체 실행
+      1. Windows: Ctrl + Shift + Enter
+      2. macOS: Shift + Command + Return
+   4. 문서 전체 렌더링 - Windows: Ctrl + Shift + K - macOS: Shift + Command + K
+5. 문서 전체를 렌더링한 후 제공된 HTML 문서와 결과가 동일하게 나타나는지 확인합니다.
+-->
+
+<!-- 아래에 작성 시작 -->
+
+# Initial setting
+
+분석에 필요한 패키지를 한 번에 불러오고, 결과물을 저장할 폴더와 색상, 글꼴 등을 이 자리에서 한 번만 정의합니다. 이렇게 미리 정의를 해두면 이후 절에서는 색상 코드나 경로를 다시 쓰지 않기 때문에 코드가 훨씬 간결해 집니다.
+
+```{r}
+if (!requireNamespace("pacman", quietly = TRUE)) install.packages("pacman")
+
+pacman::p_load(
+  tidyverse,
+  here,
+  MatchIt,
+  broom,
+  modelsummary,
+  flextable,
+  plotly,
+  htmlwidgets,
+  showtext
+)
+
+# 결과물 폴더
+dir.create(here("output"), showWarnings = FALSE)
+out <- "output/"
+
+# 색상 설정
+palettes <- list(
+  clr2 = c("#477A95", "#883A3C"),
+  clr3 = c("#477A95", "#6FC14F", "#883A3C"),
+  Clr10 = c(
+    "#176D90", "#841618", "#F18821", "#3D7337", "#A039B7",
+    "#0D9BD8", "#E73F4B", "#FFB86F", "#6FC14F", "#9E6EAC"
+  ),
+  ClrGrey = c(
+    "#000000", "#696969", "#808080", "#A9A9A9",
+    "#C0C0C0", "#D3D3D3", "#DCDCDC"
+  ),
+  ClrBlueRed  = c("#175B7F", "#4A708B", "#A9A9A9", "#872727", "#6F0E10"),
+  ClrBlueRed7 = c(
+    "#175B7F", "#477A95", "#2591CC",
+    "#A9A9A9",
+    "#BD5153", "#883A3C", "#6F0E10"
+  )
+)
+
+# 글꼴
+try({
+  sysfonts::font_add_google("Noto Sans KR", "noto")
+  showtext_auto()
+  showtext_opts(dpi = 300)
+}, silent = TRUE)
+
+fntlist <- list(
+  noto11  = list(family = "Noto Sans", size = 11),
+  noto12  = list(family = "Noto Sans", size = 12),
+  noto13  = list(family = "Noto Sans", size = 13),
+  noto14  = list(family = "Noto Sans", size = 14),
+  noto15  = list(family = "Noto Sans", size = 15),
+
+  notoL14 = list(family = "Noto Sans Light", size = 14),
+  notoL15 = list(family = "Noto Sans Light", size = 15),
+  notoL16 = list(family = "Noto Sans Light", size = 16),
+  notoL18 = list(family = "Noto Sans Light", size = 18),
+
+  notoB14 = list(family = "Noto Sans SemBd", size = 14),
+  notoB16 = list(family = "Noto Sans SemBd", size = 16),
+  notoB18 = list(family = "Noto Sans SemBd", size = 18),
+  notoB22 = list(family = "Noto Sans SemBd", size = 22)
+)
+
+theme_set(
+  theme_minimal(base_size = 13, base_family = "noto") +
+    theme(
+      panel.grid.minor = element_blank(),
+      plot.title = element_text(face = "bold")
+    )
+)
+
+options(scipen = 999)
+set.seed(20260731)
+```
+
+<br>
+
+
+<!--
+과제 2. 데이터 준비
+
+1. 1수준 헤딩으로 "Data preparation"을 입력합니다.
+2. 제공된 HTML 문서에서 해당 헤딩 아래의 설명을 찾아 복사하여 붙여 넣습니다.
+   1. 문장 안에서 코드, 함수명, 변수명 또는 파일 경로를 표시하려면 해당 텍스트를 백틱 한 개(`)로 감쌉니다.
+   2. 예: `read_csv()`, `lalonde`, `output/`
+3. R 코드 블록을 만들고, HTML 문서에 제시된 코드를 코드 블록 안에 붙여 넣습니다.
+4. 코드 블록 안의 코드를 실행하고 결과를 확인합니다.
+5. 문서 전체를 렌더링한 후 제공된 HTML 문서와 결과가 동일하게 나타나는지 확인합니다.
+-->
+
+<!-- 아래에 작성 시작 -->
+
+
+
+<br>
+
+
+<!--
+과제 3. 데이터 리뷰
+
+1.  2수준 헤딩으로 각각 "기술통계표"와 "결과변수 분포"를 입력합니다.
+3. 제공된 HTML 문서에서 각 헤딩 아래의 설명을 찾아 복사하여 붙여 넣습니다.
+   1. 글자를 굵게 표시하려면 텍스트를 별표 두 개로 감쌉니다. 예: **굵은 글씨**
+   2. 글자를 기울임꼴로 표시하려면 텍스트를 별표 한 개로 감쌉니다. 예: *기울임꼴*
+   3. 굵은 기울임꼴로 표시하려면 텍스트를 별표 세 개로 감쌉니다. - 예: ***굵은 기울임꼴***
+4. 각 헤딩 아래 R 코드 블록을 만들고, HTML 문서에 제시된 코드를 코드 블록 안에 붙여 넣습니다.
+5. 코드 블록 안의 코드를 실행하고 결과를 확인합니다.
+6. 문서 전체를 렌더링한 후 제공된 HTML 문서와 결과가 동일하게 나타나는지 확인합니다.
+-->
+
+<!-- 아래에 작성 시작 -->
+
+# Data review
+
+
+<br>
+
+
+<!--
+과제 4. 통계분석
+
+1. 2수준 헤딩으로 각각 "회귀분석과 표 출력"과 "Coefficient plot"를 입력합니다.
+2. 제공된 HTML 문서에서 각 헤딩 아래의 설명을 찾아 복사하여 붙여 넣습니다.
+   1. 이번에는 LaTeX 문법을 사용하여 통계모형의 수식을 입력해 보겠습니다.
+   2. 별도의 줄에 수식을 표시하려면 수식의 앞뒤를 두 개의 $ 기호로 아래와 같이 감쌉니다. 별도 수식 예:
+   
+   `$$ y_i = \beta_0 + \beta_1 x_i + \varepsilon_i $$`
+   3. 문장 안에 짧은 수식을 삽입하려면 수식의 앞뒤를 `$`로 감쌉니다. 문장 안의 수식 예: `$y_i$는 결과변수입니다.`
+   4. LaTeX에서 아래 첨자는 `_`, 위 첨자는 `^`를 사용하여 입력합니다. 예: `\beta_1`, `x_i`, `R^2`
+   5. 그리스 문자는 `\beta`, `\gamma`, `\varepsilon`와 같이 역슬래시로 시작하는 명령어를 사용합니다. 
+3. 각 헤딩 아래 R 코드 블록을 만들고, HTML 문서에 제시된 코드를 코드 블록 안에 붙여 넣습니다.
+4. 코드 블록 안의 코드를 실행하고 결과를 확인합니다.
+5. 문서 전체를 렌더링한 후 제공된 HTML 문서와 결과가 동일하게 나타나는지 확인합니다.
+-->
+
+<!-- 아래에 작성 시작 -->
+
+# Estimations
