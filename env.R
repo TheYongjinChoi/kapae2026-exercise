@@ -124,7 +124,7 @@ if (!python_already_initialized && keras_env_exists) {
 
 cat("\n")
 cat("========================================\n")
-cat(" R package installation\n")
+cat(" R 패키지 설치 확인\n")
 cat("========================================\n")
 
 for (pkg in packages) {
@@ -141,7 +141,7 @@ for (pkg in packages) {
 
 cat("\n")
 cat("========================================\n")
-cat(" Python environment\n")
+cat(" Python 환경 체크\n")
 cat("========================================\n")
 
 if (python_already_initialized) {
@@ -163,5 +163,5 @@ if (python_already_initialized) {
 
 cat("\n")
 cat("========================================\n")
-cat(" Installation complete!\n")
+cat(" 설치 완료!\n")
 cat("========================================\n")
