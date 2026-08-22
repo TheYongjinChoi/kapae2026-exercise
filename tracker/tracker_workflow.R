@@ -1,6 +1,6 @@
 # ══════════════════════════════════════════════════════════════════════════════
 #  KAPAE 2026 워크숍 · 1일차 1강 실습 채점 스크립트
-#  대상 문서: 01-Workflow_sol.qmd (기본 워크플로 + 정규화 회귀 통합본)
+#  대상 문서: 1-1Workflow_sol.qmd (기본 워크플로 + 정규화 회귀 통합본)
 #
 #  문항 ID 목록 (qmd의 각 빈칸 블록 하단에 아래 순서대로 삽입)
 #    task1-1-split    Part 1 / Task 1-1  훈련테스트 분할
@@ -147,6 +147,9 @@
 SUPABASE_URL <- "https://mztyhpckshnqcklogrsn.supabase.co"
 SUPABASE_KEY <- "sb_publishable_pflU44StAqW5XTy94LsuJA_p_zMRtVv"   # anon public key
 
+CHAPTER <- "d1-01"
+
+# ── 내부 상태 ─────────────────────────────────────────────────────
 .tracker_env <- new.env()
 .tracker_env$session_id <- paste0(
   format(Sys.time(), "%Y%m%d%H%M%S"), "-",
@@ -155,59 +158,33 @@ SUPABASE_KEY <- "sb_publishable_pflU44StAqW5XTy94LsuJA_p_zMRtVv"   # anon public
 
 `%||%` <- function(a, b) if (is.null(a)) b else a
 
+.has <- function(e, nm) !is.null(e[[nm]])
+
+# 정답 메시지를 콘솔 폭에 맞춰 접습니다.
+.wrap <- function(txt, width = 76, indent = "   ") {
+  ws <- strwrap(txt, width = width)
+  paste(paste0(indent, ws), collapse = "\n")
+}
+
+# 호출 환경과 전역 환경의 객체를 리스트로 모읍니다.
+# 환경에 $로 접근하면 상위 환경을 찾지 않아 값이 NULL이 되므로,
+# 규칙 검사 전에 반드시 리스트로 바꿔 두어야 합니다.
+.snapshot <- function(env) {
+  e <- as.list(env, all.names = TRUE)
+  if (!identical(env, globalenv())) {
+    g <- as.list(globalenv(), all.names = TRUE)
+    e <- utils::modifyList(g, e)
+  }
+  e
+}
+
 set_student <- function(id) {
-  if (missing(id) || !nzchar(id) || id == "ID 입력") {
+  if (missing(id) || !nzchar(id) || id %in% c("ID 입력", "학번입력", "abc")) {
     stop("첫 청크의 set_student()에 본인 ID를 입력하세요.", call. = FALSE)
   }
   .tracker_env$student_id <- id
+  message("\u2713 ", id, " 님, 실습을 시작합니다.")
   invisible(id)
-}
-
-track <- function(exercise_id, expr, chapter = NA_character_) {
-  code <- paste(deparse(substitute(expr)), collapse = "\n")
-  t0 <- Sys.time()
-
-  out <- tryCatch(
-    {
-      val <- withVisible(eval.parent(substitute(expr)))
-      list(status = "ok",
-           output = paste(utils::capture.output(print(val$value)), collapse = "\n"),
-           value = val$value, visible = val$visible)
-    },
-    error = function(e) {
-      list(status = "error", output = conditionMessage(e),
-           value = NULL, visible = FALSE)
-    }
-  )
-
-  payload <- list(
-    student_id  = .tracker_env$student_id %||% "unknown",
-    chapter     = chapter,
-    exercise_id = exercise_id,
-    code        = code,
-    output      = substr(out$output, 1, 5000),
-    status      = out$status,
-    elapsed_sec = as.numeric(difftime(Sys.time(), t0, units = "secs")),
-    session_id  = .tracker_env$session_id,
-    r_version   = paste(R.version$major, R.version$minor, sep = ".")
-  )
-
-  try(
-    httr2::request(paste0(SUPABASE_URL, "/rest/v1/submissions")) |>
-      httr2::req_headers(
-        apikey = SUPABASE_KEY,
-        Authorization = paste("Bearer", SUPABASE_KEY),
-        `Content-Type` = "application/json",
-        Prefer = "return=minimal"
-      ) |>
-      httr2::req_body_json(payload) |>
-      httr2::req_timeout(5) |>
-      httr2::req_perform(),
-    silent = TRUE
-  )
-
-  if (out$status == "error") stop(out$output, call. = FALSE)
-  if (out$visible) out$value else invisible(out$value)
 }
 
 classify_error <- function(msg) {
@@ -246,14 +223,16 @@ classify_error <- function(msg) {
   expr
 }
 
-# 안전하게 참조: 객체가 없으면 NULL
-.get <- function(e, nm) if (exists(nm, envir = e, inherits = TRUE)) get(nm, envir = e) else NULL
-
 # glmnet 적합에서 0 계수 개수
 .n_zero <- function(fit, s = "lambda.1se") {
   cf <- tryCatch(as.numeric(coef(fit, s = s)), error = function(err) NULL)
   if (is.null(cf)) return(NA_integer_)
   sum(cf[-1] == 0)
+}
+
+# glmnet 호출에서 alpha 값 꺼내기 (없으면 NULL)
+.alpha_of <- function(fit) {
+  tryCatch(as.numeric(eval(fit$call$alpha)), error = function(err) NULL)
 }
 
 # ── 정답 규칙 ────────────────────────────────────────────────
@@ -268,6 +247,7 @@ CHECKS <- list(
   "task1-1-split" = list(
     need = c("model_df", "train_id", "train_data", "test_data"),
     call_from = NULL,
+    note = "분할은 모형을 고르기 전에 먼저 해 두는 작업입니다. 테스트 데이터를 한 번이라도 보고 나면 그 정보가 판단에 섞여 들어가, 마지막에 계산하는 성능이 실제보다 좋게 나옵니다. set.seed(123)을 넣은 것은 같은 표본이 다시 뽑히게 하려는 것이고, 이 값을 바꾸면 이후 모든 결과가 조금씩 달라집니다. 무작위로 나눈다는 것은 두 집단이 같은 모집단에서 온 표본이 되도록 만드는 일이라, 훈련 데이터에서 배운 것이 테스트 데이터에도 통할 것이라는 기대의 근거가 됩니다.",
     rules = list(
 
       # ── 전처리 단계 확인 ──────────────────────────────
@@ -311,8 +291,7 @@ CHECKS <- list(
       list(f = function(e) nrow(e$train_data) == length(e$train_id),
            msg = "train_data의 행 수가 train_id의 길이와 다릅니다. train_data <- model_df[train_id, ]로 만드세요."),
 
-      list(f = function(e) nrow(e$test_data) != nrow(e$train_data) ||
-                           nrow(e$model_df) == 2 * nrow(e$train_data),
+      list(f = function(e) !identical(rownames(e$train_data), rownames(e$test_data)),
            msg = "test_data가 train_data와 같습니다. 테스트는 행 번호 앞에 음수 기호를 붙여 model_df[-train_id, ]로 만드세요."),
 
       list(f = function(e) nrow(e$train_data) + nrow(e$test_data) == nrow(e$model_df),
@@ -342,6 +321,7 @@ CHECKS <- list(
   "task1-2-ols" = list(
     need = c("ols_model", "train_data"),
     call_from = "ols_model",
+    note = "공식 우변의 점 하나로 전처리한 예측변수 전체가 모형에 들어갔습니다. summary()의 계수 표가 길게 나오는데, 이 가운데 상당수는 p값이 크고 부호도 이론과 어긋날 수 있습니다. OLS는 변수를 골라 주지 않고 주어진 것을 모두 써서 훈련 데이터의 잔차제곱합을 최소화하기 때문입니다. 예측변수가 많아질수록 이 성질이 부담이 되는데, Part 2에서 다룰 정규화 회귀는 바로 이 지점에 벌점을 걸어 계수를 줄이거나 0으로 만듭니다.",
     rules = list(
       list(f = function(e) inherits(e$ols_model, "lm") && !inherits(e$ols_model, "glm"),
            msg = "lm()으로 적합한 모델이 아닙니다. 결과변수가 연속형이므로 glm()이 아니라 lm()을 사용하세요."),
@@ -349,11 +329,12 @@ CHECKS <- list(
       list(f = function(e) all.vars(formula(e$ols_model))[1] == "rx_num",
            msg = "결과변수가 rx_num이 아닙니다. 전처리에서 이름을 바꿨으므로 원 변수명(rx_num_mod_6m)이 아닌 rx_num을 쓰세요."),
 
-      list(f = function(e) length(coef(e$ols_model)) == ncol(model.matrix(e$ols_model)),
-           msg = "모델 행렬과 계수 개수가 맞지 않습니다. 적합 과정을 다시 확인하세요."),
-
-      list(f = function(e) length(coef(e$ols_model)) > 10,
-           msg = "예측변수가 너무 적습니다. 공식 우변에 .을 넣어 결과변수를 제외한 나머지 변수 전체를 사용하세요."),
+      list(f = function(e) {
+             ref <- tryCatch(ncol(model.matrix(rx_num ~ ., data = e$train_data)),
+                             error = function(err) NULL)
+             is.null(ref) || length(coef(e$ols_model)) == ref
+           },
+           msg = "예측변수의 개수가 기준과 다릅니다. 공식 우변에 .을 넣어 결과변수를 제외한 나머지 변수 전체를 사용하세요."),
 
       list(f = function(e) nrow(model.frame(e$ols_model)) == nrow(e$train_data),
            msg = "train_data가 아닌 다른 데이터로 적합했습니다. data = train_data를 확인하세요. model_df를 쓰면 테스트 데이터가 학습에 섞입니다."),
@@ -365,6 +346,7 @@ CHECKS <- list(
   "task1-3-predict" = list(
     need = c("pred_ols", "rmse_ols", "test_data", "ols_model"),
     call_from = NULL,
+    note = "여기서 계산한 RMSE는 학습에 쓰이지 않은 데이터에서 나온 값이라 일반화 성능의 추정치입니다. 같은 모형으로 훈련 데이터를 예측하면 RMSE가 더 낮게 나오는데, 그 차이가 모형이 훈련 데이터에 맞춰진 정도입니다. 단위는 결과변수와 같으므로 처방약 개수 기준으로 평균적으로 몇 개쯤 빗나가는지로 읽으시면 됩니다. 다만 이 값 하나만으로는 좋고 나쁨을 말할 수 없고, 뒤에서 나올 영모형이나 다른 모형과 나란히 놓아야 의미가 생깁니다.",
     rules = list(
       list(f = function(e) length(.num(e$pred_ols)) == nrow(e$test_data),
            msg = "pred_ols의 길이가 테스트 데이터의 행 수와 다릅니다. newdata = test_data를 지정했는지 확인하세요. 생략하면 훈련 데이터 예측값이 반환됩니다."),
@@ -389,6 +371,7 @@ CHECKS <- list(
     need = c("x_all", "y_all", "x_train", "x_test", "y_train", "y_test",
              "model_df", "train_id"),
     call_from = NULL,
+    note = "glmnet은 공식을 받지 않으므로 데이터프레임을 숫자 행렬로 바꾸는 단계가 필요합니다. model.matrix()가 factor를 더미로 펼치면서 열 개수가 원래 변수 개수보다 늘어난 것을 dim()에서 확인할 수 있습니다. 행렬을 전체 데이터에서 한 번만 만들고 나중에 나눈 이유는 훈련과 테스트에서 따로 만들면 범주 구성에 따라 열의 개수나 순서가 달라질 수 있기 때문입니다. train_id를 그대로 재사용한 것도 같은 이유로, Part 1과 Part 2의 결과를 같은 테스트 데이터에서 비교하기 위해서입니다.",
     rules = list(
       list(f = function(e) is.matrix(e$x_all),
            msg = "x_all이 행렬이 아닙니다. model.matrix()의 결과를 그대로 저장하세요."),
@@ -431,6 +414,9 @@ CHECKS <- list(
       list(f = function(e) .eq(e$x_train, e$x_all[e$train_id, , drop = FALSE]),
            msg = "x_train이 train_id로 선택한 행과 다릅니다. 훈련과 테스트에 -train_id를 반대로 적용하지 않았는지 확인하세요."),
 
+      list(f = function(e) .eq(e$x_test, e$x_all[-e$train_id, , drop = FALSE]),
+           msg = "x_test가 기준과 다릅니다. x_all[-train_id, ]로 만드세요. 음수 기호를 빠뜨리면 훈련 데이터가 그대로 들어갑니다."),
+
       list(f = function(e) length(e$y_train) == nrow(e$x_train) &&
                            length(e$y_test) == nrow(e$x_test),
            msg = "y와 x의 행 수가 맞지 않습니다. y_all에도 같은 train_id를 적용하세요."),
@@ -442,6 +428,7 @@ CHECKS <- list(
   "task2-2-lasso" = list(
     need = c("cv_lasso", "x_train", "train_id"),
     call_from = NULL,
+    note = "lambda는 데이터에서 추정되는 모수가 아니라 연구자가 정해야 하는 하이퍼파라미터입니다. 어떤 값이 맞는지 미리 알 수 없으므로 후보를 넓게 계산해 두고 교차검증 오차가 낮은 쪽을 고릅니다. 곡선의 위쪽 축에 표시된 숫자가 각 lambda에서 살아남은 변수의 개수인데, 오른쪽으로 갈수록 벌점이 강해져 그 수가 줄어듭니다. lambda.min은 오차 자체를 최소화하고, lambda.1se는 오차가 최솟값에서 표준오차 하나 안에 머무는 범위에서 가장 강한 벌점을 고릅니다. 둘 중 무엇을 쓸지는 예측 정확도와 모형의 간결성 가운데 무엇을 우선할지에 달려 있습니다.",
     rules = list(
       list(f = function(e) inherits(e$cv_lasso, "cv.glmnet"),
            msg = "cv.glmnet()의 결과가 아닙니다. glmnet()만 쓰면 lambda별 예측오차가 계산되지 않아 lambda를 고를 수 없습니다."),
@@ -452,8 +439,14 @@ CHECKS <- list(
       list(f = function(e) isTRUE(e$cv_lasso$glmnet.fit$nobs == length(e$train_id)),
            msg = "학습에 사용한 관측치 수가 훈련 데이터와 다릅니다. x = x_train, y = y_train을 지정했는지 확인하세요. x_all을 쓰면 테스트 데이터가 학습에 포함됩니다."),
 
+      list(f = function(e) {
+             a <- .alpha_of(e$cv_lasso)
+             is.null(a) || length(a) == 0 || isTRUE(a == 1)
+           },
+           msg = "alpha가 1이 아닙니다. Lasso는 alpha = 1입니다. 0은 Ridge, 그 사이는 Elastic Net입니다."),
+
       list(f = function(e) isTRUE(.n_zero(e$cv_lasso, "lambda.1se") > 0),
-           msg = "0으로 축소된 계수가 하나도 없습니다. alpha = 0은 Ridge입니다. Lasso는 alpha = 1로 지정하세요."),
+           msg = "0으로 축소된 계수가 하나도 없습니다. alpha 값과 lambda.1se 지정을 확인하세요."),
 
       list(f = function(e) grepl("Squared", e$cv_lasso$name, ignore.case = TRUE),
            msg = "평가지표가 MSE가 아닙니다. type.measure = \"mse\"를 지정하세요."),
@@ -473,6 +466,7 @@ CHECKS <- list(
              "rmse_lasso_min", "rmse_lasso_1se",
              "cv_lasso", "x_test", "y_test"),
     call_from = NULL,
+    note = "RMSE와 변수 개수를 함께 보시면 정규화가 무엇을 주고받는지 드러납니다. lambda.1se는 변수를 크게 줄이면서도 RMSE는 크게 나빠지지 않는 경우가 많은데, 이는 제외된 변수들이 예측에 기여하는 몫이 작았다는 뜻입니다. OLS가 RMSE에서 앞서더라도 수십 개 변수를 모두 쓴 결과라는 점을 함께 고려해야 합니다. 예측변수가 관측치 수에 비해 많아질수록 이 격차는 정규화 쪽에 유리해집니다.",
     rules = list(
       list(f = function(e) length(.num(e$pred_lasso_min)) == nrow(e$x_test) &&
                            length(.num(e$pred_lasso_1se)) == nrow(e$x_test),
@@ -499,7 +493,7 @@ CHECKS <- list(
       list(f = function(e) .eq(e$rmse_lasso_1se, .rmse(e$y_test, e$pred_lasso_1se)),
            msg = "lambda.1se의 RMSE 계산식을 확인하세요. 두 줄에서 예측 객체 이름을 바꿔 쓰지 않았는지도 함께 확인하세요.")
     ),
-    note = function(e) {
+    caution = function(e) {
       if (is.matrix(e$pred_lasso_min) || is.matrix(e$pred_lasso_1se))
         "예측값이 한 열짜리 행렬로 저장되어 있습니다. as.numeric()으로 벡터로 바꿔 두면 이후 계산이 안전합니다."
       else NULL
@@ -508,6 +502,7 @@ CHECKS <- list(
   "task2-4-coef" = list(
     need = c("lasso_coef", "lasso_coef_df", "sd_x", "cv_lasso", "x_train"),
     call_from = NULL,
+    note = "표에 나타나지 않는 변수는 Lasso가 계수를 정확히 0으로 만들어 모형에서 제외한 변수입니다. 표준화 계수를 함께 계산한 것은 원래 계수의 크기가 변수의 단위에 좌우되기 때문입니다. 소득처럼 값이 큰 변수는 계수가 작게 나오고 이진변수는 크게 나오므로, 그대로 비교하면 어느 변수가 더 중요한지 잘못 읽게 됩니다. 다만 여기서 상위에 오른 변수를 인과적으로 해석하지는 마세요. Lasso는 예측에 유용한 변수를 남기는 것이지 결과를 변화시키는 변수를 찾는 것이 아니고, 서로 상관된 변수들 가운데 하나만 임의로 남기는 성질도 있습니다.",
     rules = list(
       list(f = function(e) nrow(as.matrix(e$lasso_coef)) == ncol(e$x_train) + 1,
            msg = "lasso_coef의 행 수가 예측변수 개수 + 1이 아닙니다. s를 지정하지 않으면 모든 lambda의 계수가 한꺼번에 반환됩니다."),
@@ -543,7 +538,7 @@ CHECKS <- list(
                                apply(e$x_train, 2, sd)[colnames(e$x_train)]),
            msg = "sd_x 값이 기준과 다릅니다. x_test나 model_df가 아니라 x_train으로 계산하세요.")
     ),
-    note = function(e) {
+    caution = function(e) {
       z <- sum(as.numeric(e$lasso_coef)[-1] == 0)
       if (z == 0)
         "0인 계수가 없습니다. s = \"lambda.min\"으로 꺼냈을 수 있습니다. 설명은 lambda.1se 기준입니다."
@@ -555,6 +550,7 @@ CHECKS <- list(
     need = c("cv_ridge", "pred_ridge_min", "pred_ridge_1se",
              "rmse_ridge_min", "rmse_ridge_1se", "x_test", "y_test", "train_id"),
     call_from = NULL,
+    note = "Ridge의 계수 표에는 0이 하나도 없습니다. 제곱 벌점은 계수를 0 쪽으로 당기지만 정확히 0으로 만들지는 않기 때문이고, 절댓값 벌점을 쓰는 Lasso와 갈리는 지점이 여기입니다. 두 방법의 RMSE 차이가 크지 않다면 이 데이터에서는 변수를 골라내는 것과 전부 조금씩 줄이는 것이 비슷하게 작동한다는 뜻으로 읽을 수 있습니다. 어느 쪽을 고를지는 성능만이 아니라 목적에 달려 있습니다. 소수의 변수로 설명해야 하면 Lasso가, 상관된 변수들의 정보를 함께 살리고 싶으면 Ridge가 맞습니다.",
     rules = list(
       list(f = function(e) inherits(e$cv_ridge, "cv.glmnet"),
            msg = "cv.glmnet()의 결과가 아닙니다. cv_ridge에 저장하세요."),
@@ -565,8 +561,14 @@ CHECKS <- list(
       list(f = function(e) isTRUE(e$cv_ridge$glmnet.fit$nobs == length(e$train_id)),
            msg = "학습에 사용한 관측치 수가 훈련 데이터와 다릅니다. x = x_train, y = y_train을 확인하세요."),
 
+      list(f = function(e) {
+             a <- .alpha_of(e$cv_ridge)
+             is.null(a) || length(a) == 0 || isTRUE(a == 0)
+           },
+           msg = "alpha가 0이 아닙니다. Ridge는 alpha = 0입니다. Lasso 블록에서 이 값만 바꾸면 됩니다."),
+
       list(f = function(e) isTRUE(.n_zero(e$cv_ridge, "lambda.1se") == 0),
-           msg = "0으로 축소된 계수가 있습니다. Ridge는 계수를 정확히 0으로 만들지 않습니다. alpha = 0으로 바꿨는지 확인하세요."),
+           msg = "0으로 축소된 계수가 있습니다. Ridge는 계수를 정확히 0으로 만들지 않습니다."),
 
       list(f = function(e) length(.num(e$pred_ridge_min)) == nrow(e$x_test) &&
                            length(.num(e$pred_ridge_1se)) == nrow(e$x_test),
@@ -586,53 +588,55 @@ CHECKS <- list(
     ))
 )
 
-# ── 채점 함수 ────────────────────────────────────────────────
-check <- function(exercise_id, chapter = "d1-01") {
+# ══════════════════════════════════════════════════════════════════
+#  채점 함수
+# ══════════════════════════════════════════════════════════════════
+
+check <- function(exercise_id) {
 
   spec <- CHECKS[[exercise_id]]
-  if (is.null(spec)) { message("등록되지 않은 문항입니다: ", exercise_id); return(invisible()) }
+  if (is.null(spec)) {
+    message("등록되지 않은 문항입니다: ", exercise_id); return(invisible())
+  }
 
   env  <- parent.frame()
   t0   <- Sys.time()
-  miss <- spec$need[!vapply(spec$need, exists, logical(1),
-                            envir = env, inherits = TRUE)]
+  e    <- .snapshot(env)
+  miss <- spec$need[!vapply(spec$need, function(nm) .has(e, nm), logical(1))]
 
   if (length(miss)) {
-    # 객체가 없다 = 위 블록이 실패했거나 이름이 다르다
-    last <- tryCatch(geterrmessage(), error = function(e) "")
+    last <- tryCatch(geterrmessage(), error = function(err) "")
     out  <- paste0("객체를 찾을 수 없습니다: ", paste(miss, collapse = ", "),
                    "\n   앞의 블록을 순서대로 실행했는지, 객체 이름의 철자가 맞는지 확인하세요.",
                    if (nzchar(last)) paste0("\n   [직전 오류] ", trimws(last)) else "")
-    .send(exercise_id, chapter, status = "error", correct = FALSE,
-          output = out, hint = NA_character_, code = NA_character_, t0)
+    .send(exercise_id, "error", FALSE, out, NA_character_, NA_character_, t0)
     message("\u274C 실행되지 않았습니다.\n   ", out)
     return(invisible(FALSE))
   }
 
-  # 규칙 검사
   hint <- NA_character_; ok <- TRUE
   for (r in spec$rules) {
-    res <- tryCatch(isTRUE(r$f(env)), error = function(e) FALSE)
+    res <- tryCatch(isTRUE(r$f(e)), error = function(err) FALSE)
     if (!res) { ok <- FALSE; hint <- r$msg; break }
   }
 
   code <- NA_character_
-  if (!is.null(spec$call_from) && exists(spec$call_from, envir = env, inherits = TRUE))
+  if (!is.null(spec$call_from) && .has(e, spec$call_from)) {
     code <- tryCatch(
-      paste(deparse(get(spec$call_from, envir = env)$call), collapse = " "),
-      error = function(e) NA_character_)
+      paste(deparse(e[[spec$call_from]]$call), collapse = " "),
+      error = function(err) NA_character_)
+  }
 
-  .send(exercise_id, chapter,
-        status  = if (ok) "ok" else "wrong",
-        correct = ok, output = if (ok) "OK" else hint,
-        hint = hint, code = code, t0)
+  .send(exercise_id, if (ok) "ok" else "wrong", ok,
+        if (ok) "OK" else hint, hint, code, t0)
 
   if (ok) {
-    message("\u2705 정답입니다. 다음 문항으로 넘어가세요.")
-    if (!is.null(spec$note)) {
-      nt <- tryCatch(spec$note(env), error = function(e) NULL)
-      if (!is.null(nt)) message("   \U1F4DD ", nt)
+    message("\u2705 정답입니다. 잘 채우셨습니다. 다음 문항으로 넘어가세요.")
+    if (!is.null(spec$caution)) {
+      ct <- tryCatch(spec$caution(e), error = function(err) NULL)
+      if (!is.null(ct)) message("   \U1F4DD ", ct)
     }
+    if (!is.null(spec$note)) message("\n", .wrap(spec$note))
   } else {
     message("\u274C 다시 확인해 보세요.\n   \U1F4A1 ", hint)
   }
@@ -640,18 +644,17 @@ check <- function(exercise_id, chapter = "d1-01") {
   invisible(ok)
 }
 
-# ── 전송 ─────────────────────────────────────────────────────
-.send <- function(exercise_id, chapter, status, correct, output, hint, code, t0) {
+# ── 전송 ──────────────────────────────────────────────────────────
+.send <- function(exercise_id, status, correct, output, hint, code, t0) {
   payload <- list(
     student_id  = .tracker_env$student_id %||% "unknown",
-    chapter     = chapter,
+    chapter     = CHAPTER,
     exercise_id = exercise_id,
     code        = code,
     output      = substr(output, 1, 4000),
     status      = status,
     is_correct  = correct,
     hint        = hint,
-    error_type  = NULL,                     # 강사 쪽 워커가 채움
     elapsed_sec = as.numeric(difftime(Sys.time(), t0, units = "secs")),
     session_id  = .tracker_env$session_id,
     r_version   = paste(R.version$major, R.version$minor, sep = ".")
