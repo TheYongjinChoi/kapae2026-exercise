@@ -85,8 +85,16 @@ CHECKS <- list(
          msg = "손실이 발산했습니다(Inf 또는 NaN). 갱신 부호가 W1 <- W1 - lr * grad_W1 인지 확인하세요."),
     list(f = function(e) e$loss_history[e$n_iter] < e$loss_history[1],
          msg = "손실이 줄어들지 않았습니다. 갱신에서 기울기를 더하지 말고 빼야 합니다."),
-    list(f = function(e) e$loss_history[e$n_iter] < 0.5 * e$loss_history[1],
-         msg = "손실이 충분히 줄지 않았습니다. 순전파의 Z <- x_train %*% W1 부분을 확인하세요."),
+    list(f = function(e) {
+           L <- e$loss_history
+           mean(L[1:100]) > mean(L[(e$n_iter - 99):e$n_iter])
+         },
+         msg = "손실 곡선이 내려가지 않았습니다. 순전파 Z <- x_train %*% W1과 갱신 부호를 확인하세요."),
+    list(f = function(e) {
+           L <- e$loss_history
+           mean(diff(L) <= 1e-12) > 0.95
+         },
+         msg = "손실이 오르내립니다. 학습률이나 기울기 계산을 확인하세요. 정상이라면 거의 매 반복에서 손실이 줄어듭니다."),
 
     # 가중치가 갱신되었는가
     list(f = function(e) !.eq(e$b2, mean(e$y_train), tol = 1e-10),
