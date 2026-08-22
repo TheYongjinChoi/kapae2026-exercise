@@ -1,0 +1,918 @@
+---
+title: "1일차 1강 실습. 통계적 학습의 기본 워크플로와 정규화 회귀"
+author: "최용진(런던위생열대의학대학원, Yongjin.Choi@lshtm.ac.uk)"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-fold: show
+    code-summary: "코드 보기"
+    code-tools: true
+execute:
+  warning: false
+  message: false
+  cache: true
+---
+
+이번 실습에서는 Oregon Health Insurance Experiment(OHIE) 데이터를 활용해 통계적 학습의 기본 워크플로를 구현하고, 같은 자리에 정규화 회귀(regularized regression)를 넣어 결과가 어떻게 달라지는지 확인합니다.
+
+1. 데이터를 불러오고 분석 변수를 선택합니다.
+2. 데이터를 전처리하고 훈련 데이터와 테스트 데이터로 나눕니다.
+3. OLS로 연속형 결과를 예측하고 RMSE를 계산합니다.
+4. 같은 워크플로에서 모형만 Lasso로 교체하고, 페널티 크기 $\lambda$를 교차검증으로 조정합니다.
+5. Ridge까지 넣어 세 모형의 예측 성능과 계수를 비교합니다.
+
+정규화는 예측변수가 많을 때 힘을 발휘합니다. 그래서 인구학적 특성, 보험, 건강상태, 진단력, 의료이용 등 많은 수의 예측변수를 한꺼번에 넣습니다. 결과변수는 복용 중인 처방약의 개수(`rx_num_mod_6m`)입니다.
+
+::: {.callout-note appearance="simple"}
+## 실습을 진행하는 방법
+
+이 실습은 빈칸을 채워 코드를 완성하는 방식으로 진행합니다. 각 Task마다 중요한 지점에 `_____`와 같이 빈칸으로 된 코드 블록이 있습니다.
+
+::: {.columns}
+::: {.column width="48%"}
+**① 빈칸을 직접 채웁니다**
+
+`_____` 자리에 알맞은 함수 이름이나 값을 넣으세요. 바로 위의 설명 글에 필요한 정보가 모두 들어 있습니다.
+
+```r
+train_id <- _____(
+  1:_____(_____),
+  size = _____(0.80 * nrow(model_df))
+)
+```
+:::
+
+::: {.column width="4%"}
+:::
+
+::: {.column width="48%"}
+**② 완성된 코드를 실행하세요**
+
+안내에 따라 코드를 완성하고 결과를 확인하세요.
+
+```r
+train_id <- sample(
+  1:nrow(model_df),
+  size = round(0.80 * nrow(model_df))
+)
+```
+:::
+:::
+
+<br>
+
+**③ 실행하면 정답 여부를 바로 알려줍니다**
+
+각 코드 블록 아래쪽에는 아래와 같은 정답 확인 코드가 붙어 있습니다. 이 줄들은 수정하지 마시고, 빈칸을 다 채운 뒤 블록 전체를 한 번에 실행하세요. 틀렸다면 실수의 유형에 따라 무엇이 잘못되었는지와 어디를 다시 점검해야 하는지 힌트를 함께 알려줍니다.
+
+```r
+# ══════════════════════════════════════════════════════
+#  정답 확인 및 리포트: 아래는 수정하지 마세요
+check("task1-split")
+# ══════════════════════════════════════════════════════
+```
+
+::: {.columns}
+::: {.column width="48%"}
+제대로 채웠다면 콘솔 마지막에 다음과 같이 표시됩니다.
+
+```
+✅ 정답입니다. 다음 문항으로 넘어가세요.
+```
+:::
+
+::: {.column width="4%"}
+:::
+
+::: {.column width="48%"}
+틀렸다면 점검해야 할 부분을 함께 알려줍니다.
+
+```
+❌ 다시 확인해 보세요.
+   💡 훈련과 테스트를 합한 행 수가 전체와 다릅니다. -train_id를 썼는지 확인하세요.
+```
+:::
+:::
+
+힌트를 보고 빈칸을 고친 뒤 블록을 다시 실행하면 됩니다. 몇 번을 다시 실행해도 괜찮습니다.
+
+<br>
+
+진행 순서입니다.
+
+1. 「데이터 준비」 섹션은 코드가 이미 채워져 있습니다. 그대로 실행만 하세요.
+2. Part 1부터는 설명을 읽고 빈칸을 채웁니다. 중간중간 `Ctrl`(`Cmd`) + `Enter`로 한 줄씩 확인해도 되지만, 정답 확인을 받으려면 마지막에 `Ctrl`(`Cmd`) + `Shift` + `Enter`로 채점 줄을 포함한 블록 전체를 실행해야 합니다.
+3. 앞 블록에서 만든 객체를 뒤에서 계속 사용하므로 반드시 위에서부터 순서대로 실행해야 합니다.
+4. 5분 이상 막히면 강사나 조교에게 질문해서 해결하고 넘어가세요. 현장 실습 시간에는 문제를 직접 해결하는 것보다 흐름을 따라가는 것이 더 중요합니다. 충분히 이해하지 못한 부분은 워크숍 이후 혼자서 복습하실 수 있습니다.
+
+`(선택사항)`은 시간이 남을 때 진행하는 선택 과제입니다.
+:::
+
+***
+
+# 데이터 준비
+
+## 데이터 불러오기
+
+아래 코드를 실행하세요. RDS 파일을 불러오고 이번 실습에 필요한 변수만 선택합니다. 그리고 결과변수의 분포를 확인합니다.
+
+  - `glmnet`은 Lasso, Ridge, Elastic Net을 실행하는 패키지입니다.
+  - `required_vars`에 이번 실습에서 사용할 변수 이름을 모아 둡니다. 결과변수 하나와 예측변수 여러 개가 함께 들어 있습니다.
+  - 분석에 사용할 데이터는 `df`에 저장이 되어 있습니다.
+
+```{r}
+set_student("2026001")   # 수강자 본인이 선호하는 ID로 수정
+
+library(dplyr)
+library(tidyr)
+library(tibble)
+library(ggplot2)
+library(glmnet)
+
+# 데이터 불러오기
+file_path <- "ohie_all6m.rds"
+if (!file.exists(file_path)) {
+  download.file(
+    "https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/ohie_all6m.rds", file_path, mode = "wb"
+  )
+}
+
+ohie <- readRDS(file_path)
+
+if (inherits(ohie, "data.table")) ohie <- as.data.frame(ohie)
+
+required_vars <- c(
+  # 결과변수
+  "rx_num_mod_6m",         # 현재 복용 중인 처방약의 종류 수
+
+  # 처치
+  "treatment_descriptive", # 건강보험 추첨 선정 여부
+
+  # 인구학적 특성과 가구
+  "female_6m", "birthyear_6m", "edu_6m", "employ_6m",
+  "hhsize_6m", "num19_6m", "live_alone_6m", "live_partner_6m",
+  "hhinc_pctfpl_6m",
+
+  # 보험
+  "ins_any_6m", "ins_ohp_6m", "ins_medicare_6m", "ins_employer_6m",
+  "ins_months_6m",
+
+  # 건강상태
+  "health_gen_6m", "health_chg_6m", "happiness_6m",
+  "baddays_phys_6m", "baddays_ment_6m", "baddays_tot_6m",
+  "dep_sad_6m", "dep_interest_6m",
+
+  # 진단력
+  "dia_dx_6m", "ast_dx_6m", "hbp_dx_6m", "emp_dx_6m", "ami_dx_6m",
+  "chf_dx_6m", "dep_dx_6m", "chl_dx_6m", "kid_dx_6m",
+
+  # 의료이용
+  "doc_any_6m", "doc_num_mod_6m", "er_any_6m", "er_num_mod_6m",
+  "hosp_num_mod_6m", "usual_place_6m", "usual_doc_6m", "usual_clinic_6m",
+  "need_med_6m", "need_rx_6m", "need_dent_6m",
+
+  # 비용 부담과 흡연
+  "cost_any_owe_6m", "cost_borrow_6m", "smk_ever_6m", "smk_curr_6m"
+)
+
+# 필요한 변수가 모두 존재하는지 확인
+stopifnot(all(required_vars %in% names(ohie)))
+
+# 사용할 변수만 선택
+df <- ohie |>
+  select(all_of(required_vars))
+
+dim(df)
+glimpse(df)
+hist(df$rx_num_mod_6m)
+
+# 정답과 진척도 확인을 위한 코드
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/tracker1-1_workflow.R")
+```
+
+## 변수 전처리
+
+아래 코드를 실행하세요. `transmute()`로 분석에 사용할 변수를 한 번에 정리하고, 그 결과를 `model_df`에 저장합니다. 계수를 읽을 때 편하도록 변수 이름을 알아보기 쉽게 바꾸겠습니다.
+
+  - 결과변수 `rx_num`을 맨 앞에 둡니다.
+  - 범주가 순서 없이 여러 개인 변수(`treatment`, `edu`)는 `factor()`로 변환합니다. 나머지 이진변수와 순서형, 연속형 변수는 숫자형으로 둡니다.
+  - `age`는 조사 시점(2009년)에서 출생연도를 빼서 연령으로 변환합니다.
+  - 실습 편의상 `drop_na()`로 결측이 하나라도 있는 행을 제거합니다. 하지만 실무에서는 결측치 비율이 높고 무작위 결측이 아닌 경우 통계적 대치(imputation)을 고려해야 합니다.
+
+```{r}
+model_df <- df |>
+  transmute(
+    rx_num        = as.numeric(rx_num_mod_6m),
+
+    treatment     = factor(treatment_descriptive),
+
+    female        = as.integer(female_6m),
+    age           = 2009 - as.numeric(birthyear_6m),
+    edu           = factor(edu_6m),
+    employed      = as.integer(employ_6m),
+    hh_size       = as.numeric(hhsize_6m),
+    num_child     = as.numeric(num19_6m),
+    live_alone    = as.integer(live_alone_6m),
+    live_partner  = as.integer(live_partner_6m),
+    income_fpl    = as.numeric(hhinc_pctfpl_6m),
+
+    insured       = as.integer(ins_any_6m),
+    ins_ohp       = as.integer(ins_ohp_6m),
+    ins_medicare  = as.integer(ins_medicare_6m),
+    ins_employer  = as.integer(ins_employer_6m),
+    ins_months    = as.numeric(ins_months_6m),
+
+    health_gen    = as.numeric(health_gen_6m),
+    health_chg    = as.numeric(health_chg_6m),
+    happiness     = as.numeric(happiness_6m),
+    baddays_phys  = as.numeric(baddays_phys_6m),
+    baddays_ment  = as.numeric(baddays_ment_6m),
+    baddays_tot   = as.numeric(baddays_tot_6m),
+    dep_sad       = as.numeric(dep_sad_6m),
+    dep_interest  = as.numeric(dep_interest_6m),
+
+    dx_diabetes   = as.integer(dia_dx_6m),
+    dx_asthma     = as.integer(ast_dx_6m),
+    dx_bp         = as.integer(hbp_dx_6m),
+    dx_copd       = as.integer(emp_dx_6m),
+    dx_heart      = as.integer(ami_dx_6m),
+    dx_chf        = as.integer(chf_dx_6m),
+    dx_depression = as.integer(dep_dx_6m),
+    dx_chol       = as.integer(chl_dx_6m),
+    dx_kidney     = as.integer(kid_dx_6m),
+
+    doc_any       = as.integer(doc_any_6m),
+    doc_visits    = as.numeric(doc_num_mod_6m),
+    er_any        = as.integer(er_any_6m),
+    er_visits     = as.numeric(er_num_mod_6m),
+    hosp_visits   = as.numeric(hosp_num_mod_6m),
+    usual_place   = as.integer(usual_place_6m),
+    usual_doc     = as.integer(usual_doc_6m),
+    usual_clinic  = as.integer(usual_clinic_6m),
+    need_med      = as.integer(need_med_6m),
+    need_rx       = as.integer(need_rx_6m),
+    need_dent     = as.integer(need_dent_6m),
+
+    owe_money     = as.integer(cost_any_owe_6m),
+    borrowed      = as.integer(cost_borrow_6m),
+    smoke_ever    = as.integer(smk_ever_6m),
+    smoke_curr    = as.numeric(smk_curr_6m)
+  ) |>
+  drop_na()
+
+cat("분석 표본:", nrow(model_df), "\n")
+cat("예측변수 개수:", ncol(model_df) - 1, "\n")
+```
+
+<br>
+
+
+# Part 1. 통계적 학습의 워크플로
+
+## Task 1-1. 훈련테스트 분할
+
+전체 데이터를 훈련 데이터 80%와 테스트 데이터 20%로 무작위 분할합니다.
+
+  - 먼저 `set.seed()`로 실행할 때마다 같은 분할이 재현되도록 난수를 고정합니다.
+  - `sample()` 함수를 사용해 전체 행 번호 중 훈련 데이터에 포함할 행 번호를 무작위로 추출합니다.
+    - `nrow()` 함수는 인수로 지정된 데이터프레임의 전체 관측치 수를 반환합니다. 관측치의 행 번호는 1부터 전체 관측치 수까지이므로 `1:nrow(model_df)`를 사용해 모든 행 번호를 만듭니다.
+    - 다음으로 `size` 인수에 추출할 행의 개수를 지정합니다. 여기에서는 80%를 훈련 데이터로 사용하기로 했으므로 전체 관측치 수에 `0.80`을 곱해 계산합니다. 행의 개수는 정수여야 하므로 `round()` 함수로 가장 가까운 정수로 반올림합니다.
+    - 추출된 행 번호는 `train_id`라는 객체에 저장합니다. `sample()`은 기본적으로 비복원 추출이므로 같은 행이 중복해서 뽑히지 않습니다.
+  - 이후 원 데이터 `model_df`에서 `train_id`에 포함된 행을 선택해 `train_data`를 만듭니다. 반대로 행 번호 앞에 음수 기호를 붙인 `-train_id`를 사용하면 해당 행들을 제외할 수 있으므로, 훈련 데이터에 포함되지 않은 나머지 행을 선택해 `test_data`를 만듭니다.
+
+```{r}
+#| eval: false
+
+# 아래의 결과를 복제하는 코드 작성
+set.seed(123)
+
+train_id <- _____(
+  1:_____(_____),
+  size = round(_____ * nrow(model_df))
+)
+
+train_data <- model_df[_____, ]
+test_data  <- model_df[_____, ]
+
+cat("전체 표본:", nrow(model_df), "\n")
+cat("훈련 표본:", nrow(train_data), "\n")
+cat("테스트 표본:", nrow(test_data), "\n")
+
+
+# ══════════════════════════════════════════════════════
+#  정답 확인 및 리포트: 아래는 수정하지 마세요
+#  코드 작성이 완료되면 이 줄을 포함하여 전체 블록을 실행하세요.
+#  Windows: Ctrl + Shift + Enter
+#  Mac: Cmd + Shift + Enter
+# ══════════════════════════════════════════════════════
+check("task1-1-split")
+# ══════════════════════════════════════════════════════
+```
+
+```{r}
+#| echo: false
+
+set.seed(123)
+
+train_id <- sample(
+  1:nrow(model_df),
+  size = round(0.80 * nrow(model_df))
+)
+
+train_data <- model_df[train_id, ]
+test_data  <- model_df[-train_id, ]
+
+cat("전체 표본:", nrow(model_df), "\n")
+cat("훈련 표본:", nrow(train_data), "\n")
+cat("테스트 표본:", nrow(test_data), "\n")
+```
+
+<br>
+
+
+## Task 1-2. 모델 정의
+
+먼저 OLS를 사용해 6개월 시점의 처방약 개수 `rx_num`을 예측합니다. 정규화 회귀와 비교할 기준모형이므로 앞에서 전처리한 예측변수를 모두 넣습니다.
+
+$$
+\widehat{\text{rx\_num}}_i
+=
+\beta_0
++
+\beta_1 x_{i1}
++
+\cdots
++
+\beta_p x_{ip}
+$$
+
+`lm()` 함수를 사용해 훈련 데이터에 OLS 회귀모형을 적합합니다. `lm()` 함수의 첫 번째 인수는 공식입니다. 공식에서 `~` 왼쪽에는 결과변수, 오른쪽에는 설명변수를 작성합니다.
+
+  - 예측하려는 결과변수 `rx_num`를 좌변에 지정합니다. 
+  - 결과변수를 제외한 나머지 변수 전체를 예측변수로 사용하라는 의미로 공식의 우변에 `.`를 지정합니다.
+  - `data` 인수에는 모델 학습에 사용할 훈련 데이터 `train_data`를 지정합니다.
+  - 학습된 모델을 `ols_model`에 저장합니다.
+
+마지막으로 `summary()` 함수를 사용해 회귀분석 결과를 출력합니다.
+
+```{r}
+#| eval: false
+
+# 아래의 결과를 복제하는 코드 작성
+ols_model <- _____(_____ ~ ., data = _____)
+summary(_____)
+
+
+# ══════════════════════════════════════════════════════
+#  정답 확인 및 리포트: 아래는 수정하지 마세요
+#  코드 작성이 완료되면 이 줄을 포함하여 전체 블록을 실행하세요.
+#  Windows: Ctrl + Shift + Enter
+#  Mac: Cmd + Shift + Enter
+# ══════════════════════════════════════════════════════
+check("task1-2-ols")
+# ══════════════════════════════════════════════════════
+```
+
+```{r}
+#| echo: false
+
+# 아래의 결과를 복제하는 코드 작성
+ols_model <- lm(rx_num ~ ., data = train_data)
+summary(ols_model)
+```
+
+<br>
+
+
+## Task 1-3. 예측값 계산과 평가
+
+`predict()` 함수에 학습된 모델과 테스트 데이터를 입력해 예측값을 계산합니다. 이 함수는 학습된 모델을 새로운 데이터에 적용해 예측값을 계산합니다.
+
+  - 첫 번째 인수로 `ols_model`에 저장된 학습된 OLS 모델을 불러옵니다.
+  - 두 번째 인수 `newdata`에 `test_data`에 저장된 테스트 데이터를 할당합니다.
+  - 계산한 예측값은 `pred_ols`에 저장합니다.
+
+다음으로 실제값과 예측값의 차이를 RMSE로 계산합니다.
+
+  - RMSE의 정의상 `test_data$rx_num`에는 테스트 데이터의 실제값과 예측된 결과인 `pred_ols`의 차이를 입력하고, 그 제곱의 평균을 계산합니다.
+  - 계산된 평균을 `sqrt()`에 입력하여 제곱근을 취합니다.
+  - 계산한 값은 `rmse_ols`에 저장하고 출력해서 계산된 RMSE의 값을 확인합니다.
+
+```{r}
+#| eval: false
+
+# 아래의 결과를 복제하는 코드 작성
+pred_ols <- _____(_____, newdata = _____)
+
+rmse_ols <- _____(_____((test_data$_____ - _____)^_____))
+
+rmse_ols
+
+
+# ══════════════════════════════════════════════════════
+#  정답 확인 및 리포트: 아래는 수정하지 마세요
+#  코드 작성이 완료되면 이 줄을 포함하여 전체 블록을 실행하세요.
+#  Windows: Ctrl + Shift + Enter
+#  Mac: Cmd + Shift + Enter
+# ══════════════════════════════════════════════════════
+check("task1-3-predict")
+# ══════════════════════════════════════════════════════
+```
+
+```{r}
+#| echo: false
+
+pred_ols <- predict(ols_model, newdata = test_data)
+
+rmse_ols <- sqrt(mean((test_data$rx_num - pred_ols)^2))
+
+rmse_ols
+```
+
+<br>
+
+
+# Part 2. 정규화 회귀를 적용한 학습 워크플로
+
+`glmnet()`은 Lasso, Ridge, Elastic Net을 실행하는 함수입니다. 여기서부터는 앞서 실행해본 학습 과정에서 모형만 정규화 회귀로 바꿔서 실행해보겠습니다. 워크플로의 전체 과정(적합 → 예측 → RMSE)는 앞에서 한 것과 동일합니다.
+
+## Task 2-1. Lasso와 Ridge를 위한 행렬 만들기
+
+`lm()`과 `glm()`은 공식(`y ~ x1 + x2`)과 데이터프레임을 그대로 사용하지만, `glmnet()`은 예측변수 `x`는 행렬로 받고, 결과변수 벡터 `y`를 따로 받습니다. 따라서 데이터프레임을 행렬로 바꾸는 단계가 한 번 필요합니다.
+
+1. **행렬 변환:** `model.matrix()` 함수를 사용해서 데이터프레임을 행렬로 변환하고, 이를 `x_all`에 저장하고, 결과변수 `rx_num`열은 `y_all`에 저장합니다.
+
+  - `model.matrix()` 함수는 공식을 입력하면 행렬로 만들어줍니다. 앞서 lm()에 설정한 것과 마찬가지로 모형 수식의 좌변에 `rx_num ~ .`, 우변에 결과변수를 제외한 모든 변수를 예측변수로 사용하라는 의미로  `.`를 지정.
+  - `data` 인수에는 변환할 데이터로 `model_df`를 지정합니다.
+  - `model.matrix()` 함수는 factor 변수를 자동으로 더미변수로 펼쳐줍니다. 이걸 원핫인코딩? 예를 들어 `edu`는 네 개 범주이므로 기준 범주를 제외한 세 개의 더미변수가 만들어집니다. 기준 범주를 변경하는 옵션 가능한지?
+  - `model.matrix()`는 첫 열에 1로 채워진 Intercept 열을 만듭니다(확인해보고 싶으면 head() 함수를 사용하거나 오른쪽 변수 패널에서 데이터 프레임을 더블 클릭해서 확인). 불필요하니 `[, -1]`로 이 열을 제거합니다.
+
+2. **훈련테스트 분할:** 분할은 앞에서 만든 `train_id`를 그대로 재사용합니다.
+
+  - 예측변수 행렬 `x_all`에서 훈련 데이터는 `train_id`, 테스트 데이터는 `-train_id`로 추출하여, 각각 `x_train`과 `x_test`에 저장합니다.
+  - 같은 방식으로 결과변수 벡터 `y_all`에서 `y_train`과 `y_test`를 만듭니다.
+
+마지막으로 `dim()` 함수로 훈련 행렬과 테스트 행렬의 크기를 확인합니다.
+
+여기에서 주의할 점은 행렬을 전체 데이터에서 한 번만 만들고 그 다음에 나눈다는 것입니다. 훈련 데이터와 테스트 데이터에서 따로 행렬을 만들면, 열의 개수나 순서가 달라져 오류가 발생할 수 있습니다.
+
+```{r}
+#| eval: false
+
+# 아래의 결과를 복제하는 코드 작성
+
+# 1. 행렬 변환
+x_all <- _____(rx_num ~ ., data = _____)[, -1]
+y_all <- model_df$_____
+
+# 2. 훈련테스트 분할
+x_train <- x_all[_____, ]
+x_test  <- x_all[_____, ]
+
+y_train <- y_all[_____]
+y_test  <- y_all[_____]
+
+dim(x_train)
+dim(x_test)
+
+
+# ══════════════════════════════════════════════════════
+#  정답 확인 및 리포트: 아래는 수정하지 마세요
+#  코드 작성이 완료되면 이 줄을 포함하여 전체 블록을 실행하세요.
+#  Windows: Ctrl + Shift + Enter
+#  Mac: Cmd + Shift + Enter
+# ══════════════════════════════════════════════════════
+check("task2-1-matrix")
+# ══════════════════════════════════════════════════════
+```
+
+```{r}
+#| echo: false
+
+x_all <- model.matrix(rx_num ~ ., data = model_df)[, -1]
+y_all <- model_df$rx_num
+
+x_train <- x_all[train_id, ]
+x_test  <- x_all[-train_id, ]
+
+y_train <- y_all[train_id]
+y_test  <- y_all[-train_id]
+
+dim(x_train)
+dim(x_test)
+```
+
+<br>
+
+
+## Task 2-2. Lasso 회귀와 $\lambda$ 튜닝
+
+Lasso는 잔차제곱합에 계수의 절댓값 합을 페널티로 더한 목적함수를 최소화합니다.
+
+$$
+\hat{\beta}^{\text{lasso}}
+=
+\arg\min_{\beta}
+\left\{
+\frac{1}{2n}\sum_{i=1}^{n}
+\left(y_i - \beta_0 - \sum_{j=1}^{p} x_{ij}\beta_j\right)^2
++
+\lambda \sum_{j=1}^{p} \left|\beta_j\right|
+\right\}
+$$
+
+정규화 회귀의 $\lambda$는 데이터에서 추정되는 모수가 아니라 연구자가 정해야 하는 값입니다. 어떤 값이 적절한지 미리 알 수 없으므로 하나를 골라 적합하는 대신 넓은 범위의 후보를 모두 계산해 두고 그 중에서 오차가 가장 작은 값을 고르는 방식으로 튜닝을 합니다. `cv.glmnet()`은 교차검증으로 $\lambda$별 예측오차까지 계산해 주므로, 앞으로의 예측과 평가에는 이 결과를 사용합니다.
+
+먼저 `set.seed()`로 난수를 고정합니다. 앞에서 한 번 고정했더라도 그 사이 `sample()`이 난수를 소비했기 때문에 난수를 사용하는 단계 바로 앞에서 다시 고정하는 것이 좋습니다.
+
+`cv.glmnet()` 함수를 사용해 훈련 데이터에서 교차검증 Lasso 회귀를 수행합니다.
+
+  - `x`와 `y`에 각각 훈련 데이터 행렬인 `x_train`과 `y_train`을 할당합니다.
+  - `alpha`: 페널티의 종류를 지정합니다. `1`이면 Lasso, `0`이면 Ridge, 0과 1 사이면 Elastic Net입니다.
+  - `family = "gaussian"`: 연속형 결과변수에 맞는 선형모형을 지정합니다. 이진 결과변수라면 `"binomial"`을 사용합니다.
+  - `nfolds`: 훈련 데이터를 열 겹으로 나누기 위해 `10`을 설정합니다. 아홉 겹으로 학습하고 남은 한 겹으로 평가하는 과정을 열 번 반복해 평균을 냅니다.
+  - `type.measure`: 겹마다 평가할 지표를 설정합니다. 연속형 결과변수이므로 평균제곱오차 `"mse"`를 지정합니다.
+  - 이 결과를 `cv_lasso`에 저장합니다.
+
+다음으로 `plot()` 함수에 `sign.lambda = 1`을 지정해 교차검증 곡선(cross-validation curve)를 그립니다. 이 플롯의 X축 기본값이 $-\log(\lambda)$이기 때문에, 이 인수를 `1`로 지정해야 페널티가 강한 쪽이 오른쪽으로 유지됩니다.
+
+마지막으로 `$` 기호로 두 $\lambda$를 꺼내 확인합니다.
+
+  - `cv_lasso$lambda.min`: 교차검증 오차가 가장 작은 $\lambda$입니다. 예측오차 자체를 최소화합니다.
+  - `cv_lasso$lambda.1se`: 최소 오차에서 표준오차 하나만큼 떨어진 범위 안에서 가장 큰 $\lambda$입니다. 성능은 거의 같으면서 변수는 더 적게 남기는 선택입니다.
+
+```{r}
+#| eval: false
+
+# 아래의 결과를 복제하는 코드 작성
+set.seed(123)
+
+cv_lasso <- _____(
+  x = x_train,
+  y = y_train,
+  alpha = _____,
+  family = _____,
+  nfolds = _____,
+  type.measure = _____
+)
+
+plot(cv_lasso, sign.lambda = 1)
+
+cv_lasso$_____ # 교차검증 오차가 가장 작은 lambda
+cv_lasso$_____ # 최소 오차에서 표준오차 하나만큼 떨어진 범위 안에서 가장 큰 lambda
+
+
+# ══════════════════════════════════════════════════════
+#  정답 확인 및 리포트: 아래는 수정하지 마세요
+#  코드 작성이 완료되면 이 줄을 포함하여 전체 블록을 실행하세요.
+#  Windows: Ctrl + Shift + Enter
+#  Mac: Cmd + Shift + Enter
+# ══════════════════════════════════════════════════════
+check("task2-2-lasso")
+# ══════════════════════════════════════════════════════
+```
+
+```{r}
+#| echo: false
+
+set.seed(123)
+
+cv_lasso <- cv.glmnet(
+  x = x_train,
+  y = y_train,
+  alpha = 1,
+  family = "gaussian",
+  nfolds = 10,
+  type.measure = "mse"
+)
+
+plot(cv_lasso, sign.lambda = 1)
+
+cv_lasso$lambda.min # 교차검증 오차가 가장 작은 lambda
+cv_lasso$lambda.1se # 최소 오차에서 표준오차 하나만큼 떨어진 범위 안에서 가장 큰 lambda
+```
+
+::: {.callout-tip}
+## 교차검증 곡선 읽는 법
+
+  - X축을 먼저 확인합니다. $\log(\lambda)$이면 오른쪽이 강한 페널티이고, $-\log(\lambda)$이면 왼쪽이 강한 페널티입니다.
+  - **빨간 점**은 각 $\lambda$에서의 평균 교차검증 오차이고, 위아래 막대는 그 오차의 표준오차 범위입니다.
+  - **세로 점선** 두 개 중 오차가 최소인 쪽이 `lambda.min`, 페널티가 더 강한 쪽이 `lambda.1se`입니다.
+  - 그림 위쪽 숫자는 해당 $\lambda$에서 살아남은 변수의 개수입니다. 두 점선 사이에서 변수 개수가 얼마나 줄어드는지 확인하세요.
+  - 페널티가 약한 구간에서 곡선이 평평하다면, 그 구간에서는 $\lambda$를 더 줄여도 얻을 것이 없다는 뜻입니다. 오른쪽 끝의 가파른 상승은 페널티를 과하게 주었을 때 MSE가 오히려 높아진다는 것을 의미합니다.
+:::
+
+<br>
+
+
+## Task 2-3. 예측과 평가
+
+문법이 약간 다르지만 Task 1-3와 동일한 함수를 사용하고 같은 순서로 예측값을 계산합니다. `predict()` 함수에 교차검증 결과와 테스트 데이터를 입력해 예측값을 계산해보겠습니다.
+
+  - 첫 번째 인수로 `cv_lasso`에 저장된 교차검증 결과를 불러옵니다.
+  - `newx`에 테스트 데이터 행렬인 `x_test`를 할당합니다. `lm()`에서는 `newdata`에 데이터프레임을 넣었지만, `glmnet` 계열에서는 `newx`에 행렬을 지정합니다.
+  - `s`에 예측에 사용할 $\lambda$를 지정합니다. `"lambda.min"`과 `"lambda.1se"` 두 경우를 각각 계산합니다.
+  - `predict()`는 한 열짜리 행렬을 반환하므로 `as.numeric()`으로 벡터로 변환합니다.
+  - 계산한 예측값을 각각 `pred_lasso_min`과 `pred_lasso_1se`에 저장합니다.
+
+다음으로 실제값과 예측값의 차이를 RMSE로 계산해 `rmse_lasso_min`과 `rmse_lasso_1se`에 저장합니다.
+
+마지막으로 `cat()` 함수를 사용해 기준모형인 OLS의 RMSE와 나란히 출력합니다. 이 때 두 $\lambda$에서 살아남은 변수의 개수도 함께 확인합니다. `coef()`에 `s`를 지정해 계수를 꺼내고, `!= 0`으로 0이 아닌 계수를 세되 절편은 세지 않도록 `1`을 뺍니다.
+
+```{r}
+#| eval: false
+
+# 아래의 결과를 복제하는 코드 작성
+pred_lasso_min <- as.numeric(
+  predict(_____, newx = _____, s = _____)
+)
+
+pred_lasso_1se <- as.numeric(
+  predict(cv_lasso, newx = x_test, s = _____)
+)
+
+rmse_lasso_min <- _____(_____((y_test - _____)^2))
+rmse_lasso_1se <- _____(_____((y_test - _____)^2))
+
+cat(
+  "OLS               RMSE:", round(rmse_ols, 3),
+  " 변수:", ncol(x_train), "\n",
+  "Lasso lambda.min  RMSE:", round(rmse_lasso_min, 3),
+  " 변수:", sum(coef(cv_lasso, s = "lambda.min") != 0) - 1, "\n",
+  "Lasso lambda.1se  RMSE:", round(rmse_lasso_1se, 3),
+  " 변수:", sum(coef(cv_lasso, s = "lambda.1se") != 0) - 1, "\n"
+)
+
+
+# ══════════════════════════════════════════════════════
+#  정답 확인 및 리포트: 아래는 수정하지 마세요
+#  코드 작성이 완료되면 이 줄을 포함하여 전체 블록을 실행하세요.
+#  Windows: Ctrl + Shift + Enter
+#  Mac: Cmd + Shift + Enter
+# ══════════════════════════════════════════════════════
+check("task2-3-eval")
+# ══════════════════════════════════════════════════════
+```
+
+```{r}
+#| echo: false
+
+pred_lasso_min <- as.numeric(
+  predict(cv_lasso, newx = x_test, s = "lambda.min")
+)
+
+pred_lasso_1se <- as.numeric(
+  predict(cv_lasso, newx = x_test, s = "lambda.1se")
+)
+
+rmse_lasso_min <- sqrt(mean((y_test - pred_lasso_min)^2))
+rmse_lasso_1se <- sqrt(mean((y_test - pred_lasso_1se)^2))
+
+cat(
+  "OLS               RMSE:", round(rmse_ols, 3),
+  " 변수:", ncol(x_train), "\n",
+  "Lasso lambda.min  RMSE:", round(rmse_lasso_min, 3),
+  " 변수:", sum(coef(cv_lasso, s = "lambda.min") != 0) - 1, "\n",
+  "Lasso lambda.1se  RMSE:", round(rmse_lasso_1se, 3),
+  " 변수:", sum(coef(cv_lasso, s = "lambda.1se") != 0) - 1, "\n"
+)
+```
+
+<br>
+
+
+## Task 7. 계수 확인
+
+`glmnet` 계열 결과는 계수를 보여주는 `summary()` 메서드를 제공하지 않습니다. `lm()`은 해가 하나뿐이라 계수, 표준오차, p값을 하나의 표로 정리할 수 있지만, `glmnet`은 $\lambda$마다 다른 해를 100개 가까이 저장하고 있어 `coef(fit, s = ...)`로 어느 $\lambda$의 해를 꺼낼지 지정해야 합니다. 표준오차와 p값도 통상적인 방식으로는 제공되지 않습니다.
+
+아래 실습에서는 `coef()` 함수를 사용하여 학습된 `glmnet()` 결과에서 계수를 확인해보겠습니다.
+
+  - 첫 번째 인수로 `cv_lasso`에 저장된 교차검증 결과를 불러옵니다.
+  - `s = "lambda.1se"`로 어느 $\lambda$에서의 계수를 꺼낼지 지정합니다. `s = "lambda.min"`으로 바꾸면 다른 해를 확인할 수 있습니다.
+  - 꺼낸 계수를 `lasso_coef`에 저장합니다.
+
+`coef()`가 반환하는 것은 데이터프레임이 아니라 행렬이므로, 다루기 쉽도록 `tibble()`로 정리해 `lasso_coef_df`에 저장합니다.
+
+  - `term`: 변수 이름. `rownames()` 함수로 `lasso_coef`의 행 이름을 가져옵니다.
+  - `estimate`: 계수 추정값. `as.numeric()` 함수로 벡터로 변환합니다.
+
+계수의 크기는 예측변수의 척도에 따라 달라집니다. 그러므로 계수에 해당 변수의 표준편차를 곱한 표준화 계수를 함께 계산합니다. 이 값은 예측변수가 1 표준편차만큼 변화할 때 예측값이 얼마나 달라지는지를 나타냅니다. 이를 위해 `apply()` 함수를 사용해 훈련 데이터 행렬의 열별 표준편차를 계산하고 `sd_x`에 저장합니다.
+
+  - 첫 번째 인수에 `x_train`을 할당합니다.
+  - 두 번째 인수 `2`는 계산 방향을 지정합니다. `1`이면 행, `2`면 열 단위로 계산합니다.
+  - 세 번째 인수 `sd`는 각 열에 적용할 함수입니다.
+
+마지막으로 계수표를 정리해 출력합니다.
+
+  - `filter()`로 절편을 제외하고, 계수가 `0`이 아닌 변수만 남깁니다. 표에 나타나지 않는 변수는 Lasso가 모형에서 제외한 변수입니다.
+  - `mutate()`로 계수에 해당 변수의 표준편차를 곱해 `std_estimate` 열을 만듭니다.
+  - `arrange()`로 표준화 계수의 절댓값이 큰 순서로 정렬합니다.
+
+```{r}
+#| eval: false
+
+# 아래의 결과를 복제하는 코드 작성
+lasso_coef <- coef(_____, s = _____)
+
+lasso_coef_df <- tibble(
+  term = _____(lasso_coef),
+  estimate = _____(lasso_coef)
+)
+
+sd_x <- apply(x_train, 2, sd)
+
+lasso_coef_df |>
+  filter(term != "(Intercept)", estimate != 0) |>
+  mutate(std_estimate = estimate * sd_x[term]) |>
+  arrange(desc(abs(std_estimate))) |>
+  print(n = 20)
+
+
+# ══════════════════════════════════════════════════════
+#  정답 확인 및 리포트: 아래는 수정하지 마세요
+#  코드 작성이 완료되면 이 줄을 포함하여 전체 블록을 실행하세요.
+#  Windows: Ctrl + Shift + Enter
+#  Mac: Cmd + Shift + Enter
+# ══════════════════════════════════════════════════════
+check("task2-4-coef")
+# ══════════════════════════════════════════════════════
+```
+
+```{r}
+#| echo: false
+
+lasso_coef <- coef(cv_lasso, s = "lambda.1se")
+
+lasso_coef_df <- tibble(
+  term = rownames(lasso_coef),
+  estimate = as.numeric(lasso_coef)
+)
+
+sd_x <- apply(x_train, 2, sd)
+
+lasso_coef_df |>
+  filter(term != "(Intercept)", estimate != 0) |>
+  mutate(std_estimate = estimate * sd_x[term]) |>
+  arrange(desc(abs(std_estimate))) |>
+  print(n = 40)
+```
+
+<br>
+
+
+# Part 3 (선택사항). Ridge로 한 번 더 교체
+
+Ridge는 페널티의 형태만 다릅니다. 절댓값 대신 제곱합을 사용합니다.
+
+$$
+\hat{\beta}^{\text{ridge}}
+=
+\arg\min_{\beta}
+\left\{
+\frac{1}{2n}\sum_{i=1}^{n}
+\left(y_i - \beta_0 - \sum_{j=1}^{p} x_{ij}\beta_j\right)^2
++
+\lambda \sum_{j=1}^{p} \beta_j^{2}
+\right\}
+$$
+
+제곱 페널티는 계수를 0에 가깝게 줄이지만 정확히 0으로 만들지는 않습니다. 따라서 Ridge는 변수를 선택하지 않고 모든 변수를 조금씩 축소한 채로 유지합니다.
+
+## Task 8. 교차검증과 평가
+
+앞 절과 코드가 동일하고 `alpha`만 1에서 0으로 바뀝니다.
+
+  - `set.seed()`로 난수를 고정한 뒤, `cv.glmnet()`에 `x_train`, `y_train`, `alpha = 0`, `family = "gaussian"`, `nfolds = 10`, `type.measure = "mse"`를 지정해 `cv_ridge`에 저장합니다.
+  - `predict()`에 `newx = x_test`와 `s`를 지정해 `pred_ridge_min`과 `pred_ridge_1se`를 계산합니다.
+  - RMSE를 계산해 `rmse_ridge_min`과 `rmse_ridge_1se`에 저장하고, `cat()`으로 앞서 계산한 값들과 나란히 출력합니다.
+
+```{r}
+#| eval: false
+
+# 아래의 결과를 복제하는 코드 작성
+set.seed(123)
+
+cv_ridge <- cv.glmnet(
+  x = _____,
+  y = _____,
+  alpha = _____,
+  family = _____,
+  nfolds = _____,
+  type.measure = _____
+)
+
+pred_ridge_min <- _____(
+  predict(_____, newx = _____, s = _____)
+)
+
+pred_ridge_1se <- as.numeric(
+  predict(_____, newx = _____, s = _____)
+)
+
+rmse_ridge_min <- _____(_____((_____ - _____)^2))
+rmse_ridge_1se <- _____(_____((_____ - _____)^2))
+
+cat(
+  "OLS               RMSE:", round(rmse_ols, 3), "\n",
+  "Lasso lambda.1se  RMSE:", round(rmse_lasso_1se, 3), "\n",
+  "Ridge lambda.min  RMSE:", round(rmse_ridge_min, 3), "\n",
+  "Ridge lambda.1se  RMSE:", round(rmse_ridge_1se, 3), "\n"
+)
+
+
+# ══════════════════════════════════════════════════════
+#  정답 확인 및 리포트: 아래는 수정하지 마세요
+#  코드 작성이 완료되면 이 줄을 포함하여 전체 블록을 실행하세요.
+#  Windows: Ctrl + Shift + Enter
+#  Mac: Cmd + Shift + Enter
+# ══════════════════════════════════════════════════════
+check("task3-1-ridge")
+# ══════════════════════════════════════════════════════
+```
+
+```{r}
+#| echo: false
+
+set.seed(123)
+
+cv_ridge <- cv.glmnet(
+  x = x_train,
+  y = y_train,
+  alpha = 0,
+  family = "gaussian",
+  nfolds = 10,
+  type.measure = "mse"
+)
+
+pred_ridge_min <- as.numeric(
+  predict(cv_ridge, newx = x_test, s = "lambda.min")
+)
+
+pred_ridge_1se <- as.numeric(
+  predict(cv_ridge, newx = x_test, s = "lambda.1se")
+)
+
+rmse_ridge_min <- sqrt(mean((y_test - pred_ridge_min)^2))
+rmse_ridge_1se <- sqrt(mean((y_test - pred_ridge_1se)^2))
+
+cat(
+  "OLS               RMSE:", round(rmse_ols, 3), "\n",
+  "Lasso lambda.1se  RMSE:", round(rmse_lasso_1se, 3), "\n",
+  "Ridge lambda.min  RMSE:", round(rmse_ridge_min, 3), "\n",
+  "Ridge lambda.1se  RMSE:", round(rmse_ridge_1se, 3), "\n"
+)
+```
+
+<br>
+
+
+## 예측 성능 비교
+
+아래 코드를 실행하세요. 지금까지 계산한 RMSE를 한 표로 모읍니다. 먼저 비교의 최저 기준으로 예측변수를 하나도 쓰지 않고 훈련 데이터의 평균만으로 예측했을 때의 `영모형` RMSE를 계산해 `rmse_null`에 저장합니다. 어떤 모형이든 이 값보다 나아야 의미가 있습니다.
+
+  - `model`: 모형 이름
+  - `변수수`: 각 모형이 실제로 사용한 예측변수의 개수. Lasso는 `coef()`로 0이 아닌 계수를 세고, Ridge와 OLS는 전체 예측변수 개수를 그대로 넣습니다.
+  - `rmse`: 앞에서 저장해 둔 값들
+  - `개선율`: 기준모형인 OLS 대비 RMSE가 몇 퍼센트 줄었는지 계산합니다.
+
+```{r}
+rmse_null <- sqrt(mean((y_test - mean(y_train))^2))
+
+comparison <- tibble(
+  model = c(
+    "영모형 (변수 0개)",
+    "OLS",
+    "Lasso (lambda.min)",
+    "Lasso (lambda.1se)",
+    "Ridge (lambda.min)",
+    "Ridge (lambda.1se)"
+  ),
+  변수수 = c(
+    0,
+    ncol(x_train),
+    sum(coef(cv_lasso, s = "lambda.min") != 0) - 1,
+    sum(coef(cv_lasso, s = "lambda.1se") != 0) - 1,
+    ncol(x_train),
+    ncol(x_train)
+  ),
+  rmse = c(
+    rmse_null,
+    rmse_ols,
+    rmse_lasso_min,
+    rmse_lasso_1se,
+    rmse_ridge_min,
+    rmse_ridge_1se
+  )
+) |>
+  mutate(
+    개선율 = round(100 * (rmse_ols - rmse) / rmse_ols, 2),
+    rmse = round(rmse, 3)
+  ) |>
+  arrange(rmse)
+
+comparison
+```
+
+정규화로 얻은 RMSE 개선은 크지 않습니다. 그럼에도 Lasso는 절반 이하의 변수만으로 OLS와 같거나 더 나은 예측을 했습니다.

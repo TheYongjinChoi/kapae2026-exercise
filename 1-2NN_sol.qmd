@@ -1,0 +1,1547 @@
+---
+title: "실습. 뉴럴 네트워크"
+author: "최용진"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 3
+execute:
+  warning: false
+  message: false
+  cache: true
+---
+
+이번 실습의 목표는 뉴럴 네트워크를 두 가지 방법으로 구현해 보겠습니다. 우선 패키지없이 수동으로 구현해 보면서 순전파와 역전파 알고리즘이 어떻게 작동하는지 확인하겠습니다. 이어서 `keras` 패키지를 활용하여 하이퍼 파라미터 튜닝까지 수행해 보겠습니다.
+
+1. 선형회귀에 은닉층 넣어보기: 순전파와 손실을 행렬 연산으로 직접 계산하고 `lm()` 결과와 대조합니다.
+2. Keras로 구현하기
+4. (선택사항) 하이퍼파라미터 조정: 학습률, 노드 수, 규제를 바꿔 가며 성능을 비교합니다.
+5. (선택사항) 그리드서치: 여러 축을 동시에 탐색합니다.
+
+::: {.callout-note appearance="simple"}
+## 실습을 진행하는 방법
+
+앞 세션의 실습과 동일한 방식으로 진행합니다. 각 Task마다 `_____`로 비어 있는 코드 블록이 있습니다. 바로 위의 설명 글에 필요한 정보가 모두 들어 있으니, 빈칸을 채운 뒤 `Ctrl`(`Cmd`) + `Shift` + `Enter`로 블록 전체를 실행하세요. 그 아래에 완성된 코드와 결과가 이어집니다.
+
+앞 블록에서 만든 객체를 뒤에서 계속 사용하므로 반드시 위에서부터 순서대로 실행해야 합니다. 5분 이상 막히면 강사나 조교에게 질문해서 해결하고 넘어가세요. `(선택사항)`은 시간이 남을 때 진행하는 과제입니다.
+:::
+
+앞선 실습들과 같은 OHIE 데이터, 같은 결과변수인 복용 중인 처방약의 개수(`rx_num_mod_6m`)를 예측하는 실습입니다.
+
+***
+<br>
+<!-- ─────────────────────────────────────────────────────────── -->
+
+# 데이터 준비
+
+아래 데이터 및 변수 전처리 코드를 실행하세요. 마지막에 신경망에 필요한 두 가지를 추가합니다.
+
+  - 설계행렬: 설계행렬: `keras`는 `y ~ x` 같은 공식을 이해하지 못하고 숫자 행렬만 받습니다. `model.matrix()`로 데이터프레임을 행렬로 변환하겠습니다. 이 과정에서 범주형 변수는 더미 변수로 바뀝니다. 다만 `model.matrix()`는 회귀모형용 함수라 1로만 채워진 절편 열을 자동으로 붙이는데, 이 열은 불필요하므로 제거합니다.
+  - 표준화: 앞서 `lm()`과 `glmnet()`에서는 변수를 원래 단위 그대로 넣었습니다. `lm()`은 변수 척도에 영향을 받지 않고, `glmnet()`은 내부에서 알아서 표준화를 해줍니다. 반면 신경망은 입력 척도에 민감해서 단위가 제각각이면 학습이 느려지거나 불안정해집니다. 그래서 이번에는 표준화를 사전에 해 주겠습니다.
+
+```{r}
+#| echo: true
+
+# ── 코드 실행 단축키 ──────────────────────────────────────────
+# 💡 한 줄 실행 | Windows: Ctrl + Enter | Mac: Cmd + Enter
+# 💡 코드 블록 전체 실행 | Windows: Ctrl + Shift + Enter | Mac: Cmd + Shift + Enter
+
+library(dplyr)
+library(tidyr)
+library(tibble)
+library(ggplot2)
+
+file_path <- "ohie_all6m.rds" # 파일이 스크립트와 다른 폴더에 있을 경우 해당 폴더 경로를 파일명 앞에 넣어서 업데이트
+
+ohie <- readRDS(file_path)
+
+if (inherits(ohie, "data.table")) ohie <- as.data.frame(ohie)
+
+required_vars <- c(
+  "rx_num_mod_6m",
+  "treatment_descriptive",
+  "female_6m", "birthyear_6m", "edu_6m", "employ_6m",
+  "hhsize_6m", "num19_6m", "live_alone_6m", "live_partner_6m",
+  "hhinc_pctfpl_6m",
+  "ins_any_6m", "ins_ohp_6m", "ins_medicare_6m", "ins_employer_6m",
+  "ins_months_6m",
+  "health_gen_6m", "health_chg_6m", "happiness_6m",
+  "baddays_phys_6m", "baddays_ment_6m", "baddays_tot_6m",
+  "dep_sad_6m", "dep_interest_6m",
+  "er_any_6m", "er_num_mod_6m", "hosp_num_mod_6m",
+  "usual_place_6m", "usual_doc_6m", "usual_clinic_6m",
+  "need_dent_6m",
+  "cost_any_owe_6m", "cost_borrow_6m", "smk_ever_6m", "smk_curr_6m"
+)
+
+model_df <- ohie |>
+  select(all_of(required_vars)) |>
+  transmute(
+    rx_num        = as.numeric(rx_num_mod_6m),
+
+    treatment     = factor(treatment_descriptive),
+
+    female        = as.integer(female_6m),
+    age           = 2009 - as.numeric(birthyear_6m),
+    edu           = factor(edu_6m),
+    employed      = as.integer(employ_6m),
+    hh_size       = as.numeric(hhsize_6m),
+    num_child     = as.numeric(num19_6m),
+    live_alone    = as.integer(live_alone_6m),
+    live_partner  = as.integer(live_partner_6m),
+    income_fpl    = as.numeric(hhinc_pctfpl_6m),
+
+    insured       = as.integer(ins_any_6m),
+    ins_ohp       = as.integer(ins_ohp_6m),
+    ins_medicare  = as.integer(ins_medicare_6m),
+    ins_employer  = as.integer(ins_employer_6m),
+    ins_months    = as.numeric(ins_months_6m),
+
+    health_gen    = as.numeric(health_gen_6m),
+    health_chg    = as.numeric(health_chg_6m),
+    happiness     = as.numeric(happiness_6m),
+    baddays_phys  = as.numeric(baddays_phys_6m),
+    baddays_ment  = as.numeric(baddays_ment_6m),
+    baddays_tot   = as.numeric(baddays_tot_6m),
+    dep_sad       = as.numeric(dep_sad_6m),
+    dep_interest  = as.numeric(dep_interest_6m),
+
+    er_any        = as.integer(er_any_6m),
+    er_visits     = as.numeric(er_num_mod_6m),
+    hosp_visits   = as.numeric(hosp_num_mod_6m),
+    usual_place   = as.integer(usual_place_6m),
+    usual_doc     = as.integer(usual_doc_6m),
+    usual_clinic  = as.integer(usual_clinic_6m),
+    need_dent     = as.integer(need_dent_6m),
+
+    owe_money     = as.integer(cost_any_owe_6m),
+    borrowed      = as.integer(cost_borrow_6m),
+    smoke_ever    = as.integer(smk_ever_6m),
+    smoke_curr    = as.numeric(smk_curr_6m)
+  ) |>
+  drop_na()
+
+set.seed(123)
+
+train_id <- sample(1:nrow(model_df), size = round(0.80 * nrow(model_df)))
+
+# 설계행렬: 범주형은 더미로, 절편 열은 제거
+x_all <- model.matrix(rx_num ~ ., data = model_df)[, -1]
+y_all <- model_df$rx_num
+
+# 표준화 기준은 훈련 데이터에서만 계산
+mu  <- colMeans(x_all[train_id, ])
+sdv <- apply(x_all[train_id, ], 2, sd)
+sdv[sdv == 0] <- 1
+
+x_train <- scale(x_all[train_id, ],  center = mu, scale = sdv)
+x_test  <- scale(x_all[-train_id, ], center = mu, scale = sdv)
+
+y_train <- y_all[train_id]
+y_test  <- y_all[-train_id]
+
+cat("훈련 표본:", nrow(x_train), "\n")
+cat("테스트 표본:", nrow(x_test), "\n")
+cat("예측변수 개수:", ncol(x_train), "\n")
+
+summary(y_train)
+
+# 정답과 진척도 확인을 위한 함수 불러오기
+# source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/tracker_nn.R")
+source("/Users/mac/Library/CloudStorage/Dropbox/12_Teaching/202608_CausalML/KAPAE_Lecture/_exercise/monitoring/tracker_nn.R")
+```
+
+비교의 최저 기준으로 훈련 데이터의 평균만으로 예측한 영모형의 RMSE를 계산해 둡니다.
+
+```{r}
+rmse_null <- sqrt(mean((y_test - mean(y_train))^2))
+
+round(rmse_null, 4)
+```
+
+***
+<br>
+<!-- ─────────────────────────────────────────────────────────── -->
+
+
+# Part 1. 선형회귀에 은닉층 넣어보기
+
+은닉층이 없고 출력층에 활성화 함수가 없는 신경망은 선형회귀와 같은 모형입니다. 여기에 은닉층을 하나 넣고 활성화 함수를 바꿔가며, 무엇이 모형의 표현력을 만드는지 확인하는 것이 Part 1의 목표입니다.
+
+## Task 1. 항등 활성화 은닉층 학습시키기
+
+항등 활성화 함수를 이용해 수동으로 순전파와 역전파 알고리즘을 구현해 보겠습니다. 다음과 같은 단계로 구현이 됩니다.
+
+1. 순전파: 현재 가중치로 예측값을 계산합니다.
+2. 역전파: 손실을 각 가중치로 미분해 기울기를 구합니다.
+3. 갱신: 기울기의 반대 방향으로 가중치를 조금 이동시킵니다.
+
+아래 코드의 빈칸(`_____`)을 채워 완성하십시오. 주석에 각 줄이 무엇을 하는지 적혀 있으니 읽으면서 완성하시기 바랍니다.
+
+**초기화**
+
+- `W1`: 정규분포에서 무작위로 뽑는 함수 이름과, 필요한 값의 개수를 채웁니다. 예측변수마다 유닛마다 하나씩 필요하므로 `p × 은닉층 유닛 수`만큼입니다.
+- `b1`: 0을 몇 번 반복할지 채웁니다. 은닉층 유닛 하나에 편향 하나입니다.
+- `w2`: 몇 개를 뽑을지 채웁니다. 은닉층 유닛 5개를 받아 합치므로 유닛 수만큼입니다.
+
+**반복문**
+
+- `for`: 몇 번 반복할지 채웁니다. 위에서 정의해 둔 객체 이름입니다.
+
+**순전파**
+
+- `Z`: `x_train`과 행렬곱할 가중치 객체를 채웁니다. 입력에서 은닉층으로 가는 쪽입니다.
+- `H`: 활성화 함수를 통과한 결과를 채웁니다. 여기서는 항등함수이므로 통과 전과 같습니다.
+- `loss_history[iter]`: 실제값과 비교할 예측값 객체를 채웁니다.
+
+**역전파**
+
+- `dpred`: 예측값에서 빼야 할 실제값 객체를 채웁니다. 훈련 데이터의 결과변수입니다.
+- `grad_w2`: `t(H)`와 행렬곱할 객체를 채웁니다. 바로 위에서 계산한 값입니다.
+- `dZ`: 항등함수는 도함수가 1이므로, 은닉층으로 전달된 값을 그대로 받습니다. 그 객체 이름을 채웁니다.
+- `grad_W1`: 전치해서 `dZ`와 곱할 객체를 채웁니다. `W1`에 곱해지던 값입니다.
+
+**갱신**
+
+- `W1`, `b2`: 각 파라미터에 대응하는 기울기 객체를 채웁니다. 이름이 짝을 이룹니다.
+
+```{r}
+#| eval: false
+
+# 빈칸을 채워 코드를 완성하세요
+
+set.seed(1)
+n <- nrow(x_train)   # 관측치 수 객체에 저장
+p <- ncol(x_train)   # 예측변수 수 객체에 저장
+
+n_hidden <- 5        # 은닉층 유닛 수를 5로 지정
+lr       <- 0.01     # 학습률 지정. 여기에서는 0.01로 고정합니다.
+n_iter   <- 2000     # 경사하강 반복 횟수(epoch)
+
+# ── 초기화 ────────────────────────────────────────────────
+# 초기화는 경사하강이 어디서 출발할지 정하는 단계입니다.
+# 학습으로 바뀔 값이므로 출발점으로서 적절하기만 하면 됩니다.
+# 가중치 W1, w2는 무작위 값으로, 편향 b1, b2는 고정값으로 시작합니다.
+
+# W1: 입력 -> 은닉층 가중치
+# 회귀계수가 실수인 것처럼 가중치도 실수여야 하므로 rnorm() 함수를 사용해 0을 중심으로 대칭인 정규분포에서 뽑습니다. 유닛마다 다른 값에서 출발해야 5개가 서로 다른 방향을 탐색하므로 무작위로 추출합니다. 유닛 하나가 회귀식 하나이고 은닉층 유닛이 5개로 n_hidden에 저장해 두었으므로 행의 수가 예측변수의 수인 p, 열이 5개인 행렬을 생성합니다.
+W1 <- matrix(_____(p * _____, sd = 0.1), nrow = p)
+
+# 은닉층 편향
+# rep(a, b)는 값 a를 b번 반복한 벡터를 만듭니다. 편향은 0에서 출발하고, 은닉층 유닛 수 길이의 벡터로 만들어 둡니다.
+b1 <- rep(0, _____)
+
+# w2: 은닉층 -> 출력 가중치
+# 은닉층 유닛 5개를 받아 하나의 예측값으로 합치기 때문에 5개의 가중치 값이 필요합니다. 은닉층 가중치와 마찬가지로 0을 중심으로 무작위 추출합니다.
+w2 <- rnorm(_____, sd = 0.1)
+
+# 출력 편향: 빠르게 수렴할 수 있도록 y의 평균에서 시작
+b2 <- mean(y_train)
+
+loss_history <- rep(NA, n_iter)   # 반복마다 성능비교를 위해 계산된 손실을 기록할 빈 리스트 생성
+
+# ── 학습 시작 ────────────────────────────────────────────────
+# 아래 세 단계를 n_iter에 저장한 횟수만큼 반복하면서 가중치를 조금씩 다듬어 갑니다.
+
+for (iter in 1:_____) {   # 1부터 위에서 정의한 n_iter까지 반복합니다
+
+  # ── 1. 순전파: 현재 가중치로 예측값 계산 ────────────────
+  # 은닉층 입력: 은닉층 유닛 5개의 값을 모든 관측치에 대해 한 번에 계산합니다.
+  # 유닛 하나는 Z = b + (각 예측변수 × 그 변수의 가중치)의 합 형태로 회귀식과 모양이 같습니다.
+  # 관측치 i, 유닛 1이라면 Z_i1 = b_1 + w_11*x_i1 + w_21*x_i2 + ... + w_p1*x_ip 이고,
+  # 유닛이 5개이므로 결과는 열이 5개인 행렬이 됩니다.
+  #   x_train %*% W1: %*%은 행렬곱을 의미하며, w_11*x_i1 + ... + w_p1*x_ip 부분을 계산
+  #   rep(b1, each = n): 편향 b_1을 각 열에 더하기 위한 장치
+  Z    <- x_train %*% _____ + rep(b1, each = n)
+
+  # 은닉층 출력: 활성화 함수를 항등함수로 지정했으므로 Z를 그대로 통과시킵니다.
+  H    <- _____
+
+  # 은닉층 유닛 5개를 하나의 예측값으로 합칩니다. Z를 계산할 때와 같은 방식입니다.
+  pred <- as.vector(H %*% w2 + b2)   # 최종 예측값(관측치 n개 만큼의 벡터)
+
+  # 이번 반복의 훈련 손실을 기록합니다. 학습에는 쓰이지 않고 나중에 그래프용입니다.
+  loss_history[iter] <- mean((y_train - _____)^2)
+
+  # ── 2. 역전파: 손실을 각 가중치로 미분 ──────────────────
+  # 각 가중치를 조금 늘렸을 때 손실이 얼마나 변하는지(= 기울기)를 구하는 단계입니다.
+  # 여기서는 기울기만 구하고, 가중치를 실제로 바꾸는 것은 3단계입니다.
+  # 미분은 손으로 미리 끝내두었고, 아래 코드는 그 결과 공식을 계산할 뿐입니다.
+  # 출력 쪽에서 시작해 은닉층, 입력 쪽으로 거슬러 내려갑니다.
+
+  # 손실 L = mean((pred - y)^2)을 pred로 미분하면 2 * (pred - y) / n 입니다.
+  # 2는 제곱을 미분하며 나온 계수, /n은 평균의 1/n입니다.
+  # 핵심은 (pred - y_train), 즉 잔차입니다. 어느 방향으로 얼마나 틀렸는지 알려줍니다.
+  dpred   <- 2 * (pred - _____) / n
+
+  # w2의 기울기: w2에 곱해지던 값이 H이므로 dpred에 H를 곱합니다.
+  # t(H)로 전치해야 차원이 맞아 w2와 같은 길이 5가 나옵니다.
+  # b2의 기울기: b2는 모든 관측치의 예측에 1씩 기여하므로 dpred를 그대로 더합니다.
+  grad_w2 <- as.vector(t(H) %*% _____)
+  grad_b2 <- sum(dpred)
+
+  # 여기서부터 은닉층입니다. 은닉층에는 정답이 없으므로,
+  # 출력 쪽에서 계산한 신호를 되돌려 받아야 합니다.
+  # pred = b2 + H1*w2[1] + ... + H5*w2[5] 이므로 H로 미분하면 w2만 남습니다.
+  # w2는 유닛 j가 예측에 미치는 영향의 크기이고,
+  # dpred는 그 예측이 어느 쪽으로 얼마나 틀렸는지입니다.
+  # 둘을 곱해야 "유닛 j를 어느 쪽으로 움직여야 손실이 주는가"가 나옵니다.
+  dH <- matrix(dpred, ncol = 1) %*% matrix(w2, nrow = 1)
+
+  # 활성화 함수를 거슬러 올라갑니다. 항등함수의 도함수는 1이므로 그대로 통과합니다.
+  dZ <- _____
+
+  grad_W1 <- t(_____) %*% dZ   # W1의 기울기: W1에 곱해지던 값이 x_train이므로 곱합니다.
+  grad_b1 <- colSums(dZ)         # b1의 기울기: b2 때와 같은 논리로 유닛별(열별)로 더합니다.
+
+  # ── 3. 갱신: 기울기 반대 방향으로 조금 이동 ─────────────
+  # 기울기는 손실이 커지는 방향이므로 빼 줍니다.
+  # lr(학습률)을 기울기에 곱해 한 번에 움직일 폭을 정합니다.
+  # 위 기울기는 모두 갱신 전 가중치 기준이므로, 계산이 끝난 뒤 네 뭉치를 한꺼번에 적용합니다.
+  W1 <- W1 - lr * _____
+  b1 <- b1 - lr * grad_b1
+  w2 <- w2 - lr * grad_w2
+  b2 <- b2 - lr * _____
+}
+
+# ── 테스트 손실 ───────────────────────────────────────────
+# 학습이 끝난 가중치로 테스트 데이터를 예측합니다. 순전파와 같은 계산입니다.
+n_test <- nrow(x_test)
+Z_test <- x_test %*% W1 + rep(b1, each = n_test)
+p_test <- as.vector(Z_test %*% w2 + b2)
+mse_id <- mean((y_test - p_test)^2)
+
+# ── lm()과 비교 ───────────────────────────────────────────
+# 훈련·테스트 모두 data.frame()으로 만들어야 열 이름이 일치해 predict()가 작동합니다.
+train_df <- data.frame(y = y_train, x_train)
+test_df  <- data.frame(x_test)
+
+lm_fit <- lm(y ~ ., data = train_df)          # y ~ . : 나머지 열 전부를 예측변수로
+p_lm   <- predict(lm_fit, newdata = test_df)
+mse_lm <- mean((y_test - p_lm)^2)
+
+plot(loss_history, type = "l",
+    xlab = "Epoch", ylab = "Training MSE",
+    main = "Linear activation")
+
+# 두 값이 사실상 같다면, 은닉층이 있어도 결국 선형모형이라는 뜻입니다.
+c(
+  test_mse_identity = mse_id,
+  test_mse_lm       = mse_lm
+) |>
+  round(4)
+
+
+# ══════════════════════════════════════════════════════
+#  정답 확인 및 리포트: 아래는 수정하지 마세요
+#  코드 작성이 완료되면 이 줄을 포함하여 전체 블록을 실행하세요.
+# 💡 코드 블록 전체 실행 | Windows: Ctrl + Shift + Enter | Mac: Cmd + Shift + Enter
+# ══════════════════════════════════════════════════════
+check("nn-01-identity")
+# ══════════════════════════════════════════════════════
+```
+
+```{r}
+#| echo: false
+
+set.seed(1)
+n <- nrow(x_train)   # 관측치 수 객체에 저장
+p <- ncol(x_train)   # 예측변수 수 객체에 저장
+
+n_hidden <- 5        # 은닉층 유닛 수를 5로 지정
+lr       <- 0.01     # 학습률 지정. 여기에서는 0.01로 고정합니다.
+n_iter   <- 2000     # 경사하강 반복 횟수(epoch)
+
+# ── 초기화 ────────────────────────────────────────────────
+# 초기화는 경사하강이 어디서 출발할지 정하는 단계입니다.
+# 학습으로 바뀔 값이므로 출발점으로서 적절하기만 하면 됩니다.
+# 가중치 W1, w2는 무작위 값으로, 편향 b1, b2는 고정값으로 시작합니다.
+
+# W1: 입력 -> 은닉층 가중치
+# 회귀계수가 실수인 것처럼 가중치도 실수여야 하므로 rnorm() 함수를 사용해 0을 중심으로 대칭인 정규분포에서 뽑습니다. 유닛마다 다른 값에서 출발해야 5개가 서로 다른 방향을 탐색하므로 무작위로 추출합니다. 유닛 하나가 회귀식 하나이고 은닉층 유닛이 5개로 n_hidden에 저장해 두었으므로 행의 수가 예측변수의 수인 p, 열이 5개인 행렬을 생성합니다.
+W1 <- matrix(rnorm(p * n_hidden, sd = 0.1), nrow = p)
+
+# 은닉층 편향
+# rep(a, b)는 값 a를 b번 반복한 벡터를 만듭니다. 편향은 0에서 출발하고, 은닉층 유닛 수 길이의 벡터로 만들어 둡니다.
+b1 <- rep(0, n_hidden)
+
+# w2: 은닉층 -> 출력 가중치
+# 은닉층 유닛 5개를 받아 하나의 예측값으로 합치기 때문에 5개의 가중치 값이 필요합니다. 은닉층 가중치와 마찬가지로 0을 중심으로 무작위 추출합니다.
+w2 <- rnorm(n_hidden, sd = 0.1)
+
+# 출력 편향: 빠르게 수렴할 수 있도록 y의 평균에서 시작
+b2 <- mean(y_train)
+
+loss_history <- rep(NA, n_iter)   # 반복마다 성능비교를 위해 계산된 손실을 기록할 빈 리스트 생성
+
+# ── 학습 시작 ────────────────────────────────────────────────
+# 아래 세 단계를 n_iter에 저장한 횟수만큼 반복하면서 가중치를 조금씩 다듬어 갑니다.
+
+for (iter in 1:n_iter) {   # 1부터 위에서 정의한 n_iter까지 반복합니다
+
+  # ── 1. 순전파: 현재 가중치로 예측값 계산 ────────────────
+  # 은닉층 입력: 은닉층 유닛 5개의 값을 모든 관측치에 대해 한 번에 계산합니다.
+  # 유닛 하나는 Z = b + (각 예측변수 × 그 변수의 가중치)의 합 형태로 회귀식과 모양이 같습니다.
+  # 관측치 i, 유닛 1이라면 Z_i1 = b_1 + w_11*x_i1 + w_21*x_i2 + ... + w_p1*x_ip 이고,
+  # 유닛이 5개이므로 결과는 열이 5개인 행렬이 됩니다.
+  #   x_train %*% W1: %*%은 행렬곱을 의미하며, w_11*x_i1 + ... + w_p1*x_ip 부분을 계산
+  #   rep(b1, each = n): 편향 b_1을 각 열에 더하기 위한 장치
+  Z    <- x_train %*% W1 + rep(b1, each = n)
+
+  # 은닉층 출력: 활성화 함수를 항등함수로 지정했으므로 Z를 그대로 통과시킵니다.
+  H    <- Z
+
+  # 은닉층 유닛 5개를 하나의 예측값으로 합칩니다. Z를 계산할 때와 같은 방식입니다.
+  pred <- as.vector(H %*% w2 + b2)   # 최종 예측값(관측치 n개 만큼의 벡터)
+
+  # 이번 반복의 훈련 손실을 기록합니다. 학습에는 쓰이지 않고 나중에 그래프용입니다.
+  loss_history[iter] <- mean((y_train - pred)^2)
+
+  # ── 2. 역전파: 손실을 각 가중치로 미분 ──────────────────
+  # 각 가중치를 조금 늘렸을 때 손실이 얼마나 변하는지(= 기울기)를 구하는 단계입니다.
+  # 여기서는 기울기만 구하고, 가중치를 실제로 바꾸는 것은 3단계입니다.
+  # 미분은 손으로 미리 끝내두었고, 아래 코드는 그 결과 공식을 계산할 뿐입니다.
+  # 출력 쪽에서 시작해 은닉층, 입력 쪽으로 거슬러 내려갑니다.
+
+  # 손실 L = mean((pred - y)^2)을 pred로 미분하면 2 * (pred - y) / n 입니다.
+  # 2는 제곱을 미분하며 나온 계수, /n은 평균의 1/n입니다.
+  # 핵심은 (pred - y_train), 즉 잔차입니다. 어느 방향으로 얼마나 틀렸는지 알려줍니다.
+  dpred   <- 2 * (pred - y_train) / n
+
+  # w2의 기울기: w2에 곱해지던 값이 H이므로 dpred에 H를 곱합니다.
+  # t(H)로 전치해야 차원이 맞아 w2와 같은 길이 5가 나옵니다.
+  # b2의 기울기: b2는 모든 관측치의 예측에 1씩 기여하므로 dpred를 그대로 더합니다.
+  grad_w2 <- as.vector(t(H) %*% dpred)
+  grad_b2 <- sum(dpred)
+
+  # 여기서부터 은닉층입니다. 은닉층에는 정답이 없으므로,
+  # 출력 쪽에서 계산한 신호를 되돌려 받아야 합니다.
+  # pred = b2 + H1*w2[1] + ... + H5*w2[5] 이므로 H로 미분하면 w2만 남습니다.
+  # w2는 유닛 j가 예측에 미치는 영향의 크기이고,
+  # dpred는 그 예측이 어느 쪽으로 얼마나 틀렸는지입니다.
+  # 둘을 곱해야 "유닛 j를 어느 쪽으로 움직여야 손실이 주는가"가 나옵니다.
+  dH <- matrix(dpred, ncol = 1) %*% matrix(w2, nrow = 1)
+
+  # 활성화 함수를 거슬러 올라갑니다. 항등함수의 도함수는 1이므로 그대로 통과합니다.
+  dZ <- dH
+
+  grad_W1 <- t(x_train) %*% dZ   # W1의 기울기: W1에 곱해지던 값이 x_train이므로 곱합니다.
+  grad_b1 <- colSums(dZ)         # b1의 기울기: b2 때와 같은 논리로 유닛별(열별)로 더합니다.
+
+  # ── 3. 갱신: 기울기 반대 방향으로 조금 이동 ─────────────
+  # 기울기는 손실이 커지는 방향이므로 빼 줍니다.
+  # lr(학습률)을 기울기에 곱해 한 번에 움직일 폭을 정합니다.
+  # 위 기울기는 모두 갱신 전 가중치 기준이므로, 계산이 끝난 뒤 네 뭉치를 한꺼번에 적용합니다.
+  W1 <- W1 - lr * grad_W1
+  b1 <- b1 - lr * grad_b1
+  w2 <- w2 - lr * grad_w2
+  b2 <- b2 - lr * grad_b2
+}
+
+# ── 테스트 손실 ───────────────────────────────────────────
+# 학습이 끝난 가중치로 테스트 데이터를 예측합니다. 순전파와 같은 계산입니다.
+n_test <- nrow(x_test)
+Z_test <- x_test %*% W1 + rep(b1, each = n_test)
+p_test <- as.vector(Z_test %*% w2 + b2)
+mse_id <- mean((y_test - p_test)^2)
+
+# ── lm()과 비교 ───────────────────────────────────────────
+# 훈련·테스트 모두 data.frame()으로 만들어야 열 이름이 일치해 predict()가 작동합니다.
+train_df <- data.frame(y = y_train, x_train)
+test_df  <- data.frame(x_test)
+
+lm_fit <- lm(y ~ ., data = train_df)          # y ~ . : 나머지 열 전부를 예측변수로
+p_lm   <- predict(lm_fit, newdata = test_df)
+mse_lm <- mean((y_test - p_lm)^2)
+
+plot(loss_history, type = "l",
+     xlab = "Epoch", ylab = "Training MSE",
+     main = "Linear activation")
+
+# 두 값이 사실상 같다면, 은닉층이 있어도 결국 선형모형이라는 뜻입니다.
+c(
+  test_mse_identity = mse_id,
+  test_mse_lm       = mse_lm
+) |>
+  round(4)
+```
+
+손실 곡선이 내려가다 평평해지는 것을 보면 학습 알고리즘은 제대로 작동합니다. 그런데 테스트 손실을 비교해보면 `lm()` 기반의 예측 성능과 거의 같습니다. 강의에서 설명했드싱 이 모형은 은닉층이 있어도 비선형 활성화 함수가 없이는 결국 선형함수와 같은 원리로 작동하기 때문입니다. 2,000회 반복으로는 값이 완전히 일치하지는 않는데, `lm()`은 해를 한 번에 구하는 반면 경사하강은 조금씩 접근하기 때문에 생기는 수치적 차이입니다. 그럼 반복 횟수가 더 늘어나면 두 접근법의 성능이 같아질까요? 궁금하신 분들은 `n_iter`를 20,000회로 늘려서 다시 코드를 실행해 보세요.
+
+<br>
+
+## Task 2. ReLU로 바꾸기
+
+Task 2의 코드에서 활성화 함수만 아래의 ReLU로 바꿔 보겠습니다. 나머지는 그대로입니다. ReLU는 입력이 0보다 크면 그 값을 그대로 내보내고, 0 이하이면 0을 내보냅니다.
+
+$$
+\text{ReLU}(z) = \max(0, z), \qquad
+\text{ReLU}'(z) = \begin{cases} 1 & z > 0 \\ 0 & z \le 0 \end{cases}
+$$
+
+빈칸을 찾아 다음 세 곳을 수정하세요. 우선 루프 안 순전파에서 `Z`를 그대로 내보내지 말고 `pmax(Z, 0)`으로 감싸 `H`에 저장합니다.
+
+그리고 역전파에서 `dZ <- dH`를 `dH * (Z > 0)`을 적용한 결과가 `dZ`에 저장되도록 바꿉니다. 순전파가 함수를 적용하는 자리라면 역전파는 그 도함수를 곱하는 자리입니다. 우리가 구하려는 것은 손실을 `Z`로 미분한 값인데, `Z`는 활성화 함수를 거쳐 `H`가 된 뒤에야 예측에 반영되므로 연쇄법칙에 따라
+
+$$\frac{\partial L}{\partial Z} = \frac{\partial L}{\partial H} \times \text{ReLU}'(Z)$$
+
+가 됩니다. `(Z > 0)`은 논리형 행렬을 반환하는데, `Z`의 값이 0보다 큰 경우 1, 그 외는 0으로 곱해집니다. 따라서 순전파에서 `Z`가 0 이하라 값이 활성화 함수를 통과하지 못한 유닛은 갱신 신호도 0이 되도록 하는 장치입니다.
+
+코드 완성 후 테스트 손실을 계산해 Task 2의 결과와 비교합니다.
+
+```{r}
+#| eval: false
+
+# 빈칸을 채워 코드를 완성하세요
+
+# Task 2와 모든 설정이 같습니다. 바뀌는 것은 활성화 함수뿐입니다.
+# 아래에서 <<< 표시가 붙은 두 줄이 Task 2와 다른 부분입니다.
+
+set.seed(1)
+n <- nrow(x_train)
+p <- ncol(x_train)
+
+n_hidden <- 5        # 은닉층 유닛 수
+lr       <- 0.01     # 학습률
+n_iter   <- 2000     # 경사하강 반복 횟수
+
+# ── 초기화 ────────────────────────────────────────────────
+# Task 2와 동일합니다. 시드도 같으므로 출발점이 완전히 같습니다.
+# 따라서 이후 결과의 차이는 오직 활성화 함수에서만 옵니다.
+W1 <- matrix(rnorm(p * n_hidden, sd = 0.1), nrow = p)   # 입력 -> 은닉층 (p × 5)
+b1 <- rep(0, n_hidden)                                  # 은닉층 편향
+w2 <- rnorm(n_hidden, sd = 0.1)                         # 은닉층 -> 출력
+b2 <- mean(y_train)                                     # 출력 편향
+
+loss_history_relu <- rep(NA, n_iter)
+
+# ── 학습 시작 ────────────────────────────────────────────────
+
+for (iter in 1:n_iter) {
+
+  # ── 1. 순전파 ───────────────────────────────────────────
+  Z    <- x_train %*% W1 + rep(b1, each = n)   # 은닉층 입력 (n × 5)
+
+  # <<< 변경점 1: 활성화 함수
+  # ReLU(z) = max(0, z). 음수는 0으로 잘라내고 양수만 통과시킵니다.
+  # pmax()는 두 값을 원소별로 비교해 큰 쪽을 남기는 함수입니다.
+  # 이 한 줄이 모형을 비선형으로 만듭니다.
+  H    <- _____(_____, 0)
+
+  pred <- as.vector(H %*% w2 + b2)             # 최종 예측값
+
+  loss_history_relu[iter] <- mean((y_train - pred)^2)
+
+  # ── 2. 역전파 ───────────────────────────────────────────
+  dpred   <- 2 * (pred - y_train) / n          # 손실을 pred로 미분
+  grad_w2 <- as.vector(t(H) %*% dpred)         # w2의 기울기
+  grad_b2 <- sum(dpred)                        # b2의 기울기
+
+  dH <- matrix(dpred, ncol = 1) %*% matrix(w2, nrow = 1)   # 은닉층으로 신호 전달
+
+  # <<< 변경점 2: 활성화 함수의 도함수
+  # 항등함수는 도함수가 1이라 dZ <- dH 였습니다.
+  # ReLU는 z > 0에서 1, z <= 0에서 0이므로 (Z > 0)을 곱합니다.
+  # (Z > 0)은 TRUE/FALSE 행렬이고 곱셈에서 1/0으로 취급됩니다.
+  # 즉 순전파에서 잘린 유닛은 갱신 신호도 받지 못합니다.
+  dZ <- _____ * (_____ > 0)
+
+  grad_W1 <- t(x_train) %*% dZ                 # W1의 기울기
+  grad_b1 <- colSums(dZ)                       # b1의 기울기
+
+  # ── 3. 갱신 ─────────────────────────────────────────────
+  W1 <- W1 - lr * grad_W1
+  b1 <- b1 - lr * grad_b1
+  w2 <- w2 - lr * grad_w2
+  b2 <- b2 - lr * grad_b2
+}
+
+# ── 테스트 손실 ───────────────────────────────────────────
+# 예측할 때도 학습과 같은 활성화 함수를 써야 합니다. 여기에도 pmax()가 들어갑니다.
+n_test <- nrow(x_test)
+Z_test <- x_test %*% W1 + rep(b1, each = n_test)
+H_test <- pmax(Z_test, 0)                      # <<< 여기도 ReLU
+p_test <- as.vector(H_test %*% w2 + b2)
+mse_relu <- mean((y_test - p_test)^2)
+
+# ── 두 모형 비교 ──────────────────────────────────────────
+plot(loss_history, type = "l",
+     ylim = range(c(loss_history, loss_history_relu)),
+     xlab = "Epoch", ylab = "Training MSE",
+     main = "Linear vs ReLU")
+lines(loss_history_relu, lty = 2)
+abline(h = mean(residuals(lm_fit)^2), col = "gray50", lty = 3)
+legend("topright",
+       legend = c("Linear", "ReLU", "lm()"),
+       lty = c(1, 2, 3), col = c("black", "black", "gray50"), bty = "n")
+
+c(
+  test_mse_relu     = mse_relu,
+  test_mse_identity = mse_id,
+  test_mse_lm       = mse_lm
+) |>
+  round(4)
+
+
+# ══════════════════════════════════════════════════════
+#  정답 확인 및 리포트: 아래는 수정하지 마세요
+#  코드 작성이 완료되면 이 줄을 포함하여 전체 블록을 실행하세요.
+# 💡 코드 블록 전체 실행 | Windows: Ctrl + Shift + Enter | Mac: Cmd + Shift + Enter
+# ══════════════════════════════════════════════════════
+check("nn-02-relu")
+# ══════════════════════════════════════════════════════
+```
+
+```{r}
+#| echo: false
+
+# Task 2와 모든 설정이 같습니다. 바뀌는 것은 활성화 함수뿐입니다.
+# 아래에서 <<< 표시가 붙은 두 줄이 Task 2와 다른 부분입니다.
+
+set.seed(1)
+n <- nrow(x_train)
+p <- ncol(x_train)
+
+n_hidden <- 5        # 은닉층 유닛 수
+lr       <- 0.01     # 학습률
+n_iter   <- 2000     # 경사하강 반복 횟수
+
+# ── 초기화 ────────────────────────────────────────────────
+# Task 2와 동일합니다. 시드도 같으므로 출발점이 완전히 같습니다.
+# 따라서 이후 결과의 차이는 오직 활성화 함수에서만 옵니다.
+W1 <- matrix(rnorm(p * n_hidden, sd = 0.1), nrow = p)   # 입력 -> 은닉층 (p × 5)
+b1 <- rep(0, n_hidden)                                  # 은닉층 편향
+w2 <- rnorm(n_hidden, sd = 0.1)                         # 은닉층 -> 출력
+b2 <- mean(y_train)                                     # 출력 편향
+
+loss_history_relu <- rep(NA, n_iter)
+
+# ── 학습 시작 ────────────────────────────────────────────────
+
+for (iter in 1:n_iter) {
+
+  # ── 1. 순전파 ───────────────────────────────────────────
+  Z    <- x_train %*% W1 + rep(b1, each = n)   # 은닉층 입력 (n × 5)
+
+  # <<< 변경점 1: 활성화 함수
+  # ReLU(z) = max(0, z). 음수는 0으로 잘라내고 양수만 통과시킵니다.
+  # pmax()는 두 값을 원소별로 비교해 큰 쪽을 남기는 함수입니다.
+  # 이 한 줄이 모형을 비선형으로 만듭니다.
+  H    <- pmax(Z, 0)
+
+  pred <- as.vector(H %*% w2 + b2)             # 최종 예측값
+
+  loss_history_relu[iter] <- mean((y_train - pred)^2)
+
+  # ── 2. 역전파 ───────────────────────────────────────────
+  dpred   <- 2 * (pred - y_train) / n          # 손실을 pred로 미분
+  grad_w2 <- as.vector(t(H) %*% dpred)         # w2의 기울기
+  grad_b2 <- sum(dpred)                        # b2의 기울기
+
+  dH <- matrix(dpred, ncol = 1) %*% matrix(w2, nrow = 1)   # 은닉층으로 신호 전달
+
+  # <<< 변경점 2: 활성화 함수의 도함수
+  # 항등함수는 도함수가 1이라 dZ <- dH 였습니다.
+  # ReLU는 z > 0에서 1, z <= 0에서 0이므로 (Z > 0)을 곱합니다.
+  # (Z > 0)은 TRUE/FALSE 행렬이고 곱셈에서 1/0으로 취급됩니다.
+  # 즉 순전파에서 잘린 유닛은 갱신 신호도 받지 못합니다.
+  dZ <- dH * (Z > 0)
+
+  grad_W1 <- t(x_train) %*% dZ                 # W1의 기울기
+  grad_b1 <- colSums(dZ)                       # b1의 기울기
+
+  # ── 3. 갱신 ─────────────────────────────────────────────
+  W1 <- W1 - lr * grad_W1
+  b1 <- b1 - lr * grad_b1
+  w2 <- w2 - lr * grad_w2
+  b2 <- b2 - lr * grad_b2
+}
+
+# ── 테스트 손실 ───────────────────────────────────────────
+# 예측할 때도 학습과 같은 활성화 함수를 써야 합니다. 여기에도 pmax()가 들어갑니다.
+n_test <- nrow(x_test)
+Z_test <- x_test %*% W1 + rep(b1, each = n_test)
+H_test <- pmax(Z_test, 0)                      # <<< 여기도 ReLU
+p_test <- as.vector(H_test %*% w2 + b2)
+mse_relu <- mean((y_test - p_test)^2)
+
+# ── 두 모형 비교 ──────────────────────────────────────────
+plot(loss_history, type = "l",
+     ylim = range(c(loss_history, loss_history_relu)),
+     xlab = "Epoch", ylab = "Training MSE",
+     main = "Linear vs ReLU")
+lines(loss_history_relu, lty = 2)
+abline(h = mean(residuals(lm_fit)^2), col = "gray50", lty = 3)
+legend("topright",
+       legend = c("Linear", "ReLU", "lm()"),
+       lty = c(1, 2, 3), col = c("black", "black", "gray50"), bty = "n")
+
+c(
+  test_mse_relu     = mse_relu,
+  test_mse_identity = mse_id,
+  test_mse_lm       = mse_lm
+) |>
+  round(4)
+```
+
+활성화 함수 하나를 바꿨을 뿐인데 모형이 표현할 수 있는 함수의 범위가 달라집니다. ReLU가 음수 구간을 잘라내면서 유닛마다 활성화되는 관측치가 달라지고, 그 결과 하나의 선형식으로 접을 수 없는 함수가 만들어집니다. 층을 쌓는 것 자체가 아니라 비선형 활성화 함수가 신경망의 표현력을 만듭니다.
+
+다만 표현력이 높다고 항상 예측이 좋아지는 것은 아닙니다. 데이터의 참 관계가 대체로 선형이라면 ReLU 모형이 오히려 과적합할 수 있습니다. 유닛 수와 학습률을 어떻게 정할지, 과적합을 어떻게 억제할지는 다음 실습에서 `keras`로 다룹니다.
+
+***
+<br>
+<!-- ─────────────────────────────────────────────────────────── -->
+
+
+# Part 2. Keras로 구현하기
+
+이번에는 Keras 활용해서 뉴럴 네트워크를 구현해 보겠습니다. Keras는 아래의 세 함수를 차례로 호출하는 방식으로 알고리즘을 구현합니다.
+
+| 함수 | 인수 |
+|:---|:---|
+| `keras_model_sequential()` | 층 수, 노드 수, 활성화 함수, 드롭아웃, 규제 |
+| `compile()` | 손실함수, 옵티마이저, 학습률, 평가지표 |
+| `fit()` | 배치 크기, 에폭 수, 검증 분할, 콜백 |
+
+```{r}
+library(keras3)
+
+set_random_seed(42)
+```
+
+`keras`는 R의 난수와 별개로 자체 난수를 사용합니다. 가중치 초기화와 배치 순서가 여기에 의존하므로 `set_random_seed()`로 함께 고정합니다.
+
+## Task 3. 1단계 구조 정의
+
+  - `keras_model_sequential()`에 `input_shape = ncol(x_train)`으로 입력변수 개수를 지정합니다.
+  - `layer_dense()`를 파이프로 이어 붙이면 층이 하나씩 추가됩니다. `units = 8`, `activation = "relu"`로 Part 2와 같은 은닉층을 만듭니다.
+  - 출력층은 `units = 1`입니다. 결과변수가 연속형이므로 `activation`을 지정하지 않습니다. 지정하지 않으면 항등함수가 됩니다.
+  - 완성된 모델을 `model`에 저장하고 `summary()`로 층별 파라미터 개수를 확인합니다.
+
+```{r}
+#| eval: false
+
+# 빈칸을 채워 코드를 완성하세요
+
+model <- _____(input_shape = ncol(_____)) |>
+  layer_dense(units = _____, activation = _____) |>
+  layer_dense(units = _____)
+
+summary(model)
+
+
+# ══════════════════════════════════════════════════════
+#  정답 확인 및 리포트: 아래는 수정하지 마세요
+#  코드 작성이 완료되면 이 줄을 포함하여 전체 블록을 실행하세요.
+# 💡 코드 블록 전체 실행 | Windows: Ctrl + Shift + Enter | Mac: Cmd + Shift + Enter
+# ══════════════════════════════════════════════════════
+check("nn-03-architecture")
+# ══════════════════════════════════════════════════════
+```
+
+```{r}
+#| echo: false
+
+model <- keras_model_sequential(input_shape = ncol(x_train)) |>
+  layer_dense(units = 8, activation = "relu") |>
+  layer_dense(units = 1)
+
+summary(model)
+```
+
+`Param #` 열을 손으로 검산해 보세요. 첫 층은 $p \times 8 + 8$, 출력층은 $8 \times 1 + 1$입니다. 층의 유닛 수를 5로 설정하면, Part 1에서 만든 `W1`, `b1`, `w2`, `b2`의 원소 개수와 정확히 같아집니다.
+
+<br>
+
+
+## Task 4. 2단계 학습 방식 설정
+
+`compile()` 함수로 학습 방식을 설정합니다.
+
+  - `loss`: 무엇을 줄일지 정합니다. `"mse"`를 지정하면 Part 1에서 직접 계산하던 `mean((y_train - pred)^2)`와 같은 평균제곱오차가 됩니다.
+  - `optimizer`: 어떻게 줄일지 정합니다. `optimizer_adam()`을 지정합니다. Part 1에서는 기울기에 학습률을 곱해 그대로 빼는 순수한 경사하강법을 썼지만, Adam은 파라미터마다 최근 기울기를 반영해 보폭을 조절합니다.
+  - `learning_rate`: 한 번에 움직일 폭입니다. Part 1의 `lr`에 해당하며 여기서도 `0.01`로 지정합니다.
+  - `metrics`: 학습에는 쓰이지 않고 기록만 남는 지표입니다. `metric_root_mean_squared_error()`를 지정하면 손실의 제곱근이 함께 기록되어, 뒤에서 모형을 비교할 때 쓰는 RMSE와 같은 단위로 학습 과정을 볼 수 있습니다.
+
+```{r}
+#| eval: false
+
+# 빈칸을 채워 코드를 완성하세요
+
+model |> _____(
+  loss = _____,
+  optimizer = optimizer_adam(learning_rate = _____),
+  metrics = _____()
+)
+
+# ══════════════════════════════════════════════════════
+#  정답 확인 및 리포트: 아래는 수정하지 마세요
+#  코드 작성이 완료되면 이 줄을 포함하여 전체 블록을 실행하세요.
+# 💡 코드 블록 전체 실행 | Windows: Ctrl + Shift + Enter | Mac: Cmd + Shift + Enter
+# ══════════════════════════════════════════════════════
+check("task")
+# ══════════════════════════════════════════════════════
+```
+
+```{r}
+#| echo: false
+
+model |> compile(
+  loss = "mse",
+  optimizer = optimizer_adam(learning_rate = 0.01),
+  metrics = metric_root_mean_squared_error()
+)
+```
+
+<br>
+
+
+## Task 5. 3단계 학습 실행과 학습곡선
+
+`fit()` 함수로 학습을 실행합니다.
+
+  - `x`, `y`: 학습에 사용할 입력과 결과입니다. `x_train`과 `y_train`을 지정합니다. `keras`는 공식을 받지 않으므로 표준화해 둔 행렬을 그대로 넘깁니다.
+  - `epochs`: 훈련 데이터 전체를 몇 번 통과할지 정합니다. Part 1의 `n_iter`에 해당하며 여기에서는 `200`으로 지정합니다.
+  - `batch_size`: 가중치를 한 번 갱신할 때 사용할 관측치 수입니다. `64`로 지정합니다. Part 1에서는 매번 전체 관측치로 기울기를 계산했지만, 여기서는 64개씩 나눠 보면서 한 epoch 안에서 여러 번 갱신합니다.
+  - `validation_split`: 훈련 데이터에서 검증용으로 떼어 낼 비율입니다. `0.2`를 지정해 20%를 떼어 냅니다. 이 몫은 가중치 갱신에 쓰이지 않으므로 학습 도중 처음 보는 관측치에서의 성능을 가늠할 수 있습니다. 훈련 데이터 안에서 할당하는 것이므로 테스트 데이터와 혼동하지 마세요.
+  - `verbose`: 진행 상황 출력 여부입니다. `0`을 지정해 끕니다.
+
+학습 기록은 `history`에 저장합니다. `history$metrics$loss`에는 epoch마다 계산된 훈련 손실이, `$val_loss`에는 검증 손실이 벡터로 담기며, 이 둘로 학습곡선 두 개를 그립니다.
+
+```{r}
+#| eval: false
+
+# 빈칸을 채워 코드를 완성하세요
+
+history <- model |> _____(
+  x = _____,
+  y = _____,
+  epochs = _____,
+  batch_size = 64,
+  validation_split = _____,
+  verbose = 0
+)
+
+n_ep <- length(history$metrics$loss)
+
+hist_df <- tibble(
+  epoch = rep(1:n_ep, 2),
+  loss  = c(history$metrics$_____, history$metrics$_____),
+  set   = rep(c("Training", "Validation"), each = n_ep)
+)
+
+ggplot(hist_df, aes(epoch, loss, colour = set)) +
+  geom_line(linewidth = 0.9) +
+  scale_colour_manual(values = c("#d62728", "#1f77b4")) +
+  labs(x = "Epoch", y = "MSE", colour = NULL,
+       title = "Learning curve") +
+  theme_minimal(base_size = 13)
+
+# ══════════════════════════════════════════════════════
+#  정답 확인 및 리포트: 아래는 수정하지 마세요
+#  코드 작성이 완료되면 이 줄을 포함하여 전체 블록을 실행하세요.
+# 💡 코드 블록 전체 실행 | Windows: Ctrl + Shift + Enter | Mac: Cmd + Shift + Enter
+# ══════════════════════════════════════════════════════
+check("task")
+# ══════════════════════════════════════════════════════
+```
+
+```{r}
+#| echo: false
+
+history <- model |> fit(
+  x = x_train,
+  y = y_train,
+  epochs = 60,
+  batch_size = 64,
+  validation_split = 0.2,
+  verbose = 0
+)
+
+# history에는 model을 적합한 결과로 매 회차마다 훈련과정에 대한 정보와 계산된 손실이 담겨 있습니다.
+# history$metrics$loss에는 epoch마다 계산된 훈련 손실이 벡터로 저장되어 있으므로, 그 길이를 재면 실행된 epoch 수가 나옵니다.
+n_ep <- length(history$metrics$loss)
+
+# 시각화를 위해 epoch 수만큼의 행을 만들고, 손실값을 저장하는 loss열과 계산된 loss의 유형을 훈련 또는 검증으로 구분하는 데이터프레임을 만듭니다.
+hist_df <- tibble(
+  # 1부터 n_ep까지를 두 번 반복합니다. 훈련용, 검증용 각각 하나씩이므로 반복 횟수의 두 배입니다.
+  epoch = rep(1:n_ep, 2),
+  # 두 손실 벡터를 위아래로 이어 붙입니다. 앞쪽 n_ep행은 Training, 뒤쪽 n_ep행은 Validation입니다.
+  loss  = c(history$metrics$loss, history$metrics$val_loss),
+  # 위 순서에 맞춰 라벨을 붙입니다. each = n_ep는 각 라벨을 n_ep번씩 뭉쳐서 반복하므로 loss열의 배치와 일치합니다.
+  set   = rep(c("Training", "Validation"), each = n_ep)
+)
+
+# 시각화
+ggplot(hist_df, aes(epoch, loss, colour = set)) +
+  geom_line(linewidth = 0.9) +
+  scale_colour_manual(values = c("#d62728", "#1f77b4")) +
+  labs(x = "Epoch", y = "MSE", colour = NULL,
+       title = "Learning curve") +
+  theme_minimal(base_size = 13)
+```
+
+두 곡선의 관계를 보세요.
+
+  - 함께 내려가 나란히 평평해지면 적절한 학습
+  - 훈련 손실만 계속 내려가고 검증 손실이 올라가면 그 지점부터 과적합
+  - 둘 다 높은 자리에서 멈추면 과소적합
+  - 곡선이 위아래로 튀면 학습률이 큼
+
+<br>
+
+
+## Task 6. 예측과 평가
+
+`predict()` 함수로 테스트 데이터의 예측값을 계산하고 RMSE로 성능을 비교합니다.
+
+  - `predict()`: 학습된 모델과 `x_test`를 넣습니다. `verbose = 0`으로 진행 출력을 끕니다. 반환값이 행렬이므로 `as.numeric()`으로 벡터로 바꿔 `pred_keras`에 저장합니다.
+  - `rmse_keras`: 테스트 RMSE를 계산해 저장합니다. Task 5의 학습곡선은 훈련 데이터 안에서 계산한 값이었고, 여기서 처음으로 테스트 데이터를 씁니다.
+  - `pred_lm`, `rmse_lm`: 비교를 위해 Part 1에서 적합해 둔 `lm_fit`의 테스트 예측값과 RMSE도 계산합니다. `lm_fit`은 데이터프레임을 받으므로 `x_test`를 `data.frame()`으로 바꿔 넘깁니다.
+  - 영모형의 `rmse_null`까지 세 값을 나란히 출력합니다.
+
+```{r}
+#| eval: false
+
+# 빈칸을 채워 코드를 완성하세요
+
+pred_keras <- _____(predict(_____, x_test, verbose = 0))
+
+rmse_keras <- _____(_____((y_test - _____)^2))
+
+test_df <- data.frame(x_test)
+pred_lm <- predict(_____, newdata = _____)
+
+rmse_lm <- sqrt(mean((y_test - _____)^2))
+
+c(null = rmse_null, lm = rmse_lm, keras = rmse_keras) |> round(4)
+
+
+# ══════════════════════════════════════════════════════
+#  정답 확인 및 리포트: 아래는 수정하지 마세요
+#  코드 작성이 완료되면 이 줄을 포함하여 전체 블록을 실행하세요.
+# 💡 코드 블록 전체 실행 | Windows: Ctrl + Shift + Enter | Mac: Cmd + Shift + Enter
+# ══════════════════════════════════════════════════════
+check("nn-06-predict")
+# ══════════════════════════════════════════════════════
+```
+
+```{r}
+#| echo: false
+
+pred_keras <- as.numeric(predict(model, x_test, verbose = 0))
+
+rmse_keras <- sqrt(mean((y_test - pred_keras)^2))
+
+test_df <- data.frame(x_test)
+pred_lm <- predict(lm_fit, newdata = test_df)
+
+rmse_lm <- sqrt(mean((y_test - pred_lm)^2))
+
+c(null = rmse_null, lm = rmse_lm, keras = rmse_keras) |> round(4)
+```
+
+세 값이 각각 무엇인지부터 정리하면 이렇습니다. `null`은 예측변수를 하나도 쓰지 않고 훈련 데이터의 평균만으로 예측했을 때의 RMSE로, 어떤 모형이든 이보다는 나아야 하는 최저 기준입니다. `lm`은 같은 예측변수로 선형회귀를 적합했을 때의 RMSE이고, `keras`는 은닉층 하나를 둔 신경망의 RMSE입니다.
+
+영모형과 선형회귀 대비 얼마나 개선되었는지 확인해 보세요. 선형회귀와 비교해서 차이가 크지 않다면 예측변수와 결과변수의 관계가 대체로 선형일 가능성이 높고, 또 과소적합(underfitting) 또는 과적합(overfitting) 상태일 가능성을 의미하기도 합니다. 신경망을 썼다는 사실이 그 자체로 성능을 보장하지 않습니다. 이어지는 섹션에서는 하이퍼 파라미터를 추가로 튜닝해 보면서 성능이 더 높아질 수 있는지 확인해 보겠습니다.
+
+***
+<br>
+<!-- ─────────────────────────────────────────────────────────── -->
+
+
+# Part 3. (선택사항) 하이퍼파라미터 조정
+
+Task 6에서 세 값을 나란히 놓았을 때 Keras 모형의 성능이 선형회귀의 성능보다 높지 않았습니다. 은닉층을 얹었는데도 성능이 따라오지 않은 것인데, 여기에는 두 가지 가능성이 있습니다. 예측변수와 결과변수의 관계가 대체로 선형이라 은닉층이 잡아낼 것이 애초에 많지 않았을 수 있고, 아니면 구조는 충분한데 학습 설정이 맞지 않아 모형이 가진 표현력을 다 쓰지 못했을 수 있습니다. Task 3에서 5까지는 단순한 신경망 모델로 노드 8개, 학습률 0.01, 규제 없음으로 고정해두고 훈련을 시켰습니다. Part 3에서는 이 값들을 하나씩 바꿔 가며 검증 손실이 어떻게 반응하는지 보고, 기본 설정에서 얼마나 나아질 수 있는지 확인합니다.
+
+같은 구조를 반복해서 만들어야 하므로 모형 정의를 함수로 감싸두겠습니다. 아래 코드에서 정의된 `build_model()`은 Task 3에서 5까지 세 단계로 나눠 실행하던 구조 정의와 컴파일을 함수 하나로 묶은 것입니다. 층을 쌓고 `compile()`까지 마친 모형을 반환하므로 호출을 하면 학습만 남은 모형이 나옵니다.
+
+바뀐 점은 값을 코드에 직접 쓰지 않고 인수로 빼냈다는 것입니다. `units`, `lr`, `dropout`, `l2` 네 개가 조정 대상이고, 함수 정의의 `= 8`, `= 0.01` 같은 부분은 아무것도 넘기지 않았을 때 쓰이는 기본값입니다. 예를 들어, `build_model()`이라고만 쓰면 Task 5와 같은 모형이 나오고, `build_model(units = 128)`이라고 쓰면 노드 수만 바뀐 모형이 나옵니다. 반복문 안에서 값만 갈아 끼우며 여러 모형을 만들 수 있도록 정의해둔 것입니다.
+
+`layer_dropout()`과 `regularizer_l2()`는 Part 3에서 새로 등장합니다. 지금은 두 인수의 기본값이 모두 `0`이라 아무 효과가 없습니다. `regularizer_l2(0)`은 벌점을 걸지 않는 것과 같고, `layer_dropout(rate = 0)`은 노드를 하나도 끄지 않으므로 층이 있어도 통과만 시킵니다. Task 9에 가서 이 값들에 `0`이 아닌 수를 넘기면 그때부터 작동합니다. 미리 자리를 만들어 두었다고 보시면 됩니다.
+
+조정할 항목이 더 생기면 같은 방식으로 인수를 하나 추가하고 기본값을 지금과 같은 동작이 되도록 두면 됩니다. 예를 들어 은닉층을 하나 더 넣고 싶다면 `units2 = 0`을 인수로 받아 `0`이 아닐 때만 층을 추가하도록 쓰면, 앞서 작성한 코드는 그대로 두고 새 실험만 얹을 수 있습니다.
+
+```{r}
+build_model <- function(units = 8, lr = 0.01, dropout = 0, l2 = 0) {
+  keras_model_sequential(input_shape = ncol(x_train)) |>
+    layer_dense(units = units, activation = "relu",
+                kernel_regularizer = regularizer_l2(l2)) |>
+    layer_dropout(rate = dropout) |>
+    layer_dense(units = 1) |>
+    compile(
+      loss = "mse",
+      optimizer = optimizer_adam(learning_rate = lr),
+      metrics = metric_root_mean_squared_error()
+    )
+}
+
+# Task 5에서 학습한 기본 설정의 검증 RMSE입니다.
+# 앞으로 모든 비교 그림에 기준선으로 들어갑니다.
+rmse_val_base <- sqrt(min(history$metrics$val_loss))
+
+round(rmse_val_base, 4)
+```
+
+::: {.callout-note}
+## 조정 단계에서 테스트 데이터를 쓰지 않는 이유
+
+Part 3의 비교는 모두 검증 RMSE로 합니다. 설정을 고르는 데 테스트 데이터를 쓰면 그 데이터가 조정 과정의 일부가 되어, 마지막에 계산하는 성능이 실제보다 좋게 나옵니다. 테스트 데이터는 Part 4의 마지막에 한 번만 씁니다.
+:::
+
+<br>
+
+
+## Task 7. 학습률
+
+학습률은 한 번에 움직일 폭입니다. 폭이 지나치게 좁으면 정해진 epoch 안에 충분히 내려가지 못하고, 지나치게 넓으면 최소 지점을 넘나들며 손실이 오르내립니다. 세 값을 시도해 각각 어떤 증상이 나타나는지 봅니다.
+
+  - `lrs`: 시도할 학습률 세 개를 벡터로 만들어 저장합니다. `0.0005`, `0.01`, `0.3`을 씁니다. 기본값인 `0.01`을 가운데 두고 양쪽으로 크게 벌린 값입니다.
+  - `set_random_seed()`: 반복문 안에서 매번 `42`로 호출합니다. 초기 가중치를 같게 맞춰야 세 결과의 차이를 학습률 때문이라고 말할 수 있습니다.
+  - `build_model()`: `lr` 인수에 현재 학습률을 넘깁니다. 나머지 인수는 기본값을 그대로 씁니다.
+  - `fit()`: `epochs = 40`, `batch_size = 64`, `validation_split = 0.2`로 학습합니다.
+  - `curves_lr`: 세 번의 학습곡선을 담을 리스트입니다. 반복마다 훈련 손실과 검증 손실을 세로로 쌓은 데이터프레임을 만들어 넣습니다.
+  - `rmse_val_lr`: 설정마다 검증 손실의 최솟값에 제곱근을 취해 저장합니다. 학습 도중 가장 좋았던 지점의 RMSE입니다.
+
+```{r}
+#| eval: false
+
+# 빈칸을 채워 코드를 완성하세요
+
+lrs <- c(_____, _____, _____)
+
+curves_lr   <- list()
+rmse_val_lr <- numeric(length(lrs))
+
+for (j in seq_along(lrs)) {
+
+  set_random_seed(_____)
+
+  m <- build_model(lr = _____)
+
+  h <- m |> fit(x_train, y_train, epochs = _____, batch_size = 64,
+                validation_split = 0.2, verbose = 0)
+
+  n_ep <- length(h$metrics$loss)
+
+  curves_lr[[j]] <- tibble(
+    epoch = rep(1:n_ep, 2),
+    loss  = c(h$metrics$loss, h$metrics$val_loss),
+    set   = rep(c("Training", "Validation"), each = n_ep),
+    label = paste0("lr = ", lrs[j])
+  )
+
+  rmse_val_lr[j] <- _____(_____(h$metrics$val_loss))
+}
+
+# 시각화
+bind_rows(curves_lr) |>
+  ggplot(aes(epoch, loss, colour = set)) +
+  geom_line(linewidth = 0.9) +
+  facet_wrap(~ label, scales = "free_y") +
+  scale_colour_manual(values = c("#d62728", "#1f77b4")) +
+  labs(x = "Epoch", y = "MSE", colour = NULL,
+       title = "Effect of learning rate") +
+  theme_minimal(base_size = 12)
+
+
+# ══════════════════════════════════════════════════════
+#  정답 확인 및 리포트: 아래는 수정하지 마세요
+#  코드 작성이 완료되면 이 줄을 포함하여 전체 블록을 실행하세요.
+# 💡 코드 블록 전체 실행 | Windows: Ctrl + Shift + Enter | Mac: Cmd + Shift + Enter
+# ══════════════════════════════════════════════════════
+check("nn-07-lr")
+# ══════════════════════════════════════════════════════
+```
+
+```{r}
+#| echo: false
+
+lrs <- c(0.0005, 0.01, 0.3)
+
+curves_lr   <- list()
+rmse_val_lr <- numeric(length(lrs))
+
+for (j in seq_along(lrs)) {
+
+  set_random_seed(42)
+
+  m <- build_model(lr = lrs[j])
+
+  h <- m |> fit(x_train, y_train, epochs = 40, batch_size = 64,
+                validation_split = 0.2, verbose = 0)
+
+  n_ep <- length(h$metrics$loss)
+
+  curves_lr[[j]] <- tibble(
+    epoch = rep(1:n_ep, 2),
+    loss  = c(h$metrics$loss, h$metrics$val_loss),
+    set   = rep(c("Training", "Validation"), each = n_ep),
+    label = paste0("lr = ", lrs[j])
+  )
+
+  rmse_val_lr[j] <- sqrt(min(h$metrics$val_loss))
+}
+
+# 시각화
+bind_rows(curves_lr) |>
+  ggplot(aes(epoch, loss, colour = set)) +
+  geom_line(linewidth = 0.9) +
+  facet_wrap(~ label, scales = "free_y") +
+  scale_colour_manual(values = c("#d62728", "#1f77b4")) +
+  labs(x = "Epoch", y = "MSE", colour = NULL,
+       title = "Effect of learning rate") +
+  theme_minimal(base_size = 12)
+```
+
+세 패널에서 각각 다른 증상이 나타납니다. 학습률이 너무 작으면 곡선이 거의 내려가지 않은 채 40 epoch가 끝나고, 적절하면 빠르게 내려가 평평해지며, 너무 크면 곡선이 위아래로 튀거나 아예 내려가지 않습니다.
+
+<br>
+
+
+## Task 8. 노드 수
+
+학습률을 `0.01`로 고정하고 은닉층 노드 수만 바꿉니다. 한 번에 한 축씩 움직여야 어느 값이 결과를 바꾼 것인지 말할 수 있습니다.
+
+  - `units_list`: 시도할 노드 수 세 개를 벡터로 만듭니다. `2`, `8`, `128`을 씁니다. 기본값 8을 가운데 두고 양쪽으로 벌린 값입니다.
+  - `build_model()`: `units`에 현재 노드 수를, `lr`에 `0.01`을 넘깁니다.
+  - `fit()`: `epochs = 60`으로 늘립니다. 노드가 많은 모형은 수렴에 더 걸립니다.
+  - `curves_u`, `rmse_val_u`: Task 7과 같은 방식으로 학습곡선과 검증 RMSE를 저장합니다.
+
+```{r}
+#| eval: false
+
+# 빈칸을 채워 코드를 완성하세요
+
+units_list <- c(_____, _____, _____)
+
+curves_u   <- list()
+rmse_val_u <- numeric(length(units_list))
+
+for (j in seq_along(units_list)) {
+
+  set_random_seed(42)
+
+  m <- build_model(units = _____, lr = _____)
+
+  h <- m |> fit(x_train, y_train, epochs = _____, batch_size = 64,
+                validation_split = 0.2, verbose = 0)
+
+  n_ep <- length(h$metrics$loss)
+
+  curves_u[[j]] <- tibble(
+    epoch = rep(1:n_ep, 2),
+    loss  = c(h$metrics$loss, h$metrics$val_loss),
+    set   = rep(c("Training", "Validation"), each = n_ep),
+    label = paste0("units = ", units_list[j])
+  )
+
+  rmse_val_u[j] <- sqrt(min(h$metrics$_____))
+}
+
+# 시각화
+bind_rows(curves_u) |>
+  ggplot(aes(epoch, loss, colour = set)) +
+  geom_line(linewidth = 0.9) +
+  facet_wrap(~ label, scales = "free_y") +
+  scale_colour_manual(values = c("#d62728", "#1f77b4")) +
+  labs(x = "Epoch", y = "MSE", colour = NULL,
+       title = "Effect of hidden units") +
+  theme_minimal(base_size = 12)
+
+
+# ══════════════════════════════════════════════════════
+#  정답 확인 및 리포트: 아래는 수정하지 마세요
+#  코드 작성이 완료되면 이 줄을 포함하여 전체 블록을 실행하세요.
+# 💡 코드 블록 전체 실행 | Windows: Ctrl + Shift + Enter | Mac: Cmd + Shift + Enter
+# ══════════════════════════════════════════════════════
+check("nn-08-units")
+# ══════════════════════════════════════════════════════
+```
+
+```{r}
+#| echo: false
+
+units_list <- c(2, 8, 128)
+
+curves_u   <- list()
+rmse_val_u <- numeric(length(units_list))
+
+for (j in seq_along(units_list)) {
+
+  set_random_seed(42)
+
+  m <- build_model(units = units_list[j], lr = 0.01)
+
+  h <- m |> fit(x_train, y_train, epochs = 60, batch_size = 64,
+                validation_split = 0.2, verbose = 0)
+
+  n_ep <- length(h$metrics$loss)
+
+  curves_u[[j]] <- tibble(
+    epoch = rep(1:n_ep, 2),
+    loss  = c(h$metrics$loss, h$metrics$val_loss),
+    set   = rep(c("Training", "Validation"), each = n_ep),
+    label = paste0("units = ", units_list[j])
+  )
+
+  rmse_val_u[j] <- sqrt(min(h$metrics$val_loss))
+}
+
+# 시각화
+bind_rows(curves_u) |>
+  ggplot(aes(epoch, loss, colour = set)) +
+  geom_line(linewidth = 0.9) +
+  facet_wrap(~ label, scales = "free_y") +
+  scale_colour_manual(values = c("#d62728", "#1f77b4")) +
+  labs(x = "Epoch", y = "MSE", colour = NULL,
+       title = "Effect of hidden units") +
+  theme_minimal(base_size = 12)
+```
+
+노드 수는 모형의 용량입니다. 키우면 훈련 손실은 계속 좋아지지만 검증 손실은 그렇지 않습니다. `units = 128` 패널에서 두 곡선 사이의 간격이 벌어지는지 보세요. 그 간격이 훈련 데이터에만 맞춰진 부분입니다. 막대그림의 높이가 훈련 손실이 아니라 검증 손실을 기준으로 한다는 점이 중요합니다. 용량을 키운 만큼 성능이 따라오지 않는다면, 다음 Task에서 그 용량을 억제하는 장치를 붙여 봅니다.
+
+<br>
+
+
+## Task 9. 규제
+
+Task 8의 `units = 128`에서 나타난 과적합에 세 처방을 비교합니다. 용량을 줄이는 대신 큰 모형을 그대로 두고 학습 과정에 제약을 거는 방식입니다.
+
+  - 조기 종료: `callback_early_stopping()`으로 검증 손실이 개선되지 않으면 학습을 중단합니다. `patience = 8`은 여덟 epoch 동안 나아지지 않으면 멈춘다는 뜻이고, `restore_best_weights = TRUE`를 넣으면 가장 좋았던 시점의 가중치로 되돌아가므로 epoch 수를 조정 대상에서 뺄 수 있습니다.
+  - 드롭아웃: 매 갱신마다 노드의 일부를 무작위로 끕니다. 특정 노드에 의존하지 못하게 만드는 장치이고, 예측 시점에는 자동으로 꺼집니다. `build_model()`의 `dropout` 인수로 비율을 넘깁니다.
+  - 가중치 규제: 릿지와 같은 형태의 벌점을 가중치에 겁니다. 앞 세션의 $\lambda$가 `l2` 인수로 다시 등장합니다.
+
+세 설정을 `settings` 리스트에 담고 반복문으로 돌립니다.
+
+  - `cb_es`: 조기 종료 콜백을 만들어 저장합니다. 세 설정에 모두 적용합니다.
+  - `settings`: `label`, `dropout`, `l2`를 담은 리스트 세 개입니다. 규제 없음, 드롭아웃 `0.3`, L2 `0.01` 순입니다.
+  - `build_model()`: `units = 128`, `lr = 0.01`로 고정하고 `dropout`과 `l2`만 설정마다 바꿉니다.
+  - `fit()`: `epochs = 100`으로 넉넉히 두고 `callbacks = list(cb_es)`를 넘깁니다. 조기 종료가 있으므로 100회를 다 돌지 않고 멈춥니다.
+
+```{r}
+#| eval: false
+
+# 빈칸을 채워 코드를 완성하세요
+
+cb_es <- callback_early_stopping(monitor = "val_loss", patience = _____,
+                                 restore_best_weights = _____)
+
+settings <- list(
+  list(label = "No regularisation", dropout = 0,   l2 = 0),
+  list(label = "Dropout 0.3",       dropout = _____, l2 = 0),
+  list(label = "L2 0.01",           dropout = 0,   l2 = _____)
+)
+
+curves_reg   <- list()
+rmse_val_reg <- numeric(length(settings))
+
+for (i in seq_along(settings)) {
+
+  s <- settings[[i]]
+
+  set_random_seed(42)
+
+  m <- build_model(units = _____, lr = 0.01,
+                   dropout = s$_____, l2 = s$_____)
+
+  h <- m |> fit(x_train, y_train, epochs = 100, batch_size = 64,
+                validation_split = 0.2, callbacks = list(_____), verbose = 0)
+
+  n_ep <- length(h$metrics$loss)
+
+  curves_reg[[i]] <- tibble(
+    epoch = rep(1:n_ep, 2),
+    loss  = c(h$metrics$loss, h$metrics$val_loss),
+    set   = rep(c("Training", "Validation"), each = n_ep),
+    label = s$label
+  )
+
+  rmse_val_reg[i] <- sqrt(min(h$metrics$val_loss))
+}
+
+# 시각화
+bind_rows(curves_reg) |>
+  filter(set == "Validation") |>
+  ggplot(aes(epoch, loss, colour = label)) +
+  geom_line(linewidth = 0.9) +
+  labs(x = "Epoch", y = "Validation MSE", colour = NULL,
+       title = "Regularisation strategies") +
+  theme_minimal(base_size = 12)
+
+
+# ══════════════════════════════════════════════════════
+#  정답 확인 및 리포트: 아래는 수정하지 마세요
+#  코드 작성이 완료되면 이 줄을 포함하여 전체 블록을 실행하세요.
+# 💡 코드 블록 전체 실행 | Windows: Ctrl + Shift + Enter | Mac: Cmd + Shift + Enter
+# ══════════════════════════════════════════════════════
+check("nn-09-reg")
+# ══════════════════════════════════════════════════════
+```
+
+```{r}
+#| echo: false
+
+cb_es <- callback_early_stopping(monitor = "val_loss", patience = 8,
+                                 restore_best_weights = TRUE)
+
+settings <- list(
+  list(label = "No regularisation", dropout = 0,   l2 = 0),
+  list(label = "Dropout 0.3",       dropout = 0.3, l2 = 0),
+  list(label = "L2 0.01",           dropout = 0,   l2 = 0.01)
+)
+
+curves_reg   <- list()
+rmse_val_reg <- numeric(length(settings))
+
+for (i in seq_along(settings)) {
+
+  s <- settings[[i]]
+
+  set_random_seed(42)
+
+  m <- build_model(units = 128, lr = 0.01,
+                   dropout = s$dropout, l2 = s$l2)
+
+  h <- m |> fit(x_train, y_train, epochs = 100, batch_size = 64,
+                validation_split = 0.2, callbacks = list(cb_es), verbose = 0)
+
+  n_ep <- length(h$metrics$loss)
+
+  curves_reg[[i]] <- tibble(
+    epoch = rep(1:n_ep, 2),
+    loss  = c(h$metrics$loss, h$metrics$val_loss),
+    set   = rep(c("Training", "Validation"), each = n_ep),
+    label = s$label
+  )
+
+  rmse_val_reg[i] <- sqrt(min(h$metrics$val_loss))
+}
+
+
+# 시각화
+bind_rows(curves_reg) |>
+  filter(set == "Validation") |>
+  ggplot(aes(epoch, loss, colour = label)) +
+  geom_line(linewidth = 0.9) +
+  labs(x = "Epoch", y = "Validation MSE", colour = NULL,
+       title = "Regularisation strategies") +
+  theme_minimal(base_size = 12)
+```
+
+세 곡선의 길이가 서로 다르게 나옵니다. 조기 종료가 각각 다른 시점에서 학습을 멈췄기 때문이고, 규제가 걸린 쪽이 더 오래 개선되는 경우가 많습니다. 규제 없는 설정의 곡선이 일찍 바닥을 치고 올라가는지 확인해 보세요.
+
+막대그림에서 세 값의 차이가 크지 않다면 이 데이터에서 과적합의 여지가 애초에 크지 않았다는 뜻으로 읽을 수 있습니다. 규제는 용량이 남아돌 때 효과를 내는 장치라 모형이 이미 데이터에 비해 작으면 걸어도 달라지는 것이 적습니다.
+
+***
+<br>
+<!-- ─────────────────────────────────────────────────────────── -->
+
+
+# Part 4. (선택사항) 그리드서치
+
+Part 3에서는 한 번에 한 축씩 움직였습니다. 이 방식은 어느 축이 결과를 바꾸는지 보기에는 좋지만, 값들이 서로 영향을 주고받는 경우를 놓칩니다. 노드를 늘렸을 때 맞는 학습률과 노드가 적을 때 맞는 학습률이 다를 수 있기 때문입니다. Part 4에서는 여러 축을 동시에 탐색합니다. 이러한 방식을 그리드서치라고 합니다.
+
+## Task 10. 격자 만들기와 교차검증
+
+  - `grid`: `expand.grid()`로 노드 수, 학습률, 드롭아웃의 모든 조합을 만듭니다. `units`는 `8`과 `64`, `lr`은 `0.005`와 `0.02`, `dropout`은 `0`과 `0.3`입니다.
+  - `K`, `fold`: 겹의 수를 `3`으로 두고, 훈련 데이터의 각 행에 1부터 3까지의 번호를 무작위로 배정합니다. `rep(1:K, length.out = nrow(x_train))`으로 번호를 만든 뒤 `sample()`로 섞습니다.
+  - `run_one()`: 조합 하나를 받아 3겹 교차검증을 수행하고 평균 RMSE를 반환하는 함수입니다. 겹마다 두 겹으로 학습하고 남은 한 겹으로 평가합니다.
+  - `evaluate()`: 학습된 모형과 평가용 데이터를 넣으면 손실을 반환합니다. `loss`가 MSE이므로 제곱근을 취하면 RMSE입니다.
+  - `results`: `cv_rmse` 오름차순으로 정렬한 결과입니다.
+
+Part 3의 `validation_split`이 훈련 데이터의 일부를 한 번 떼어 고정해 두는 방식이었다면, 여기서는 겹을 바꿔 가며 모든 관측치가 한 번씩 평가에 쓰입니다. 검증이 훈련 데이터 안에서만 이루어진다는 점은 같습니다.
+
+::: {.callout-warning}
+## 실행 시간
+
+8조합 × 3겹 = 24회 학습이므로 몇 분 걸립니다. 시간이 부족하면 `dropout`을 `0` 하나로 고정해 4조합으로 줄이세요.
+:::
+
+```{r}
+#| eval: false
+
+# 빈칸을 채워 코드를 완성하세요
+
+set.seed(123)
+
+grid <- _____(
+  units   = c(_____, _____),
+  lr      = c(0.005, 0.02),
+  dropout = c(0, 0.3)
+)
+
+K <- _____
+fold <- sample(rep(1:K, length.out = nrow(x_train)))
+
+run_one <- function(i) {
+
+  scores <- numeric(K)
+
+  for (k in 1:K) {
+
+    xa <- x_train[fold != k, ]; ya <- y_train[fold != k]
+    xb <- x_train[fold == k, ]; yb <- y_train[fold == k]
+
+    set_random_seed(42)
+
+    m <- build_model(units = grid$units[i], lr = grid$_____[i],
+                     dropout = grid$dropout[i])
+
+    m |> fit(xa, ya, epochs = 60, batch_size = 64,
+             validation_data = list(_____, _____),
+             callbacks = list(callback_early_stopping(
+               monitor = "val_loss", patience = 8,
+               restore_best_weights = TRUE)),
+             verbose = 0)
+
+    scores[k] <- _____(as.numeric(evaluate(m, xb, yb, verbose = 0)["loss"]))
+  }
+
+  mean(scores)
+}
+
+grid$cv_rmse <- sapply(seq_len(nrow(grid)), run_one)
+
+results <- grid |> arrange(_____) |> mutate(cv_rmse = round(cv_rmse, 4))
+
+results
+
+# 시각화
+results |>
+  mutate(label = paste0("u", units, " / lr", lr, " / d", dropout),
+         label = reorder(label, -cv_rmse)) |>
+  ggplot(aes(label, cv_rmse)) +
+  geom_col(width = 0.6, fill = "#1f77b4") +
+  geom_hline(yintercept = rmse_val_base, linetype = "dashed") +
+  geom_text(aes(label = cv_rmse), hjust = -0.15, size = 3.4) +
+  coord_flip() +
+  labs(x = NULL, y = "교차검증 RMSE", title = "Grid search") +
+  theme_minimal(base_size = 12)
+
+# ══════════════════════════════════════════════════════
+#  정답 확인 및 리포트: 아래는 수정하지 마세요
+#  코드 작성이 완료되면 이 줄을 포함하여 전체 블록을 실행하세요.
+# 💡 코드 블록 전체 실행 | Windows: Ctrl + Shift + Enter | Mac: Cmd + Shift + Enter
+# ══════════════════════════════════════════════════════
+check("nn-10-grid")
+# ══════════════════════════════════════════════════════
+```
+
+```{r}
+#| echo: false
+
+set.seed(123)
+
+grid <- expand.grid(
+  units   = c(8, 64),
+  lr      = c(0.005, 0.02),
+  dropout = c(0, 0.3)
+)
+
+K <- 3
+fold <- sample(rep(1:K, length.out = nrow(x_train)))
+
+run_one <- function(i) {
+
+  scores <- numeric(K)
+
+  for (k in 1:K) {
+
+    xa <- x_train[fold != k, ]; ya <- y_train[fold != k]
+    xb <- x_train[fold == k, ]; yb <- y_train[fold == k]
+
+    set_random_seed(42)
+
+    m <- build_model(units = grid$units[i], lr = grid$lr[i],
+                     dropout = grid$dropout[i])
+
+    m |> fit(xa, ya, epochs = 60, batch_size = 64,
+             validation_data = list(xb, yb),
+             callbacks = list(callback_early_stopping(
+               monitor = "val_loss", patience = 8,
+               restore_best_weights = TRUE)),
+             verbose = 0)
+
+    scores[k] <- sqrt(as.numeric(evaluate(m, xb, yb, verbose = 0)["loss"]))
+  }
+
+  mean(scores)
+}
+
+grid$cv_rmse <- sapply(seq_len(nrow(grid)), run_one)
+
+results <- grid |> arrange(cv_rmse) |> mutate(cv_rmse = round(cv_rmse, 4))
+
+results
+
+
+# 시각화
+results |>
+  mutate(label = paste0("u", units, " / lr", lr, " / d", dropout),
+         label = reorder(label, -cv_rmse)) |>
+  ggplot(aes(label, cv_rmse)) +
+  geom_col(width = 0.6, fill = "#1f77b4") +
+  geom_hline(yintercept = rmse_val_base, linetype = "dashed") +
+  geom_text(aes(label = cv_rmse), hjust = -0.15, size = 3.4) +
+  coord_flip() +
+  labs(x = NULL, y = "교차검증 RMSE", title = "Grid search") +
+  theme_minimal(base_size = 12)
+```
+
+여덟 조합 사이의 간격이 Part 3에서 한 축씩 움직였을 때보다 좁게 나올 수 있습니다. 격자에 넣은 값들이 Part 3의 극단값보다 좁은 범위이기 때문입니다. 조합 간 차이가 크지 않다면 이 데이터에서 하이퍼파라미터 조정으로 얻을 수 있는 몫이 제한적이라는 신호로 읽을 수 있습니다.
+
+<br>
+
+
+## Task 11. 최종 평가
+
+이제 최적 조합으로 훈련 데이터 전체를 학습하고 테스트 데이터로 한 번만 평가합니다. 아래 코드를 실행해 네 모형을 나란히 봅니다. 점선은 선형회귀의 테스트 RMSE입니다.
+
+  - `best`: `results`의 첫 행입니다. 정렬해 두었으므로 `cv_rmse`가 가장 작은 조합입니다.
+  - `final_model`: `best`의 세 값을 `build_model()`에 넘겨 만듭니다.
+  - `fit()`: `epochs = 100`, `validation_split = 0.2`, 조기 종료 콜백을 함께 넘깁니다. Part 4의 교차검증은 설정을 고르는 데까지만 쓰였고, 최종 학습은 훈련 데이터 전체로 한 번 합니다.
+  - `pred_final`, `rmse_final`: 테스트 예측값과 RMSE입니다. 이 실습에서 테스트 데이터를 쓰는 것은 여기가 처음이자 마지막입니다.
+
+```{r}
+#| echo: true
+
+best <- results[1, ]
+
+set_random_seed(42)
+
+final_model <- build_model(units = best$units, lr = best$lr,
+                           dropout = best$dropout)
+
+final_model |> fit(
+  x_train, y_train,
+  epochs = 100, batch_size = 64,
+  validation_split = 0.2,
+  callbacks = list(callback_early_stopping(
+    monitor = "val_loss", patience = 8, restore_best_weights = TRUE)),
+  verbose = 0
+)
+
+pred_final <- as.numeric(predict(final_model, x_test, verbose = 0))
+
+rmse_final <- sqrt(mean((y_test - pred_final)^2))
+
+tibble(
+  모형 = c("영모형", "선형회귀", "Keras (기본 설정)", "Keras (조정 후)"),
+  테스트_RMSE = round(c(rmse_null, rmse_lm, rmse_keras, rmse_final), 4)
+)
+
+# 시각화
+tibble(
+  모형 = factor(c("영모형", "선형회귀", "Keras 기본", "Keras 조정 후"),
+                levels = c("영모형", "선형회귀", "Keras 기본", "Keras 조정 후")),
+  rmse = c(rmse_null, rmse_lm, rmse_keras, rmse_final)
+) |>
+  ggplot(aes(모형, rmse)) +
+  geom_col(width = 0.55, fill = "#1f77b4") +
+  geom_hline(yintercept = rmse_lm, linetype = "dashed") +
+  geom_text(aes(label = round(rmse, 3)), vjust = -0.4, size = 3.6) +
+  labs(x = NULL, y = "테스트 RMSE", title = "Final comparison") +
+  theme_minimal(base_size = 12)
+```
