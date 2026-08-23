@@ -10,7 +10,8 @@
 #    2. 분석에 필요한 R 패키지 설치
 #    3. Quarto 실행 파일 확인
 #    4. Python + Keras 환경 설치 및 연결
-#    5. 최종 확인 결과 출력
+#    5. 실습 데이터 내려받기
+#    6. 최종 확인 결과 출력
 # ============================================================
 
 
@@ -53,6 +54,8 @@ packages <- c(render_packages, analysis_packages)
 new_packages <- packages[
   !packages %in% rownames(installed.packages())
 ]
+
+installed_now <- new_packages   # 이번 실행에서 새로 설치한 패키지
 
 if (length(new_packages) > 0) {
   message("설치할 패키지: ", paste(new_packages, collapse = ", "))
@@ -110,6 +113,8 @@ envs <- tryCatch(
 
 keras_env_exists <- keras_env %in% envs
 
+python_installed_now <- FALSE   # 이번 실행에서 Keras 환경을 새로 만들었는지
+
 
 # ------------------------------------------------------------
 # 4. r-keras 환경 설치 (안전할 때만 시도)
@@ -131,6 +136,10 @@ if (!keras_env_exists && !python_already_initialized) {
   )
 
   # 설치 직후 상태 갱신
+  python_installed_now <- keras_env %in% tryCatch(
+    virtualenv_list(), error = function(e) character(0)
+  )
+  keras_env_exists <- python_installed_now
   python_already_initialized <- py_available(initialize = FALSE)
 
 } else if (!keras_env_exists && python_already_initialized) {
@@ -179,7 +188,43 @@ if (!python_already_initialized && keras_env_exists) {
 
 
 # ------------------------------------------------------------
-# 6. 최종 환경 확인
+# 6. 실습 데이터 내려받기
+# ------------------------------------------------------------
+# 작업 폴더에 파일이 없을 때만 받습니다.
+
+data_files <- c("ohie_all6m.rds")
+
+data_base <- paste0(
+  "https://raw.githubusercontent.com/TheYongjinChoi/",
+  "kapae2026-exercise/main/"
+)
+
+data_downloaded <- character(0)   # 이번 실행에서 새로 받은 파일
+data_existing   <- character(0)   # 이미 있던 파일
+data_failed     <- character(0)   # 내려받기에 실패한 파일
+
+for (f in data_files) {
+
+  if (file.exists(f)) {
+    data_existing <- c(data_existing, f)
+    next
+  }
+
+  ok <- tryCatch({
+    download.file(paste0(data_base, f), destfile = f, mode = "wb", quiet = TRUE)
+    file.exists(f)
+  }, error = function(e) FALSE)
+
+  if (ok) {
+    data_downloaded <- c(data_downloaded, f)
+  } else {
+    data_failed <- c(data_failed, f)
+  }
+}
+
+
+# ------------------------------------------------------------
+# 7. 최종 환경 확인
 # ------------------------------------------------------------
 
 cat("\n")
@@ -242,6 +287,95 @@ if (python_already_initialized) {
 
 cat("\n")
 cat("========================================\n")
-cat(" 설치 완료\n")
+cat(" 실습 데이터\n")
 cat("========================================\n")
-cat("FAILED 항목이 없다면 실습을 시작하셔도 됩니다.\n")
+
+if (length(data_downloaded) > 0) {
+  for (f in data_downloaded) {
+    cat(sprintf("%-20s : 내려받음\n", f))
+  }
+}
+if (length(data_existing) > 0) {
+  for (f in data_existing) {
+    cat(sprintf("%-20s : 이미 있음\n", f))
+  }
+}
+if (length(data_failed) > 0) {
+  for (f in data_failed) {
+    cat(sprintf("%-20s : FAILED\n", f))
+  }
+}
+
+
+# ------------------------------------------------------------
+# 8. 최종 안내 메시지
+# ------------------------------------------------------------
+
+pkg_ok    <- all(vapply(packages, requireNamespace, logical(1), quietly = TRUE))
+data_ok   <- length(data_failed) == 0
+python_ok <- python_already_initialized
+
+cat("\n")
+cat("========================================\n")
+
+if (pkg_ok && data_ok && python_ok && quarto_ok) {
+  cat(" 설치 완료\n")
+} else {
+  cat(" 설치 완료 (확인 필요)\n")
+}
+
+cat("========================================\n")
+
+# 패키지
+if (pkg_ok) {
+  if (length(installed_now) > 0) {
+    cat(sprintf("- 실습에 필요한 R 패키지 %d개를 모두 설치했습니다. (이번에 새로 설치: %d개)\n",
+                length(packages), length(installed_now)))
+  } else {
+    cat(sprintf("- 실습에 필요한 R 패키지 %d개가 모두 준비되어 있습니다.\n",
+                length(packages)))
+  }
+} else {
+  failed_pkgs <- packages[!vapply(packages, requireNamespace, logical(1), quietly = TRUE)]
+  cat("- 설치되지 않은 패키지가 있습니다: ", paste(failed_pkgs, collapse = ", "), "\n", sep = "")
+}
+
+# Python
+if (python_installed_now) {
+  cat("- Python 3.10과 Keras 환경('r-keras')을 새로 설치하고 연결했습니다.\n")
+} else if (python_ok) {
+  cat("- Python 환경이 이미 준비되어 있어 그대로 연결했습니다.\n")
+} else {
+  cat("- Python 환경이 아직 연결되지 않았습니다. R 세션을 재시작한 뒤 이 스크립트를 다시 실행하세요.\n")
+}
+
+# Quarto
+if (quarto_ok) {
+  cat("- Quarto가 확인되었습니다. 문서를 HTML로 렌더링할 수 있습니다.\n")
+} else {
+  cat("- Quarto를 찾지 못했습니다. https://quarto.org/docs/get-started/ 에서 설치하세요.\n")
+}
+
+# 데이터
+if (length(data_downloaded) > 0) {
+  cat("- 실습 데이터를 작업 폴더에 내려받았습니다: ",
+      paste(data_downloaded, collapse = ", "), "\n", sep = "")
+} else if (length(data_existing) > 0) {
+  cat("- 실습 데이터가 작업 폴더에 이미 있습니다: ",
+      paste(data_existing, collapse = ", "), "\n", sep = "")
+}
+if (length(data_failed) > 0) {
+  cat("- 내려받지 못한 데이터가 있습니다: ",
+      paste(data_failed, collapse = ", "),
+      "\n  네트워크를 확인한 뒤 다시 실행하거나 강사에게 문의하세요.\n", sep = "")
+}
+
+cat("\n")
+cat("작업 폴더: ", getwd(), "\n", sep = "")
+cat("실습 파일(.qmd)과 데이터가 이 폴더에 함께 있어야 합니다.\n")
+
+if (pkg_ok && data_ok && python_ok && quarto_ok) {
+  cat("\n준비가 끝났습니다. 실습을 시작하셔도 됩니다.\n")
+} else {
+  cat("\n위에 표시된 항목을 해결한 뒤 다시 실행해 주세요.\n")
+}
