@@ -145,7 +145,7 @@
 # ══════════════════════════════════════════════════════════════════════════════
 
 SUPABASE_URL <- "https://mztyhpckshnqcklogrsn.supabase.co"
-SUPABASE_KEY <- "sb_publishable_pflU44StAqW5XTy94LsuJA_p_zMRtVv"   # anon public key
+SUPABASE_KEY <- Sys.getenv("KAPAE_SUPABASE_KEY", "sb_publishable_pflU44StAqW5XTy94LsuJA_p_zMRtVv")   # publishable key (공개 가능)
 
 CHAPTER <- "d1-01"
 
@@ -179,7 +179,9 @@ CHAPTER <- "d1-01"
 }
 
 set_student <- function(id) {
-  if (missing(id) || !nzchar(id) || id %in% c("ID 입력", "학번입력", "abc")) {
+  web <- identical(tryCatch(get0(".kapae_client", ifnotfound = "local"),
+                            error = function(e) "local"), "web")
+  if (missing(id) || !nzchar(id) || (!web && id %in% c("ID 입력", "학번입력", "abc"))) {
     stop("첫 청크의 set_student()에 본인 ID를 입력하세요.", call. = FALSE)
   }
   .tracker_env$student_id <- id
@@ -657,6 +659,8 @@ check <- function(exercise_id) {
     hint        = hint,
     elapsed_sec = as.numeric(difftime(Sys.time(), t0, units = "secs")),
     session_id  = .tracker_env$session_id,
+    client      = tryCatch(get0(".kapae_client", ifnotfound = "local"),
+                           error = function(e) "local"),
     r_version   = paste(R.version$major, R.version$minor, sep = ".")
   )
   try(
