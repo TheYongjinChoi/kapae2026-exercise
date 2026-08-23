@@ -1,0 +1,1313 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.9.38">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="author" content="최용진">
+<meta name="dcterms.date" content="2026-08-23">
+
+<title>사전 실습. R 기초와 Quarto 문법</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="00RBasics_sol_files/libs/clipboard/clipboard.min.js"></script>
+<script src="00RBasics_sol_files/libs/quarto-html/quarto.js" type="module"></script>
+<script src="00RBasics_sol_files/libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="00RBasics_sol_files/libs/quarto-html/popper.min.js"></script>
+<script src="00RBasics_sol_files/libs/quarto-html/tippy.umd.min.js"></script>
+<script src="00RBasics_sol_files/libs/quarto-html/anchor.min.js"></script>
+<link href="00RBasics_sol_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="00RBasics_sol_files/libs/quarto-html/quarto-syntax-highlighting-15634bcf2e68342d4ad2dfa704d543f6.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="00RBasics_sol_files/libs/bootstrap/bootstrap.min.js"></script>
+<link href="00RBasics_sol_files/libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="00RBasics_sol_files/libs/bootstrap/bootstrap-138a6193a3bd40baf1e627da441a4734.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+
+
+</head>
+
+<body class="quarto-light">
+
+<div id="quarto-content" class="page-columns page-rows-contents page-layout-article">
+<div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+  <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Table of contents</h2>
+   
+  <ul>
+  <li><a href="#part-0.-개발환경-준비" id="toc-part-0.-개발환경-준비" class="nav-link active" data-scroll-target="#part-0.-개발환경-준비">Part 0. 개발환경 준비</a></li>
+  <li><a href="#part-1.-quarto-문서-다루기" id="toc-part-1.-quarto-문서-다루기" class="nav-link" data-scroll-target="#part-1.-quarto-문서-다루기">Part 1. Quarto 문서 다루기</a>
+  <ul class="collapse">
+  <li><a href="#quarto란" id="toc-quarto란" class="nav-link" data-scroll-target="#quarto란">Quarto란?</a></li>
+  <li><a href="#코드-블록" id="toc-코드-블록" class="nav-link" data-scroll-target="#코드-블록">코드 블록</a>
+  <ul class="collapse">
+  <li><a href="#코드-블록-넣는-법" id="toc-코드-블록-넣는-법" class="nav-link" data-scroll-target="#코드-블록-넣는-법">코드 블록 넣는 법</a></li>
+  <li><a href="#코드-블록-옵션" id="toc-코드-블록-옵션" class="nav-link" data-scroll-target="#코드-블록-옵션">코드 블록 옵션</a></li>
+  </ul></li>
+  <li><a href="#코드-실행-단축키" id="toc-코드-실행-단축키" class="nav-link" data-scroll-target="#코드-실행-단축키">코드 실행 단축키</a></li>
+  <li><a href="#task-1.-마크다운-문법" id="toc-task-1.-마크다운-문법" class="nav-link" data-scroll-target="#task-1.-마크다운-문법">Task 1. 마크다운 문법</a></li>
+  </ul></li>
+  <li><a href="#part-2.-r의-기본-문법" id="toc-part-2.-r의-기본-문법" class="nav-link" data-scroll-target="#part-2.-r의-기본-문법">Part 2. R의 기본 문법</a>
+  <ul class="collapse">
+  <li><a href="#할당-연산자--" id="toc-할당-연산자--" class="nav-link" data-scroll-target="#할당-연산자--">할당 연산자 <code>&lt;-</code></a></li>
+  <li><a href="#파이프-연산자" id="toc-파이프-연산자" class="nav-link" data-scroll-target="#파이프-연산자">파이프 연산자 <code>|&gt;</code></a></li>
+  <li><a href="#task-2.-객체와-자료형" id="toc-task-2.-객체와-자료형" class="nav-link" data-scroll-target="#task-2.-객체와-자료형">Task 2. 객체와 자료형</a></li>
+  <li><a href="#task-3.-함수와-인수" id="toc-task-3.-함수와-인수" class="nav-link" data-scroll-target="#task-3.-함수와-인수">Task 3. 함수와 인수</a></li>
+  </ul></li>
+  <li><a href="#part-3.-데이터-불러오기와-훑어보기" id="toc-part-3.-데이터-불러오기와-훑어보기" class="nav-link" data-scroll-target="#part-3.-데이터-불러오기와-훑어보기">Part 3. 데이터 불러오기와 훑어보기</a>
+  <ul class="collapse">
+  <li><a href="#task-4.-파일-읽기와-구조-확인" id="toc-task-4.-파일-읽기와-구조-확인" class="nav-link" data-scroll-target="#task-4.-파일-읽기와-구조-확인">Task 4. 파일 읽기와 구조 확인</a></li>
+  </ul></li>
+  <li><a href="#part-4.-변수-다루기" id="toc-part-4.-변수-다루기" class="nav-link" data-scroll-target="#part-4.-변수-다루기">Part 4. 변수 다루기</a>
+  <ul class="collapse">
+  <li><a href="#task-5.-필요한-변수만-골라-정리하기" id="toc-task-5.-필요한-변수만-골라-정리하기" class="nav-link" data-scroll-target="#task-5.-필요한-변수만-골라-정리하기">Task 5. 필요한 변수만 골라 정리하기</a></li>
+  <li><a href="#task-6.-열-꺼내기와-행-걸러내기" id="toc-task-6.-열-꺼내기와-행-걸러내기" class="nav-link" data-scroll-target="#task-6.-열-꺼내기와-행-걸러내기">Task 6. 열 꺼내기와 행 걸러내기</a></li>
+  </ul></li>
+  <li><a href="#part-5.-요약과-시각화" id="toc-part-5.-요약과-시각화" class="nav-link" data-scroll-target="#part-5.-요약과-시각화">Part 5. 요약과 시각화</a>
+  <ul class="collapse">
+  <li><a href="#task-7.-집단별-요약" id="toc-task-7.-집단별-요약" class="nav-link" data-scroll-target="#task-7.-집단별-요약">Task 7. 집단별 요약</a></li>
+  </ul></li>
+  <li><a href="#part-6.-반복과-함수" id="toc-part-6.-반복과-함수" class="nav-link" data-scroll-target="#part-6.-반복과-함수">Part 6. 반복과 함수</a>
+  <ul class="collapse">
+  <li><a href="#task-8.-반복문" id="toc-task-8.-반복문" class="nav-link" data-scroll-target="#task-8.-반복문">Task 8. 반복문</a></li>
+  </ul></li>
+  <li><a href="#part-7.-문서-렌더링" id="toc-part-7.-문서-렌더링" class="nav-link" data-scroll-target="#part-7.-문서-렌더링">Part 7. 문서 렌더링</a>
+  <ul class="collapse">
+  <li><a href="#렌더링rendering이란" id="toc-렌더링rendering이란" class="nav-link" data-scroll-target="#렌더링rendering이란">렌더링(rendering)이란?</a></li>
+  <li><a href="#데이터-분석-결과를-공유하는-아주-쉬운-방법" id="toc-데이터-분석-결과를-공유하는-아주-쉬운-방법" class="nav-link" data-scroll-target="#데이터-분석-결과를-공유하는-아주-쉬운-방법">데이터 분석 결과를 공유하는 아주 쉬운 방법</a></li>
+  <li><a href="#렌더링하는-방법" id="toc-렌더링하는-방법" class="nav-link" data-scroll-target="#렌더링하는-방법">렌더링하는 방법</a></li>
+  <li><a href="#렌더링이-실패할-때" id="toc-렌더링이-실패할-때" class="nav-link" data-scroll-target="#렌더링이-실패할-때">렌더링이 실패할 때</a></li>
+  </ul></li>
+  </ul>
+</nav>
+</div>
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default">
+<div class="quarto-title">
+<h1 class="title">사전 실습. R 기초와 Quarto 문법</h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    <div>
+    <div class="quarto-title-meta-heading">Author</div>
+    <div class="quarto-title-meta-contents">
+             <p>최용진 </p>
+          </div>
+  </div>
+    
+    <div>
+    <div class="quarto-title-meta-heading">Published</div>
+    <div class="quarto-title-meta-contents">
+      <p class="date">August 23, 2026</p>
+    </div>
+  </div>
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<p>이 실습은 본 세션의 실습 파일들을 따라가는 데 필요한 최소한의 R 문법과 Quarto 사용법을 정리한 자료입니다. R을 처음 다루거나 오랜만에 쓰시는 분들을 위한 것이므로 이미 익숙하시면 넘어가셔도 됩니다. 이 스크립트에서는 다음의 내용들을 다루며, 환경 설치를 제외하고 30~40분 안에 완료하실 수 있도록 설계되었습니다.</p>
+<ol start="0" type="1">
+<li><strong>개발환경 준비</strong>: 패키지와 Python 환경을 한 번에 설치</li>
+<li><strong>Quarto 문서 다루기</strong>: 문서의 구조, 코드 블록, 마크다운 문법</li>
+<li><strong>R의 기본 문법</strong>: 할당과 파이프, 객체, 자료형, 함수와 인수</li>
+<li><strong>데이터 불러오기와 훑어보기</strong>: 파일 읽기와 구조 확인</li>
+<li><strong>변수 다루기</strong>: 열 선택, 행 걸러내기, 새 변수 만들기</li>
+<li><strong>요약과 시각화</strong>: 집단별 요약과 기본 그래프</li>
+<li><strong>반복과 함수</strong>: 본 실습에서 반복해서 등장하는 두 가지 형태</li>
+<li><strong>문서 렌더링</strong>: 완성한 문서를 HTML로 내보내기</li>
+</ol>
+<div class="callout callout-style-simple callout-note callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Note</span>실습을 진행하는 방법
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>본 세션의 실습과 같은 방식으로 빈칸 채우기입니다. 각 Task마다 <code>_____</code>로 비어 있는 코드 블록이 있습니다. 바로 위의 설명 글에 필요한 정보가 들어 있으니, 빈칸을 채운 뒤 <code>Ctrl</code>(<code>Cmd</code>) + <code>Shift</code> + <code>Enter</code>로 블록 전체를 실행하세요. 그 아래에 완성된 코드와 결과가 이어집니다.</p>
+<p>앞 블록에서 만든 객체를 뒤에서 계속 사용하므로 위에서부터 순서대로 실행하는 것이 좋습니다.</p>
+</div>
+</div>
+<hr>
+<p><br></p>
+<section id="part-0.-개발환경-준비" class="level1">
+<h1>Part 0. 개발환경 준비</h1>
+<p>본 세션의 실습은 여러 패키지와 Python 환경을 사용합니다. 수업 중에 설치하면 시간이 오래 걸리므로 아래 코드를 미리 한 번 실행해 두세요.</p>
+<p><code>env00.R</code> 파일을 여러분의 작업 폴더에 내려받은 뒤, 아래 블록을 실행하면 됩니다. 처음 실행할 때는 Python과 TensorFlow까지 받으므로 인터넷 속도에 따라 10분에서 20분쯤 걸립니다. 두 번째부터는 이미 설치된 것을 건너뛰므로 금방 끝납니다. 코드 실행은 아래 코드 블록 위에 <code>Run Cell</code> 버튼을 클릭하거나 단축키를 입력하면 됩니다.</p>
+<ul>
+<li>블록 전체 실행: 코드 블록 안에 커서를 위치시키고 <code>Ctrl</code>(<code>Cmd</code>) + <code>Shift</code> + <code>Enter</code></li>
+<li>한 줄 실행: 실행하려는 코드 줄에 커서를 위치시키고 <code>Ctrl</code>(<code>Cmd</code>) + <code>Enter</code></li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 코드를 실행하세요</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># 코드 실행 단축키: Ctrl(Cmd) + Shift + Enter</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">source</span>(<span class="st">"https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/env00.R"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>실행이 끝나면 아래와 같은 확인 표가 출력됩니다. 모든 항목이 <code>OK</code>이고 <code>quarto</code> 줄에 버전 번호가 보이면 준비가 끝난 것입니다.</p>
+<pre><code>========================================
+ 문서 렌더링 패키지
+========================================
+knitr        : OK
+rmarkdown    : OK
+.....        : OK
+...</code></pre>
+<div class="callout callout-style-default callout-warning callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Warning</span>설치 중 문제가 생기면
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>FAILED</code>가 있거나 Python 환경 설치가 중간에 멈췄다면, R 세션을 재시작한 뒤(<code>Ctrl</code>/<code>Cmd</code> + <code>Shift</code> + <code>F10</code>) 다시 실행해 보세요. <code>install_keras()</code>는 이미 다른 Python이 연결된 세션에서는 동작하지 않기 때문에, 재시작만으로 해결되는 경우가 많습니다.</p>
+<p>그래도 안 되면 Python 관련 부분만 건너뛰셔도 됩니다. 신경망 실습을 제외한 나머지는 R 패키지만으로 진행할 수 있습니다.</p>
+</div>
+</div>
+<hr>
+<p><br></p>
+</section>
+<section id="part-1.-quarto-문서-다루기" class="level1">
+<h1>Part 1. Quarto 문서 다루기</h1>
+<section id="quarto란" class="level2">
+<h2 class="anchored" data-anchor-id="quarto란">Quarto란?</h2>
+<p>이 워크숍의 실습 시간에 사용할 Quarto는 설명글, 코드, 분석 결과를 하나의 문서 안에서 함께 작성하고 렌더링할 수 있는 문서 작성 도구입니다. R을 이용한 데이터 분석뿐 아니라 Python, Julia 등 여러 언어를 지원하며, 하나의 원본 문서에서 HTML, PDF, Word, 슬라이드 등 다양한 형식으로 출력할 수 있습니다. Quarto 문서의 파일 확장자는 <code>.qmd</code>입니다. 이 실습에서는 <code>.qmd</code> 파일 안에서 설명을 읽고, 직접 R 코드를 작성하고 실행하면서 결과를 확인합니다.</p>
+<p>Quarto 문서(<code>.qmd</code>)는 크게 세 가지 요소로 이루어집니다.</p>
+<p><strong>YAML 머리말</strong>은 문서 맨 위에 <code>---</code> 세 개로 감싸인 부분입니다. 제목, 저자, 출력 형식처럼 문서 전체에 적용되는 설정을 작성합니다. 이 문서의 맨 위를 열어 보면 <code>format: html</code> 아래에 목차를 표시하도록 설정하는 <code>toc: true</code>가 있습니다. 실습에서는 YAML을 직접 수정할 필요가 거의 없습니다. 제공된 설정을 그대로 사용하면 됩니다.</p>
+<p><strong>마크다운 본문</strong>은 설명을 작성하는 부분입니다. 지금 읽고 계신 이 문단도 마크다운 본문에 해당합니다. 제목, 목록, 강조, 링크 등을 간단한 기호를 이용해 작성할 수 있습니다. 마크다운의 기본 문법은 Task 1에서 직접 작성해 보면서 살펴보겠습니다.</p>
+<p><strong>코드 블록</strong>은 세 개의 백틱과 <code>{r}</code>로 시작하고 다시 백틱 세 개로 끝나는 부분입니다. 코드 블록 안에 작성한 R 코드를 실행하면 그 결과를 같은 문서 안에서 바로 확인할 수 있습니다.</p>
+<p>이처럼 설명, 분석 코드, 분석 결과를 하나의 문서 안에 함께 기록할 수 있다는 점이 Quarto의 중요한 장점입니다. 코드와 결과가 분리되지 않기 때문에 분석 과정을 나중에 다시 확인하거나 다른 사람과 공유하기도 쉽습니다.</p>
+<p>또한 Quarto에서는 R뿐 아니라 Python, Julia 등 여러 언어를 사용할 수 있습니다. 코드 블록을 시작할 때 중괄호 안의 언어를 바꾸면 됩니다.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># R 코드</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Python 코드</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="코드-블록" class="level2">
+<h2 class="anchored" data-anchor-id="코드-블록">코드 블록</h2>
+<section id="코드-블록-넣는-법" class="level3">
+<h3 class="anchored" data-anchor-id="코드-블록-넣는-법">코드 블록 넣는 법</h3>
+<p><code>.qmd</code> 문서는 마크다운으로 작성한 본문 사이에 코드 블록을 삽입하는 구조로 되어 있습니다. 직접 입력한다면 백틱 세 개와 <code>{r}</code>로 코드 블록을 열고, 백틱 세 개로 닫습니다. 백틱은 키보드에서 숫자 <code>1</code> 왼쪽, 물결표(<code>~</code>)와 같은 자리에 있는 기호입니다.</p>
+<p>예를 들어 다음과 같이 작성합니다. 코드 블록 안의 코드를 실행하면 계산 결과가 Positron 아래 콘솔창 또는 코드 바로 아래에 표시됩니다.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2</code></pre>
+</div>
+</div>
+<p>실제 <code>.qmd</code> 파일에서는 다음과 같은 구조입니다.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb7"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>::: {.cell}</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="in">```{.r .cell-code}</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>))</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>::: {.cell-output .cell-output-stdout}</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a><span class="in">[1] 2</span></span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a><span class="in">```</span></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>:::</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>:::</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>새로운 코드 블록은 직접 백틱을 입력하지 않아도 단축키로 간편하게 만들 수 있습니다.</p>
+<ul>
+<li>Windows: <code>Ctrl</code> + <code>Alt</code> + <code>I</code></li>
+<li>Mac: <code>Cmd</code> + <code>Option</code> + <code>I</code></li>
+</ul>
+<p>단축키를 누르면 현재 커서가 있는 위치에 빈 R 코드 블록이 생성되고, 커서가 자동으로 코드 블록 안으로 이동합니다. 아래 빈 줄에 커서를 놓은 뒤 단축키를 눌러 새로운 R 코드 블록을 하나 만들어 보세요.</p>
+<!-- 아래에 한 줄 띄우고 커서를 위치시킨 후 Windows는 Ctrl + Alt + I, Mac은 Cmd + Option + I를 눌러 코드 블록을 만들어 보세요. -->
+<p>코드 블록은 세 가지를 지켜야 정상 동작합니다.</p>
+<ul>
+<li>여는 줄은 <code>```{r}</code>이고 닫는 줄은 백틱 세 개뿐입니다. 닫는 줄에 아무것도 붙이지 마세요.</li>
+<li>여는 줄과 닫는 줄은 각각 한 줄을 통째로 차지해야 합니다. 앞에 공백이나 글자가 있으면 블록으로 인식되지 않습니다.</li>
+<li>블록의 앞뒤에는 빈 줄을 하나씩 두세요.</li>
+</ul>
+</section>
+<section id="코드-블록-옵션" class="level3">
+<h3 class="anchored" data-anchor-id="코드-블록-옵션">코드 블록 옵션</h3>
+<p>블록 안에서 <code>#|</code>로 시작하는 줄은 주석이 아니라 그 블록의 설정입니다. 실습에서 직접 작성할 일은 없지만, 실습에서 자주 보게 될 표현들이니 참고로 살펴보면 좋음</p>
+<div id="tbl-chunk" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-chunk-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;1: 자주 쓰는 코드 블록 옵션
+</figcaption>
+<div aria-describedby="tbl-chunk-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 40%">
+<col style="width: 60%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>옵션</th>
+<th>하는 일</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><code>#| label: setup</code></td>
+<td>블록에 이름을 붙입니다. 편집기 개요에서 찾기 쉬워집니다</td>
+</tr>
+<tr class="even">
+<td><code>#| echo: false</code></td>
+<td>코드는 숨기고 결과만 보여 줍니다</td>
+</tr>
+<tr class="odd">
+<td><code>#| eval: false</code></td>
+<td>코드를 보여 주되 실행하지 않습니다</td>
+</tr>
+<tr class="even">
+<td><code>#| message: false</code></td>
+<td>패키지 로딩 메시지 등을 숨깁니다</td>
+</tr>
+<tr class="odd">
+<td><code>#| fig-width: 7</code></td>
+<td>그림의 가로 크기를 지정합니다</td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p><br></p>
+</section>
+</section>
+<section id="코드-실행-단축키" class="level2">
+<h2 class="anchored" data-anchor-id="코드-실행-단축키">코드 실행 단축키</h2>
+<p>코딩 속도를 빠르게 해주므로 외워두면 아주 좋습니다</p>
+<div id="tbl-shortcut" class="quarto-float quarto-figure quarto-figure-center anchored">
+<figure class="quarto-float quarto-float-tbl figure">
+<figcaption class="quarto-float-caption-top quarto-float-caption quarto-float-tbl" id="tbl-shortcut-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Table&nbsp;2: 코드 실행 단축키
+</figcaption>
+<div aria-describedby="tbl-shortcut-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<table class="caption-top table">
+<colgroup>
+<col style="width: 39%">
+<col style="width: 39%">
+<col style="width: 21%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>하는 일</th>
+<th>Windows</th>
+<th>Mac</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>새 코드 블록 만들기</td>
+<td><code>Ctrl</code> + <code>Alt</code> + <code>I</code></td>
+<td><code>Cmd</code> + <code>Option</code> + <code>I</code></td>
+</tr>
+<tr class="even">
+<td>커서가 있는 줄 실행</td>
+<td><code>Ctrl</code> + <code>Enter</code></td>
+<td><code>Cmd</code> + <code>Enter</code></td>
+</tr>
+<tr class="odd">
+<td>블록 전체 실행</td>
+<td><code>Ctrl</code> + <code>Shift</code> + <code>Enter</code></td>
+<td><code>Cmd</code> + <code>Shift</code> + <code>Enter</code></td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+</div>
+<p><br></p>
+</section>
+<section id="task-1.-마크다운-문법" class="level2">
+<h2 class="anchored" data-anchor-id="task-1.-마크다운-문법">Task 1. 마크다운 문법</h2>
+<p>아래는 본 실습 자료에서 쓰이는 마크다운 문법입니다. 빈칸을 채운 뒤 이 블록의 내용을 복사해 본문에 붙여넣고 렌더링해 결과를 확인해 보세요.</p>
+<ul>
+<li>제목은 <code>#</code>의 개수로 수준을 정합니다. 하나면 1수준, 두 개면 2수준입니다.</li>
+<li>굵게는 별표 두 개, 기울임은 별표 하나로 감쌉니다.</li>
+<li>목록은 하이픈이나 숫자로 시작하고, 들여쓰기로 하위 항목을 만듭니다.</li>
+<li>본문 안의 코드나 변수 이름은 백틱 하나로 감쌉니다.</li>
+<li>링크는 대괄호에 표시할 글자를, 소괄호에 주소를 씁니다.</li>
+<li>수식은 달러 기호 하나로 감싸면 문장 안에, 두 개로 감싸면 별도 줄에 나옵니다.</li>
+<li>구분선은 별표 세 개를 한 줄에 씁니다.</li>
+</ul>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb8"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># 빈칸을 채워 완성하세요</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>_____ 1수준 제목</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>_____ 2수준 제목</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>이것은 _____굵은 글씨_____이고, 이것은 _____기울임_____입니다.</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>첫 번째 항목</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>두 번째 항목</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a><span class="ss">  - </span>하위 항목</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>본문에서 변수 이름은 _____rx_num_____처럼 감쌉니다.</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>링크는 _____Quarto 공식 문서_____(https://quarto.org)처럼 씁니다.</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>문장 안 수식은 _____\tau_____이고, 별도 줄 수식은 아래와 같습니다.</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>Y_i = \alpha + \tau D_i + \varepsilon_i</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>_____</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p><strong>완성된 형태</strong></p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb9"><pre class="sourceCode markdown code-with-copy"><code class="sourceCode markdown"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu"># 1수준 제목</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">## 2수준 제목</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>이것은 **굵은 글씨**이고, 이것은 *기울임*입니다.</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>첫 번째 항목</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="ss">- </span>두 번째 항목</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a><span class="ss">  - </span>하위 항목</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>본문에서 변수 이름은 <span class="in">`rx_num`</span>처럼 감쌉니다.</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>링크는 <span class="co">[</span><span class="ot">Quarto 공식 문서</span><span class="co">](https://quarto.org)</span>처럼 씁니다.</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>문장 안 수식은 $\tau$이고, 별도 줄 수식은 아래와 같습니다.</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>Y_i = \alpha + \tau D_i + \varepsilon_i</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>$$</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>***</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>한 가지 주의할 점이 있습니다. 하이픈 세 개(<code>---</code>)를 구분선으로 쓰면 바로 위에 글자가 있을 때 제목의 밑줄로 해석되어 빈 제목이 생깁니다. 구분선은 별표 세 개(<code>***</code>)를 쓰시는 편이 안전합니다.</p>
+<p>강조 상자가 필요하면 콜아웃을 씁니다. 콜론 세 개로 열고 닫으며, <code>note</code>, <code>tip</code>, <code>warning</code>, <code>important</code> 네 종류가 있습니다.</p>
+<div class="callout callout-style-default callout-tip callout-titled">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>이런 상자가 만들어집니다
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>앞의 실습 자료에서 보신 안내 상자들이 이 문법으로 만든 것입니다.</p>
+</div>
+</div>
+<hr>
+<p><br></p>
+</section>
+</section>
+<section id="part-2.-r의-기본-문법" class="level1">
+<h1>Part 2. R의 기본 문법</h1>
+<section id="할당-연산자--" class="level2">
+<h2 class="anchored" data-anchor-id="할당-연산자--">할당 연산자 <code>&lt;-</code></h2>
+<p>R에서 값을 저장할 때는 화살표 <code>&lt;-</code>를 씁니다. <strong>오른쪽의 값을 왼쪽 이름에 넣으라</strong>는 뜻입니다.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="dv">10</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>x</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 10</code></pre>
+</div>
+</div>
+<p><code>x &lt;- 10</code>을 실행해도 화면에는 아무것도 나오지 않습니다. 저장만 하고 출력은 하지 않기 때문입니다. 값을 보려면 이름만 따로 실행하면 됩니다.</p>
+<p><code>=</code>도 같은 일을 하지만, 관례상 저장에는 <code>&lt;-</code>를, 함수의 인수를 지정할 때는 <code>=</code>를 씁니다. 아래에서 <code>mean(x, na.rm = TRUE)</code>의 <code>=</code>가 그 경우입니다. 두 기호를 구분해 두면 코드를 읽을 때 무엇이 저장이고 무엇이 인수 지정인지 구분이 쉽습니다.</p>
+<p><code>RStudio</code>와 <code>Positron</code>에서는 <code>Alt</code> + <code>-</code>(Mac은 <code>Option</code> + <code>-</code>)를 누르면 <code>&lt;-</code>가 공백과 함께 입력됩니다. 매번 세 타를 치지 않아도 됩니다.</p>
+<p><br></p>
+</section>
+<section id="파이프-연산자" class="level2">
+<h2 class="anchored" data-anchor-id="파이프-연산자">파이프 연산자 <code>|&gt;</code></h2>
+<p>파이프는 <strong>앞의 결과를 뒤 함수의 첫 번째 인수로 넘기라</strong>는 뜻입니다. 예를 들어, 아래 두 줄은 완전히 같은 코드입니다.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>v <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">1</span>, <span class="dv">4</span>, <span class="dv">1</span>, <span class="dv">5</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(v)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2.8</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>v <span class="sc">|&gt;</span> <span class="fu">mean</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2.8</code></pre>
+</div>
+</div>
+<p>값 하나를 넘길 때는 차이가 없어 보이지만, 단계가 여러 개일 때는 순서와 가독성이 달라집니다. 파이프가 없으면 함수가 안쪽부터 중첩되어 읽는 순서와 실행 순서가 반대가 됩니다. 본 실습의 데이터 정리 코드가 대부분 이 형태입니다.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 파이프 없이: 안쪽에서 바깥쪽으로 읽어야 합니다</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">round</span>(<span class="fu">sqrt</span>(<span class="fu">mean</span>(v)), <span class="dv">2</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 파이프로: 왼쪽에서 오른쪽으로 순서대로 읽힙니다</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>v <span class="sc">|&gt;</span> <span class="fu">mean</span>() <span class="sc">|&gt;</span> <span class="fu">sqrt</span>() <span class="sc">|&gt;</span> <span class="fu">round</span>(<span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>참고로 <code>|&gt;</code>는 R 4.1부터 기본으로 들어간 연산자입니다. 예전 자료에서 보이는 <code>%&gt;%</code>도 파이프로 하는 일은 거의 같지만 <code>magrittr</code> 패키지를 불러와야 사용할 수 있습니다.</p>
+<p>파이프도 단축키가 있습니다. <code>Ctrl</code> + <code>Shift</code> + <code>M</code>(Mac은 <code>Cmd</code> + <code>Shift</code> + <code>M</code>)입니다.</p>
+<p><br></p>
+</section>
+<section id="task-2.-객체와-자료형" class="level2">
+<h2 class="anchored" data-anchor-id="task-2.-객체와-자료형">Task 2. 객체와 자료형</h2>
+<p>R에서 값을 저장할 때는 화살표 <code>&lt;-</code>를 씁니다. 등호도 동작하지만 관례상 화살표를 쓰고, 등호는 함수의 인수를 지정할 때 씁니다. 다음의 안내에 따라 객체에 값을 저장하고, 객체의 속성을 확인하는 코드를 작성해 보세요.</p>
+<ul>
+<li><code>x</code>: <code>10</code>을 저장합니다.</li>
+<li><code>v</code>: 여러 값을 묶을 때는 <code>c()</code>를 씁니다. <code>c(3, 1, 4, 1, 5)</code>를 저장합니다.</li>
+<li><code>s</code>: 문자는 따옴표로 감쌉니다. <code>"KAPAE"</code>를 저장합니다.</li>
+<li><code>b</code>: 참거짓은 <code>TRUE</code>와 <code>FALSE</code>입니다. 따옴표를 붙이지 않습니다.</li>
+<li><code>class()</code>로 자료형을, <code>length()</code>로 길이를 확인합니다.</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 빈칸을 채워 코드를 완성하고 실행하세요</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="co"># 코드 실행 단축키: Ctrl(Cmd) + Shift + Enter</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>x <span class="ot">&lt;-</span> <span class="dv">10</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>v _____ <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">1</span>, <span class="dv">4</span>, <span class="dv">1</span>, <span class="dv">5</span>)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>s <span class="ot">&lt;-</span> _____KAPAE_____</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>b <span class="ot">&lt;-</span> _____</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a><span class="fu">_____</span>(x)</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a><span class="fu">_____</span>(v)</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(s)</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(b)</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a><span class="fu">_____</span>(v)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "numeric"</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "numeric"</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "character"</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "logical"</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 5</code></pre>
+</div>
+</div>
+<p><br></p>
+</section>
+<section id="task-3.-함수와-인수" class="level2">
+<h2 class="anchored" data-anchor-id="task-3.-함수와-인수">Task 3. 함수와 인수</h2>
+<p>함수는 이름 뒤에 소괄호 <code>()</code>를 붙여 호출하고, 괄호 안에 <strong>인수(argument)</strong>를 넣습니다. 인수는 함수가 작업을 수행하기 위해 전달받는 입력값입니다. 인수는 <code>이름 = 값</code>처럼 이름을 붙여 지정할 수도 있고, 함수에 정해진 순서대로 이름 없이 넣을 수도 있습니다. <strong>다음의 안내에 따라 함수와 인수를 직접 입력하여 코드를 완성해 보세요.</strong></p>
+<ul>
+<li><code>mean(v)</code>로 평균을 구합니다.</li>
+<li>결측이 하나라도 있으면 결과가 <code>NA</code>가 됩니다. <code>na.rm = TRUE</code>를 넣으면 결측을 빼고 계산합니다.</li>
+<li><code>round()</code>는 두 번째 인수로 소수점 자리를 받습니다. <code>round(3.14159, 2)</code>처럼 씁니다.</li>
+<li><code>seq()</code>는 수열을 만듭니다. <code>seq(1, 10, by = 2)</code>처럼 씁니다.</li>
+<li>함수의 사용법이 궁금하면 물음표를 앞에 붙여 <code>?mean</code>을 실행하면 도움말이 열립니다.</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 빈칸을 채워 코드를 완성하고 실행하세요</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="co"># 코드 실행 단축키: Ctrl(Cmd) + Shift + Enter</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>v_na <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">3</span>, <span class="dv">1</span>, <span class="dv">4</span>, <span class="cn">NA</span>, <span class="dv">5</span>)</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a><span class="fu">_____</span>(v)</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(v_na)</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(v_na, <span class="at">_____ =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a><span class="fu">_____</span>(<span class="fl">3.14159</span>, _____)</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a><span class="fu">seq</span>(<span class="dv">1</span>, <span class="dv">10</span>, <span class="at">_____ =</span> <span class="dv">2</span>)</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span><span class="sc">:</span><span class="dv">5</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2.8</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] NA</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 3.25</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 3.14</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1 3 5 7 9</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1 2 3 4 5</code></pre>
+</div>
+</div>
+<hr>
+<p><br></p>
+</section>
+</section>
+<section id="part-3.-데이터-불러오기와-훑어보기" class="level1">
+<h1>Part 3. 데이터 불러오기와 훑어보기</h1>
+<section id="task-4.-파일-읽기와-구조-확인" class="level2">
+<h2 class="anchored" data-anchor-id="task-4.-파일-읽기와-구조-확인">Task 4. 파일 읽기와 구조 확인</h2>
+<p>본 세션의 실습에서 쓰는 OHIE 데이터를 불러옵니다. 확장자가 <code>.rds</code>이므로 <code>readRDS()</code>를 씁니다.</p>
+<ul>
+<li><code>file_path</code>: 파일 이름을 문자열로 저장합니다. 파일이 다른 폴더에 있으면 경로를 앞에 붙입니다.</li>
+<li><code>ohie</code>: <code>readRDS(file_path)</code>의 결과를 저장합니다.</li>
+<li><code>dim()</code>으로 행과 열의 개수를, <code>nrow()</code>와 <code>ncol()</code>로 각각을 확인합니다.</li>
+<li><code>head()</code>로 앞부분 몇 행을 봅니다. 기본값은 6행입니다.</li>
+<li><code>summary()</code>로 변수의 요약통계를 봅니다.</li>
+</ul>
+<p>파일이 어디 있는지 모르겠다면 <code>getwd()</code>로 현재 작업 폴더를 확인하세요. 그 폴더에 파일을 두면 이름만으로 불러올 수 있습니다.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 빈칸을 채워 코드를 완성하고 실행하세요</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="co"># 코드 실행 단축키: Ctrl(Cmd) + Shift + Enter</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(tidyr)</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(ggplot2)</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>file_path <span class="ot">&lt;-</span> <span class="st">"_____"</span></span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>ohie <span class="ot">&lt;-</span> <span class="fu">_____</span>(file_path)</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a><span class="fu">_____</span>(ohie)</span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(ohie)</span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a><span class="fu">_____</span>(ohie)</span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a><span class="fu">_____</span>(ohie[, <span class="dv">1</span><span class="sc">:</span><span class="dv">5</span>])</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 6359  363</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 6359</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 363</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  person_id household_id_descriptive treatment_descriptive
+1         5                   100005                     1
+2         8                   102094                     0
+3        27                   172099                     0
+4        28                   100028                     0
+5        42                   100042                     1
+6        78                   100078                     1
+  draw_lottery_descriptive dt_notify_lottery
+1                        7             14103
+2                        8             14133
+3                        3             13985
+4                        6             14074
+5                        7             14103
+6                        7             14103</code></pre>
+</div>
+</div>
+<p><code>ohie[, 1:5]</code>는 앞의 다섯 열만 골라 본 것입니다. 전체 열이 수백 개라 그대로 출력하면 화면을 가득 채웁니다. 대괄호 안의 쉼표 앞이 행, 뒤가 열이라는 점이 중요한데, 본 실습에서 <code>df[train_id, ]</code>처럼 쓰는 것도 같은 문법입니다.</p>
+<hr>
+<p><br></p>
+</section>
+</section>
+<section id="part-4.-변수-다루기" class="level1">
+<h1>Part 4. 변수 다루기</h1>
+<section id="task-5.-필요한-변수만-골라-정리하기" class="level2">
+<h2 class="anchored" data-anchor-id="task-5.-필요한-변수만-골라-정리하기">Task 5. 필요한 변수만 골라 정리하기</h2>
+<p>실습에 쓸 변수 여섯 개만 남기고 이름을 알아보기 쉽게 바꿉니다. 본 세션의 실습 파일들이 모두 이 단계로 시작합니다.</p>
+<p>파이프 연산자 <code>|&gt;</code>는 앞의 결과를 뒤 함수의 첫 인수로 넘깁니다. <code>df |&gt; filter(...)</code>는 <code>filter(df, ...)</code>와 같은 뜻이고, 단계가 여러 개일 때 읽기 쉬워집니다.</p>
+<ul>
+<li><code>transmute()</code>: 새 변수를 만들면서 나머지 열은 버립니다. 이름을 바꾸며 정리할 때 편합니다. 나머지를 남기려면 <code>mutate()</code>를 씁니다.</li>
+<li><code>as.numeric()</code>, <code>as.integer()</code>, <code>factor()</code>: 자료형을 바꿉니다. 범주가 여러 개인 변수는 <code>factor()</code>로 둡니다.</li>
+<li><code>drop_na()</code>: 결측이 하나라도 있는 행을 제거합니다.</li>
+<li><code>age</code>는 조사 시점 2009년에서 출생연도를 뺀 값입니다.</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 빈칸을 채워 코드를 완성하고 실행하세요</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="co"># 코드 실행 단축키: Ctrl(Cmd) + Shift + Enter</span></span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>df <span class="ot">&lt;-</span> ohie <span class="sc">|&gt;</span></span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">_____</span>(</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">rx_num     =</span> <span class="fu">as.numeric</span>(rx_num_mod_6m),</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">treatment  =</span> <span class="fu">_____</span>(treatment_descriptive),</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">female     =</span> <span class="fu">as.integer</span>(female_6m),</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">age        =</span> <span class="dv">2009</span> _____ <span class="fu">as.numeric</span>(birthyear_6m),</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>    <span class="at">income_fpl =</span> <span class="fu">_____</span>(hhinc_pctfpl_6m),</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>    <span class="at">health_gen =</span> <span class="fu">as.numeric</span>(health_gen_6m)</span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>  ) <span class="sc">|&gt;</span></span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">_____</span>()</span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a><span class="fu">dim</span>(df)</span>
+<span id="cb35-16"><a href="#cb35-16" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span>(df)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 5164    6</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  rx_num treatment female age income_fpl health_gen
+1      2         0      0  41    0.00000          3
+2      0         0      1  47   42.89636          2
+3      0         1      1  63   77.21346          1
+4      1         1      1  27   72.70260          2
+5      0         0      0  54   96.37188          2
+6      0         0      0  45   25.73782          1</code></pre>
+</div>
+</div>
+<p><br></p>
+</section>
+<section id="task-6.-열-꺼내기와-행-걸러내기" class="level2">
+<h2 class="anchored" data-anchor-id="task-6.-열-꺼내기와-행-걸러내기">Task 6. 열 꺼내기와 행 걸러내기</h2>
+<p>R에서 데이터를 다룰 때 가장 기본적으로 사용하는 자료구조 중 하나가 <strong>데이터 프레임(data frame)</strong>입니다. 데이터 프레임은 엑셀의 표와 같은 <strong>행과 열로 구성된 2차원 테이블</strong>이라고 생각하면 됩니다. 각 열에는 서로 다른 형식의 값이 들어갈 수 있습니다. 예를 들어 한 열은 숫자, 다른 열은 텍스트로 구성할 수 있습니다.</p>
+<p>비슷한 자료구조로 <strong>행렬(matrix)</strong>이 있습니다. 행렬 역시 행과 열로 이루어진 2차원 구조이지만, 데이터 프레임과 달리 <strong>모든 값이 같은 자료형</strong>이어야 합니다. 예를 들어 전체가 숫자이거나 전체가 텍스트여야 합니다.</p>
+<p>데이터 프레임이나 행렬에서 특정 행이나 열만 가져올 때는 객체 이름 뒤에 <code>[행 범위, 열 범위]</code>를 붙여 선택할 수 있습니다. 또는 <code>select()</code>, <code>filter()</code>와 같은 함수를 활용할 수도 있습니다. 실습 파일에서는 두 방법이 모두 사용되므로 함께 익혀 두시면 좋습니다.</p>
+<ul>
+<li><code>df$rx_num</code>: 달러 기호로 열 하나를 꺼냅니다.</li>
+<li><code>df[["rx_num"]]</code>: 같은 결과입니다. 열 이름이 변수에 담겨 있을 때 유용합니다.</li>
+<li><code>select()</code>: 열 여러 개를 골라 데이터프레임으로 남깁니다.</li>
+<li><code>filter()</code>: 조건에 맞는 행만 남깁니다. 같다는 조건은 등호 두 개(<code>==</code>)입니다.</li>
+<li><code>table()</code>: 범주별 빈도를 셉니다.</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 빈칸을 채워 코드를 완성하고 실행하세요</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="co"># 코드 실행 단축키: Ctrl(Cmd) + Shift + Enter</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(df_____rx_num)</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>df <span class="sc">|&gt;</span> <span class="fu">_____</span>(age, income_fpl) <span class="sc">|&gt;</span> <span class="fu">head</span>()</span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>df_female <span class="ot">&lt;-</span> df <span class="sc">|&gt;</span> <span class="fu">_____</span>(female _____ <span class="dv">1</span>)</span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a><span class="fu">nrow</span>(df_female)</span>
+<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a><span class="fu">_____</span>(df<span class="sc">$</span>treatment)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 1.713594</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  age income_fpl
+1  41    0.00000
+2  47   42.89636
+3  63   77.21346
+4  27   72.70260
+5  54   96.37188
+6  45   25.73782</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 2988</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+   0    1 
+3206 1958 </code></pre>
+</div>
+</div>
+<p>조건을 여러 개 걸 때는 쉼표로 이어 쓰면 모두 만족하는 행만 남습니다. <code>filter(female == 1, age &gt;= 50)</code>처럼 씁니다. 하나라도 만족하면 남기려면(즉, OR) <code>|</code>를 씁니다.</p>
+<hr>
+<p><br></p>
+</section>
+</section>
+<section id="part-5.-요약과-시각화" class="level1">
+<h1>Part 5. 요약과 시각화</h1>
+<section id="task-7.-집단별-요약" class="level2">
+<h2 class="anchored" data-anchor-id="task-7.-집단별-요약">Task 7. 집단별 요약</h2>
+<p>데이터를 요약하거나 필요한 값을 계산할 때는 직접 계산식을 작성하기보다 R 또는 패키지에 이미 정의되어 있는 함수를 주로 사용합니다. 다음은 데이터 분석에서 자주 사용하는 기본 함수들로 이번 실습에서도 반복해서 사용하므로 익혀 두시면 좋습니다.</p>
+<ul>
+<li><code>summarise()</code>: 요약값을 계산합니다. <code>n()</code>은 행의 개수입니다.</li>
+<li><code>group_by()</code>: 앞에 붙이면 집단별로 나누어 계산합니다.</li>
+<li><code>arrange()</code>: 정렬합니다. 내림차순은 <code>desc()</code>로 감쌉니다.</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 빈칸을 채워 코드를 완성하고 실행하세요</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="co"># 코드 실행 단축키: Ctrl(Cmd) + Shift + Enter</span></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>df <span class="sc">|&gt;</span></span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">_____</span>(</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">n       =</span> <span class="fu">_____</span>(),</span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>    평균    <span class="ot">=</span> <span class="fu">mean</span>(rx_num),</span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>    표준편차 <span class="ot">=</span> <span class="fu">_____</span>(rx_num)</span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a>df <span class="sc">|&gt;</span></span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">_____</span>(treatment) <span class="sc">|&gt;</span></span>
+<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarise</span>(</span>
+<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a>    <span class="at">n    =</span> <span class="fu">n</span>(),</span>
+<span id="cb43-15"><a href="#cb43-15" aria-hidden="true" tabindex="-1"></a>    평균 <span class="ot">=</span> <span class="fu">_____</span>(rx_num),</span>
+<span id="cb43-16"><a href="#cb43-16" aria-hidden="true" tabindex="-1"></a>    <span class="at">.groups =</span> <span class="st">"drop"</span></span>
+<span id="cb43-17"><a href="#cb43-17" aria-hidden="true" tabindex="-1"></a>  )</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>     n     평균 표준편차
+1 5164 1.713594 2.570614</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 2 × 3
+  treatment     n  평균
+  &lt;fct&gt;     &lt;int&gt; &lt;dbl&gt;
+1 0          3206  1.71
+2 1          1958  1.72</code></pre>
+</div>
+</div>
+<p><code>.groups = "drop"</code>은 요약이 끝난 뒤 집단 구분을 해제하라는 뜻입니다. 넣지 않으면 안내 메시지가 뜨고, 이어지는 계산에서 의도치 않게 집단별로 처리될 수 있습니다.</p>
+<p><br></p>
+</section>
+</section>
+<section id="part-6.-반복과-함수" class="level1">
+<h1>Part 6. 반복과 함수</h1>
+<section id="task-8.-반복문" class="level2">
+<h2 class="anchored" data-anchor-id="task-8.-반복문">Task 8. 반복문</h2>
+<p>같은 작업을 여러 번 할 때 씁니다. 본 실습에서는 교차검증의 겹마다, 부스팅의 회차마다 반복하는 자리에 나옵니다.</p>
+<ul>
+<li><code>for (i in 1:5) { ... }</code>: <code>i</code>가 1부터 5까지 바뀌며 중괄호 안이 실행됩니다.</li>
+<li>결과를 모으려면 빈 그릇을 먼저 만들어 두고 자리마다 채웁니다. <code>numeric(5)</code>는 0으로 채운 길이 5의 벡터입니다.</li>
+<li><code>seq_along(x)</code>는 <code>1:length(x)</code>와 같습니다. 길이가 0일 때도 안전하게 동작합니다.</li>
+</ul>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="co"># 빈칸을 채워 코드를 완성하고 실행하세요</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a><span class="co"># 코드 실행 단축키: Ctrl(Cmd) + Shift + Enter</span></span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>result <span class="ot">&lt;-</span> <span class="fu">_____</span>(<span class="dv">5</span>)</span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (i <span class="cf">in</span> _____) {</span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>  result[_____] <span class="ot">&lt;-</span> i<span class="sc">^</span><span class="dv">2</span></span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-10"><a href="#cb46-10" aria-hidden="true" tabindex="-1"></a>result</span>
+<span id="cb46-11"><a href="#cb46-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-12"><a href="#cb46-12" aria-hidden="true" tabindex="-1"></a>groups <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"A"</span>, <span class="st">"B"</span>, <span class="st">"C"</span>)</span>
+<span id="cb46-13"><a href="#cb46-13" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> (g <span class="cf">in</span> <span class="fu">_____</span>(groups)) {</span>
+<span id="cb46-14"><a href="#cb46-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">cat</span>(<span class="st">"집단"</span>, groups[g], <span class="st">"</span><span class="sc">\n</span><span class="st">"</span>)</span>
+<span id="cb46-15"><a href="#cb46-15" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="cell">
+<div class="cell-output cell-output-stdout">
+<pre><code>[1]  1  4  9 16 25</code></pre>
+</div>
+<div class="cell-output cell-output-stdout">
+<pre><code>집단 A 
+집단 B 
+집단 C </code></pre>
+</div>
+</div>
+<p><br></p>
+<hr>
+<p><br></p>
+</section>
+</section>
+<section id="part-7.-문서-렌더링" class="level1">
+<h1>Part 7. 문서 렌더링</h1>
+<section id="렌더링rendering이란" class="level2">
+<h2 class="anchored" data-anchor-id="렌더링rendering이란">렌더링(rendering)이란?</h2>
+<p>지금까지는 코드 블록을 하나씩 실행하면서 결과를 확인했습니다. <strong>렌더링(rendering)</strong>은 <code>.qmd</code> 파일 전체를 위에서부터 한 번에 실행하고, 코드의 실행 결과를 본문의 글과 함께 엮어 하나의 HTML 문서로 만드는 작업입니다.</p>
+<p>여러분에게 제공된 실습 파일 중 <code>.html</code> 파일은 <code>.qmd</code> 파일을 렌더링한 결과물입니다. 마크다운에서 정한 형식에 따라 글과 코드를 작성하면 Quarto가 이를 정리하여 지금 보고 계신 것과 같은 보기 좋은 문서를 간편하게 만들어 줍니다.</p>
+<p>렌더링은 대략 다음과 같은 과정을 거칩니다.</p>
+<ol type="1">
+<li><code>knitr</code>가 R 코드 블록을 위에서부터 순서대로 실행하고 결과와 그림을 수집합니다.</li>
+<li>코드 실행 결과를 본문의 마크다운과 결합합니다.</li>
+<li>Quarto가 이를 HTML로 변환하고 YAML에서 지정한 목차와 스타일 등을 적용합니다.</li>
+</ol>
+<p>지금 보고 계신 이 문서도 같은 과정을 거쳐 만들어졌습니다.</p>
+</section>
+<section id="데이터-분석-결과를-공유하는-아주-쉬운-방법" class="level2">
+<h2 class="anchored" data-anchor-id="데이터-분석-결과를-공유하는-아주-쉬운-방법">데이터 분석 결과를 공유하는 아주 쉬운 방법</h2>
+<p>Quarto에서는 <strong>분석 코드, 실행 결과, 결과에 대한 설명을 하나의 문서에서 함께 관리</strong>할 수 있습니다. 데이터나 분석 코드가 바뀌더라도 문서를 다시 렌더링하면 표와 그림을 포함한 결과가 모두 함께 갱신됩니다. 분석 결과를 따로 복사해서 Word 등에 옮겨 붙이는 과정이 줄어들고, 이전 분석 결과를 실수로 그대로 남겨 두는 문제도 방지할 수 있습니다.</p>
+<p>또한 문서 전체를 처음부터 끝까지 실행해 보는 것은 <strong>분석의 재현성을 확인하는 좋은 방법</strong>입니다. 콘솔에서 코드 블록을 하나씩 실행하다 보면 현재 R 세션에 우연히 남아 있는 객체에 의존할 수 있습니다. 반면 새로운 세션에서 문서를 처음부터 렌더링했을 때도 정상적으로 실행된다면, 필요한 코드와 객체가 문서 안에서 올바른 순서로 만들어지고 있는지 확인할 수 있습니다.</p>
+</section>
+<section id="렌더링하는-방법" class="level2">
+<h2 class="anchored" data-anchor-id="렌더링하는-방법">렌더링하는 방법</h2>
+<p>가장 간단한 방법은 편집기 상단의 <strong>Render 또는 Preview 버튼</strong>을 사용하는 것입니다. RStudio나 Positron에서 해당 버튼을 누르면 현재 <code>.qmd</code> 문서를 렌더링할 수 있습니다.</p>
+<p>단축키를 사용할 수도 있습니다.</p>
+<ul>
+<li>Windows: <code>Ctrl</code> + <code>Shift</code> + <code>K</code></li>
+<li>Mac: <code>Cmd</code> + <code>Shift</code> + <code>K</code></li>
+</ul>
+<p><strong>지금 한 번 단축키를 눌러 이 문서를 직접 렌더링해 보세요.</strong></p>
+<p>터미널에서도 렌더링할 수 있습니다. 터미널을 열고 <code>.qmd</code> 파일이 있는 폴더에서 다음 명령어를 실행합니다.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb49"><pre class="sourceCode bash code-with-copy"><code class="sourceCode bash"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="ex">quarto</span> render 00RBasics_sol.qmd</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>렌더링이 완료되면 같은 폴더에 <code>00RBasics_sol.html</code>이 만들어집니다. 이 파일을 브라우저에서 열면 렌더링된 문서를 확인할 수 있습니다.</p>
+<p>R 콘솔에서 실행할 수도 있습니다.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb50"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a>quarto<span class="sc">::</span><span class="fu">quarto_render</span>(<span class="st">"00RBasics_sol.qmd"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="렌더링이-실패할-때" class="level2">
+<h2 class="anchored" data-anchor-id="렌더링이-실패할-때">렌더링이 실패할 때</h2>
+<p>렌더링 과정에서 오류가 발생하더라도 대부분 오류 메시지를 따라가면 원인을 찾을 수 있습니다.</p>
+<p><strong>첫 번째로 확인할 것은 완성되지 않은 코드입니다.</strong> 실습 파일의 학생용 코드 블록에는 <code>_____</code>와 같은 빈칸이 남아 있습니다. 이 상태로 실행하면 오류가 발생할 수 있으므로, 아직 완성하지 않은 코드 블록에는 <code>#| eval: false</code>를 붙여 렌더링할 때 실행되지 않도록 해 두었습니다. 빈칸을 모두 채운 뒤 이 옵션을 지우면 해당 코드 블록도 렌더링할 때 함께 실행됩니다.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a>result <span class="ot">&lt;-</span> _____</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><strong>두 번째로 확인할 것은 파일 경로입니다.</strong> 예를 들어 다음 코드는 현재 작업 위치에서 <code>ohie_all6m.rds</code>라는 파일을 찾습니다.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a>ohie <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">"ohie_all6m.rds"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>파일이 예상한 위치에 없다면 렌더링 과정에서 파일을 찾지 못했다는 오류가 발생합니다. 실습에서는 경로 문제를 줄이기 위해 필요한 데이터 파일을 안내된 위치에 두세요.</p>
+<p><strong>세 번째로 확인할 것은 앞선 코드 블록에서 만들어지는 객체입니다.</strong> 예를 들어 뒤쪽 코드에서 <code>model_df</code>를 사용한다면 그보다 앞선 코드 블록에서 <code>model_df</code>가 먼저 만들어져야 합니다. 콘솔에서 이전에 만들어 둔 객체에만 의존하고 문서 안에는 해당 객체를 만드는 코드가 없다면 렌더링 과정에서 다음과 같은 오류가 발생합니다.</p>
+<pre class="text"><code>object 'model_df' not found</code></pre>
+<p>렌더링 오류 메시지에는 일반적으로 문제가 발생한 코드 블록이나 파일의 위치가 함께 표시됩니다. <strong>오류가 발생하면 먼저 어떤 코드 블록에서 멈췄는지 확인하고, 해당 코드 블록과 바로 앞의 코드를 점검하세요.</strong></p>
+</section>
+</section>
+
+</main>
+<!-- /main column -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copied!");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copied!");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+</div> <!-- /content -->
+
+
+
+
+</body></html>
