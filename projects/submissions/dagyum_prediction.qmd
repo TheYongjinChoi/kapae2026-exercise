@@ -1,0 +1,207 @@
+---
+title: "연구설계 실습: 머신러닝 예측"
+author: "dagyum"
+student-id: "dagyum"
+design-method: "prediction"
+format:
+  html:
+    toc: true
+    embed-resources: true
+  docx:
+    toc: true
+  pdf:
+    toc: true
+  revealjs:
+    slide-number: true
+    scrollable: true
+execute:
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/lab_helpers.R")
+student_id <- "dagyum"
+method <- "prediction"
+```
+
+# 학생 입력 1. 연구 배경
+
+각 항목은 **1~3문장**으로 짧게 작성하세요. 수업 마지막 약 **30분 동안** 서로의 연구설계를 함께 살펴보고 토론합니다.
+
+```{r}
+#| label: research-background
+#| include: false
+
+research_title <- "국가의 기후변화 대응 성과 예측: 구조적·제도적·에너지 요인을 중심으로"
+
+theoretical_background <- "
+국가별 기후변화 대응 성과는 경제구조, 에너지 체계, 정부의 정책집행 역량 등 다양한 국가적 조건에 따라 차이를 보일 수 있다. 특히 초기 기후성과와 국가의 구조적 여건은 이후 기후성과와 밀접하게 관련될 가능성이 있다.
+"
+
+research_need <- "
+기존 연구는 국가별 기후성과의 결정요인을 설명하는 데 주로 초점을 두어 왔다. 이러한 요인들을 이용하여 향후 국가의 기후성과를 어느 정도 예측할 수 있는지를 살펴볼 필요가 있다.
+"
+
+research_question <- "
+2018년의 기후성과와 국가의 구조적·제도적·에너지 특성을 이용하여 2026년 기후성과를 얼마나 예측할 수 있는가? 어떤 변수가 예측에 가장 중요하게 기여하는가?
+"
+
+expected_contribution <- "
+본 연구는 국가별 기후성과 연구에 예측적 접근을 적용하여 기존의 설명 중심 분석을 보완한다. 또한 향후 기후성과가 낮을 가능성이 있는 국가의 특성을 파악하는 데 활용될 수 있다.
+"
+```
+
+# 학생 입력 2. 데이터와 방법론
+
+실제로 사용할 데이터를 **직접 확인하거나 구체적으로 떠올리며** 아래 질문에 답하세요.  
+이 질문에 답하는 과정 자체가 현재 데이터가 선택한 방법론에 적절한지 확인하는 과정입니다. 필수 질문에 답하기 어렵다면 다른 방법론이 더 적절할 수 있습니다.
+
+```{r}
+#| label: method-data-inputs
+#| include: false
+
+# 1. 어떤 데이터를 사용할 예정인가요?
+data_name <- "2018-2026 국가별 기후변화 대응 성과(CCPI) 데이터"
+
+# 2. 데이터의 한 행(row)은 무엇을 의미하나요?
+unit_of_observation <- "국가 1개"
+
+# 3. 무엇을 예측하려고 하나요?
+outcome_var <- "CCPI_2026"
+outcome_label <- "2026년 기후변화 대응 성과(CCPI)"
+
+# 4. 결과변수 형태
+outcome_type <- "continuous"
+
+# 5. 예측에 사용할 실제 변수명
+predictor_vars <- c(
+  "CCPI_2018",
+  "로그GDP",
+  "에너지집약도",
+  "정부효과성",
+  "환경보호인식"
+)
+
+# 6. 표시할 변수명
+predictor_labels <- c(
+  "2018년 CCPI",
+  "1인당 GDP",
+  "에너지 집약도",
+  "정부 효과성",
+  "환경보호 인식"
+)
+
+# 7. 변수 형태
+predictor_types <- c(
+  "continuous",
+  "continuous",
+  "continuous",
+  "continuous",
+  "continuous"
+)
+
+# 8. 관측치 수
+sample_size <- 55
+
+# 9. 별도의 test/hold-out 자료
+has_test_set <- FALSE
+
+# 10. 예측 결과 활용
+prediction_use <- "
+국가의 초기 기후성과와 구조적·제도적·에너지 특성을 이용하여
+향후 기후변화 대응 성과가 상대적으로 낮을 가능성이 있는 국가를 파악하고자 한다.
+"
+
+spec <- build_spec_from_environment(environment())
+```
+
+# 1. 연구 배경과 연구질문
+
+```{r}
+#| results: asis
+cat(project_overview_text(spec))
+```
+
+# 2. 데이터와 방법론 적합성
+
+```{r}
+#| results: asis
+cat(data_structure_text(spec))
+cat(data_compatibility_text(spec))
+```
+
+# 3. 분석 방법
+
+```{r}
+#| results: asis
+cat(methods_text(spec))
+```
+
+```{r}
+#| label: simulate
+#| include: false
+analysis <- simulate_project(spec)
+```
+
+# 4. 주요 분석 결과
+
+```{r}
+#| results: asis
+cat(main_results_text(analysis, spec))
+```
+
+```{r}
+#| label: main-results
+main_figures <- make_main_figures(analysis, spec)
+render_figure_list(main_figures)
+```
+
+# 5. 부록 결과
+
+## 부록 1. 변수별 결측치
+
+```{r}
+knitr::kable(
+  analysis$missingness,
+  digits = 2,
+  caption = "표 S1. 변수별 결측치 현황",
+  col.names = c("변수명", "결측치 수", "결측치 비율(%)")
+)
+```
+
+```{r}
+#| results: asis
+cat(supplement_intro_text(spec))
+```
+
+```{r}
+supp_figures <- make_supplement_figures(analysis, spec)
+render_figure_list(supp_figures)
+```
+
+```{r}
+#| label: auto-submit
+#| include: false
+# HTML/Word/PDF/슬라이드로 렌더할 때마다 현재 QMD를 자동 제출합니다.
+submit_project(
+  qmd_path = knitr::current_input(),
+  endpoint = "",
+  course_key = ""
+)
+```
+
+```{r}
+#| label: optional-other-formats
+#| include: false
+#| eval: false
+# 필요할 때 QMD 소스에서 직접 실행하는 선택사항입니다.
+# PDF만 만들기:
+# render_project_outputs(knitr::current_input(), formats = "pdf")
+#
+# RevealJS 슬라이드만 만들기:
+# render_project_outputs(knitr::current_input(), formats = "revealjs")
+```
+
