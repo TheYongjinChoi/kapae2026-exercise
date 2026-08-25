@@ -15,6 +15,7 @@ format:
     slide-number: true
     scrollable: true
 execute:
+  echo: false
   warning: false
   message: false
 ---
@@ -23,13 +24,10 @@ execute:
 #| label: setup
 #| include: false
 source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/lab_helpers.R")
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/report_helpers.R")
 student_id <- "joonk"
 method <- "prediction"
 ```
-
-# 학생 입력 1. 연구 배경
-
-각 항목은 **1~3문장**으로 짧게 작성하세요. 수업 마지막 약 **30분 동안** 서로의 연구설계를 함께 살펴보고 토론합니다.
 
 ```{r}
 #| label: research-background
@@ -41,16 +39,10 @@ theoretical_background <- "administrative burden이 시민 이용자들의 디�
 
 research_need <- "물리적 조건 외에 경험적, 심리적 장애 요인을 파악할 수 있음"
 
-research_question <- "administrative burden이 디지털 서비스 이용의사에 주는 영향과 adminitrative burden 유형별 상대적 임팩트 크기 분석"
+research_question <- "administrative burden이 디지털 서비스 이용의사에 주는 영향과 administrative burden 유형별 상대적 임팩트 크기 분석"
 
-expected_contribution <- "이 연구가 추가할 수 있는 학술적 또는 정책적 기여를 1~3문장으로 적으세요.
-"
+expected_contribution <- ""
 ```
-
-# 학생 입력 2. 데이터와 방법론
-
-실제로 사용할 데이터를 **직접 확인하거나 구체적으로 떠올리며** 아래 질문에 답하세요.  
-이 질문에 답하는 과정 자체가 현재 데이터가 선택한 방법론에 적절한지 확인하는 과정입니다. 필수 질문에 답하기 어렵다면 다른 방법론이 더 적절할 수 있습니다.
 
 ```{r}
 #| label: method-data-inputs
@@ -98,7 +90,7 @@ sample_size <- 3700
 has_test_set <- TRUE
 
 # 10. 이 예측 결과를 연구나 정책에서 어떻게 활용하고 싶나요?
-prediction_use <- "디지털 서비스와 관련도가높은 administrative burden 중심으로 사용자 비용을 최소화할 수있는 정책 마련의 근거로 제시"
+prediction_use <- "디지털 서비스와 관련도가 높은 administrative burden 중심으로 사용자 비용을 최소화할 수 있는 정책 마련의 근거로 제시"
 
 spec <- build_spec_from_environment(environment())
 ```
