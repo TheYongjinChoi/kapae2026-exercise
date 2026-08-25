@@ -8,7 +8,7 @@
 
 <meta name="author" content="YongjinChoi">
 
-<title>Research Design Lab: Difference-in-differences (DID)</title>
+<title>Research Design Lab: Instrumental variables (IV)</title>
 <style>
 
 code{white-space: pre-wrap;}
@@ -4093,38 +4093,46 @@ display: none;
     <h2 id="toc-title">Table of contents</h2>
    
   <ul>
-  <li><a href="#research-question-and-design" id="toc-research-question-and-design" class="nav-link active" data-scroll-target="#research-question-and-design">1. Research question and design</a>
+  <li><a href="#학생-입력-영역" id="toc-학생-입력-영역" class="nav-link active" data-scroll-target="#학생-입력-영역">학생 입력 영역</a>
+  <ul class="collapse">
+  <li><a href="#단계.-연구-배경과-연구질문" id="toc-단계.-연구-배경과-연구질문" class="nav-link" data-scroll-target="#단계.-연구-배경과-연구질문">1단계. 연구 배경과 연구질문</a></li>
+  <li><a href="#단계.-방법론과-실제-데이터-구조-확인" id="toc-단계.-방법론과-실제-데이터-구조-확인" class="nav-link" data-scroll-target="#단계.-방법론과-실제-데이터-구조-확인">2단계. 방법론과 실제 데이터 구조 확인</a></li>
+  </ul></li>
+  <li><a href="#research-background-and-question" id="toc-research-background-and-question" class="nav-link" data-scroll-target="#research-background-and-question">1. Research background and question</a>
   <ul class="collapse">
   <li><a href="#proposed-study" id="toc-proposed-study" class="nav-link" data-scroll-target="#proposed-study">Proposed study</a>
   <ul class="collapse">
   <li><a href="#research-background" id="toc-research-background" class="nav-link" data-scroll-target="#research-background">Research background</a></li>
   </ul></li>
   </ul></li>
-  <li><a href="#data-and-expected-structure" id="toc-data-and-expected-structure" class="nav-link" data-scroll-target="#data-and-expected-structure">2. Data and expected structure</a></li>
+  <li><a href="#data-method-compatibility-check" id="toc-data-method-compatibility-check" class="nav-link" data-scroll-target="#data-method-compatibility-check">2. Data-method compatibility check</a>
+  <ul class="collapse">
+  <li><a href="#method-data-compatibility-check" id="toc-method-data-compatibility-check" class="nav-link" data-scroll-target="#method-data-compatibility-check">Method-data compatibility check</a></li>
+  </ul></li>
   <li><a href="#methods" id="toc-methods" class="nav-link" data-scroll-target="#methods">3. Methods</a></li>
   <li><a href="#simulated-analysis" id="toc-simulated-analysis" class="nav-link" data-scroll-target="#simulated-analysis">4. Simulated analysis</a>
   <ul class="collapse">
   <li><a href="#main-results" id="toc-main-results" class="nav-link" data-scroll-target="#main-results">Main results</a></li>
+  <li><a href="#automatic-basic-interpretation" id="toc-automatic-basic-interpretation" class="nav-link" data-scroll-target="#automatic-basic-interpretation">Automatic basic interpretation</a></li>
   </ul></li>
-  <li><a href="#interpretation-template" id="toc-interpretation-template" class="nav-link" data-scroll-target="#interpretation-template">5. Interpretation template</a></li>
   <li><a href="#supplementary-material" id="toc-supplementary-material" class="nav-link" data-scroll-target="#supplementary-material">Supplementary material</a>
   <ul class="collapse">
-  <li><a href="#a1.-missing-records-by-variable" id="toc-a1.-missing-records-by-variable" class="nav-link" data-scroll-target="#a1.-missing-records-by-variable">A1. Missing records by variable</a></li>
-  <li><a href="#a2.-data-cleaning-flow" id="toc-a2.-data-cleaning-flow" class="nav-link" data-scroll-target="#a2.-data-cleaning-flow">A2. Data-cleaning flow</a></li>
-  <li><a href="#a3.-design-specific-diagnostics" id="toc-a3.-design-specific-diagnostics" class="nav-link" data-scroll-target="#a3.-design-specific-diagnostics">A3. Design-specific diagnostics</a></li>
-  <li><a href="#a4.-required-robustness-and-sensitivity-checks" id="toc-a4.-required-robustness-and-sensitivity-checks" class="nav-link" data-scroll-target="#a4.-required-robustness-and-sensitivity-checks">A4. Required robustness and sensitivity checks</a></li>
-  <li><a href="#a5.-reproducibility-record" id="toc-a5.-reproducibility-record" class="nav-link" data-scroll-target="#a5.-reproducibility-record">A5. Reproducibility record</a></li>
+  <li><a href="#supplement-1.-missing-records-by-variable" id="toc-supplement-1.-missing-records-by-variable" class="nav-link" data-scroll-target="#supplement-1.-missing-records-by-variable">Supplement 1. Missing records by variable</a></li>
+  <li><a href="#supplement-2.-data-cleaning-flow" id="toc-supplement-2.-data-cleaning-flow" class="nav-link" data-scroll-target="#supplement-2.-data-cleaning-flow">Supplement 2. Data-cleaning flow</a></li>
+  <li><a href="#supplement-3.-full-design-specific-diagnostics-and-sensitivity-analyses" id="toc-supplement-3.-full-design-specific-diagnostics-and-sensitivity-analyses" class="nav-link" data-scroll-target="#supplement-3.-full-design-specific-diagnostics-and-sensitivity-analyses">Supplement 3. Full design-specific diagnostics and sensitivity analyses</a></li>
+  <li><a href="#supplement-4.-required-robustness-and-sensitivity-checklist" id="toc-supplement-4.-required-robustness-and-sensitivity-checklist" class="nav-link" data-scroll-target="#supplement-4.-required-robustness-and-sensitivity-checklist">Supplement 4. Required robustness and sensitivity checklist</a></li>
+  <li><a href="#supplement-5.-reproducibility-record" id="toc-supplement-5.-reproducibility-record" class="nav-link" data-scroll-target="#supplement-5.-reproducibility-record">Supplement 5. Reproducibility record</a></li>
   </ul></li>
-  <li><a href="#render-outputs" id="toc-render-outputs" class="nav-link" data-scroll-target="#render-outputs">6. Render outputs</a></li>
+  <li><a href="#render-outputs" id="toc-render-outputs" class="nav-link" data-scroll-target="#render-outputs">5. Render outputs</a></li>
   <li><a href="#submission" id="toc-submission" class="nav-link" data-scroll-target="#submission">Submission</a></li>
   </ul>
-<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="02_YongjinChoi_did_research_design.docx"><i class="bi bi-file-word"></i>MS Word</a></li><li><a href="../02_YongjinChoi_did_research_design.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li><li><a href="02_YongjinChoi_did_research_design.html"><i class="bi bi-file-slides"></i>RevealJS</a></li></ul></div></nav>
+<div class="quarto-alternate-formats"><h2>Other Formats</h2><ul><li><a href="02_YongjinChoi_iv_vaccination_consultation.docx"><i class="bi bi-file-word"></i>MS Word</a></li><li><a href="../02_YongjinChoi_iv_vaccination_consultation.pdf"><i class="bi bi-file-pdf"></i>PDF</a></li><li><a href="02_YongjinChoi_iv_vaccination_consultation.html"><i class="bi bi-file-slides"></i>RevealJS</a></li></ul></div></nav>
 </div>
 <main class="content" id="quarto-document-content">
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">Research Design Lab: Difference-in-differences (DID)</h1>
+<h1 class="title">Research Design Lab: Instrumental variables (IV)</h1>
 </div>
 
 
@@ -4147,69 +4155,91 @@ display: none;
 </header>
 
 
-<section id="research-question-and-design" class="level1">
-<h1>1. Research question and design</h1>
+<section id="학생-입력-영역" class="level1">
+<h1>학생 입력 영역</h1>
+<p>이 파일은 <strong>두 단계</strong>로 작성합니다. 답변은 논문 초안이 아니라 수업에서 빠르게 공유할 연구설계 메모입니다. 각 서술형 항목은 가능하면 <strong>1–3문장</strong>으로 짧게 작성하세요. 수업 마지막 약 <strong>30분 동안 서로의 설계를 함께 살펴보고 토론</strong>합니다.</p>
+<section id="단계.-연구-배경과-연구질문" class="level2">
+<h2 class="anchored" data-anchor-id="단계.-연구-배경과-연구질문">1단계. 연구 배경과 연구질문</h2>
+</section>
+<section id="단계.-방법론과-실제-데이터-구조-확인" class="level2">
+<h2 class="anchored" data-anchor-id="단계.-방법론과-실제-데이터-구조-확인">2단계. 방법론과 실제 데이터 구조 확인</h2>
+<p>여러분이 실제 연구에 사용할 데이터를 <strong>직접 확인하거나 구체적으로 떠올려보며</strong> 아래 질문에 답하세요. 이 질문들은 단순 입력란이 아니라, 선택한 방법론의 식별전략 또는 예측전략이 현재 데이터에서 가능한지를 점검하는 체크리스트입니다. <strong>필수 질문에 답하기 어렵다면 그 방법론이 현재 데이터에 적절하지 않을 수 있습니다.</strong></p>
+</section>
+</section>
+<section id="research-background-and-question" class="level1">
+<h1>1. Research background and question</h1>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">project_overview_text</span>(spec))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <section id="proposed-study" class="level2">
 <h2 class="anchored" data-anchor-id="proposed-study">Proposed study</h2>
-<p><strong>Title.</strong> 여기에 연구 제목을 입력하세요<br>
-<strong>Design.</strong> Difference-in-differences (DID)<br>
-<strong>Data.</strong> 여기에 데이터셋 이름을 입력하세요</p>
+<p><strong>Title.</strong> Effect of attending a vaccination consultation on subsequent childhood vaccine uptake<br>
+<strong>Design.</strong> Instrumental variables (IV)<br>
+<strong>Data.</strong> Randomised vaccination consultation encouragement study<br>
+<strong>Unit of observation.</strong> Caregiver-child dyad</p>
 <section id="research-background" class="level3">
 <h3 class="anchored" data-anchor-id="research-background">Research background</h3>
+<p><strong>Theoretical/policy background.</strong> Caregivers who attend vaccination consultations may be more willing to vaccinate even before the consultation, making conventional comparisons vulnerable to selection bias.</p>
+<p><strong>Why this study is needed.</strong> A randomised encouragement to attend the consultation can provide exogenous variation in consultation attendance if the encouragement affects uptake primarily through attendance.</p>
+<p><strong>Research question.</strong> What is the causal effect of attending a vaccination consultation on subsequent completion of recommended childhood vaccination among caregivers whose attendance is changed by the encouragement?</p>
+<p><strong>Expected contribution.</strong> The IV design targets a local average treatment effect and makes the relevance and exclusion assumptions explicit rather than treating attendance as conditionally exogenous.</p>
 <p>수업 마지막 약 <strong>30분 동안</strong> 각 연구설계를 함께 살펴보고 데이터-방법론 적합성, 식별가정, 필요한 진단을 중심으로 토론합니다.</p>
 </section>
 </section>
 </section>
-<section id="data-and-expected-structure" class="level1">
-<h1>2. Data and expected structure</h1>
-<p>학생은 실제 분석을 수행하는 것이 아니라, 자신이 알고 있는 데이터의 구조를 바탕으로 <strong>논문에 필요한 분석 설계와 결과의 흐름</strong>을 먼저 설계합니다. 아래 결과는 입력한 구조에 맞춰 자동 생성한 교육용 가상 데이터에 기반합니다.</p>
+<section id="data-method-compatibility-check" class="level1">
+<h1>2. Data-method compatibility check</h1>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">data_structure_text</span>(spec))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p><strong>Known data characteristics.</strong> 여기에 데이터 특성을 간략히 입력하세요<br>
-Outcome type: <strong>continuous</strong>. Predictor structure: continuous 4, binary 2, categorical 1. 패널 구조는 약 400개 단위 × 8개 시점이며 처치는 5번째 시점부터 시작한다고 가정합니다.</p>
+<p><strong>Known data characteristics.</strong><br>
+Outcome type: <strong>continuous</strong>. Predictor structure: continuous 6, binary 3, categorical 1. 도구변수의 first-stage strength를 교육용으로 0.40 수준으로 설정합니다.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">data_compatibility_text</span>(spec))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="method-data-compatibility-check" class="level3">
+<h3 class="anchored" data-anchor-id="method-data-compatibility-check">Method-data compatibility check</h3>
+<p>아래 항목은 입력한 답변을 바탕으로 한 <strong>설계 점검용 안내</strong>입니다. 경고가 있다고 해서 분석이 불가능하다는 뜻은 아니지만, 해당 질문에 답하기 어렵다면 현재 데이터가 이 방법론의 핵심 식별조건을 충족하는지 다시 확인해야 합니다.</p>
+<ul>
+<li>✓ 도구변수가 정의되어 있습니다.</li>
+<li>✓ 내생적 처치/노출이 정의되어 있습니다.</li>
+<li>✓ relevance와 exclusion restriction을 검토할 근거가 작성되어 있습니다.</li>
+</ul>
+</section>
 </section>
 <section id="methods" class="level1">
 <h1>3. Methods</h1>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">methods_text</span>(spec))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>DID는 treated/control group과 pre/post timing을 명시하고 unit 및 time fixed effects와 적절한 clustered standard errors를 사용합니다. 효과 추정보다 먼저 raw group-time trajectories와 event-study pre-period coefficients를 시각적으로 확인해 parallel-trends 가정의 개연성을 점검합니다. staggered adoption이 있으면 단순 TWFE 대신 cohort-time ATT 계열 추정량을 고려합니다.</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">methods_text</span>(spec))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>IV 분석은 instrument relevance, independence/exogeneity, exclusion restriction, monotonicity가 요구됨을 명시합니다. first-stage coefficient/F statistic을 먼저 제시하고, 2SLS 추정치는 OLS와 같은 축에서 비교합니다. 결과 해석은 instrument가 영향을 미치는 compliers의 LATE라는 점을 분명히 합니다.</p>
 <p>모든 specification은 결과를 본 뒤 임의로 선택하지 않는다는 원칙을 둡니다. 결측자료 처리, 표본 제외, 변수 coding, 주요 hyperparameter 또는 bandwidth/caliper를 Methods 또는 supplement에 명시합니다.</p>
 </section>
 <section id="simulated-analysis" class="level1">
 <h1>4. Simulated analysis</h1>
+<p>아래 결과는 입력한 연구설계와 데이터 구조를 바탕으로 만든 <strong>교육용 가상 결과</strong>입니다. 실제 분석 결과가 아닙니다.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>analysis <span class="ot">&lt;-</span> <span class="fu">simulate_project</span>(spec)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>analysis <span class="ot">&lt;-</span> <span class="fu">simulate_project</span>(spec)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <section id="main-results" class="level2">
 <h2 class="anchored" data-anchor-id="main-results">Main results</h2>
-<p>메인 본문에는 표와 그림을 합쳐 <strong>최대 4개</strong>만 배치합니다. 인과추론 설계는 진단 또는 식별 가정 확인을 결과 추정치보다 앞에 둡니다.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>main_figures <span class="ot">&lt;-</span> <span class="fu">make_main_figures</span>(analysis, spec)</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="fu">render_figure_list</span>(main_figures)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>main_figures <span class="ot">&lt;-</span> <span class="fu">make_main_figures</span>(analysis, spec)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">render_figure_list</span>(main_figures)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
-<h3 class="anchored">Figure 1. Mandatory pre-estimation visual inspection</h3>
-<div class="plotly html-widget html-fill-item" id="htmlwidget-5cac9d6457258d410f51" style="width:100%;height:400px;"></div>
-<script type="application/json" data-for="htmlwidget-5cac9d6457258d410f51">{"x":{"data":[{"x":[1,2,3,4,5,6,7,8],"y":[38.877050641734854,42.144560682223855,45.544736751018156,46.540726188290542,49.455098424842838,52.210272966917103,53.347863668734327,59.071426243957646],"text":["time: 1<br />y: 38.87705<br />group: Control","time: 2<br />y: 42.14456<br />group: Control","time: 3<br />y: 45.54474<br />group: Control","time: 4<br />y: 46.54073<br />group: Control","time: 5<br />y: 49.45510<br />group: Control","time: 6<br />y: 52.21027<br />group: Control","time: 7<br />y: 53.34786<br />group: Control","time: 8<br />y: 59.07143<br />group: Control"],"type":"scatter","mode":"lines+markers","line":{"width":3.7795275590551185,"color":"rgba(0,0,0,1)","dash":"solid"},"hoveron":"points","name":"Control","legendgroup":"Control","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","marker":{"autocolorscale":false,"color":"rgba(0,0,0,1)","opacity":1,"size":5.6692913385826778,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)"}},"frame":null},{"x":[1,2,3,4,5,6,7,8],"y":[40.757834546815722,42.789082274846763,45.636065313864883,47.563854426152616,54.685122887061631,55.315574260030104,61.821367546886698,66.969693631098892],"text":["time: 1<br />y: 40.75783<br />group: Treated","time: 2<br />y: 42.78908<br />group: Treated","time: 3<br />y: 45.63607<br />group: Treated","time: 4<br />y: 47.56385<br />group: Treated","time: 5<br />y: 54.68512<br />group: Treated","time: 6<br />y: 55.31557<br />group: Treated","time: 7<br />y: 61.82137<br />group: Treated","time: 8<br />y: 66.96969<br />group: Treated"],"type":"scatter","mode":"lines+markers","line":{"width":3.7795275590551185,"color":"rgba(0,0,0,1)","dash":"dash"},"hoveron":"points","name":"Treated","legendgroup":"Treated","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","marker":{"autocolorscale":false,"color":"rgba(0,0,0,1)","opacity":1,"size":5.6692913385826778,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)"}},"frame":null},{"x":[4.5,4.5],"y":[37.472418492266655,68.374325780567091],"text":"xintercept: 4.5","type":"scatter","mode":"lines","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)","dash":"dash"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":23.970112079701121,"r":7.9701120797011216,"b":40.647571606475722,"l":40.647571606475722},"paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":15.940224159402241},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[0.64999999999999991,8.3499999999999996],"tickmode":"array","ticktext":["2","4","6","8"],"tickvals":[2,4,6,8],"categoryorder":"array","categoryarray":["2","4","6","8"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.9850560398505603,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":12.7521793275218},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.72455564360919278,"zeroline":false,"anchor":"y","title":{"text":"Time","font":{"color":"rgba(0,0,0,1)","family":"","size":15.940224159402241}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[37.472418492266655,68.374325780567091],"tickmode":"array","ticktext":["40","50","60"],"tickvals":[40,50,60],"categoryorder":"array","categoryarray":["40","50","60"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.9850560398505608,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":12.7521793275218},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.72455564360919289,"zeroline":false,"anchor":"x","title":{"text":"Mean outcome","font":{"color":"rgba(0,0,0,1)","family":"","size":15.940224159402241}},"hoverformat":".2f"},"shapes":[],"showlegend":true,"legend":{"bgcolor":null,"bordercolor":null,"borderwidth":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":12.7521793275218},"title":{"text":"","font":{"color":"rgba(0,0,0,1)","family":"","size":15.940224159402241}}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false,"displaylogo":false,"responsive":true},"source":"A","attrs":{"e5fc2aeb524e":{"x":{},"y":{},"linetype":{},"type":"scatter"},"e5fc3f6894e5":{"x":{},"y":{},"linetype":{}},"e5fc6b0766e8":{"xintercept":{}}},"cur_data":"e5fc2aeb524e","visdat":{"e5fc2aeb524e":["function (y) ","x"],"e5fc3f6894e5":["function (y) ","x"],"e5fc6b0766e8":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
-<h3 class="anchored">Figure 2. Event-study coefficients</h3>
-<div class="plotly html-widget html-fill-item" id="htmlwidget-f524af3b6673e073e101" style="width:100%;height:400px;"></div>
-<script type="application/json" data-for="htmlwidget-f524af3b6673e073e101">{"x":{"data":[{"x":[-4.4159999999999995,3.4159999999999999],"y":[0,0],"text":"yintercept: 0","type":"scatter","mode":"lines","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)","dash":"dash"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[-4,-3,-2,-1,0,1,2,3],"y":[-0.18378059038871739,0.11025743324923343,-0.33174509652761963,0.28427026140882367,0.81706387228813881,1.5300583325821058,2.5310377716823291,2.6592586481981719],"text":["event_time: -4<br />estimate: -0.1837806<br />conf.low: -0.5757806<br />conf.high: 0.2082194","event_time: -3<br />estimate:  0.1102574<br />conf.low: -0.2817426<br />conf.high: 0.5022574","event_time: -2<br />estimate: -0.3317451<br />conf.low: -0.7237451<br />conf.high: 0.0602549","event_time: -1<br />estimate:  0.2842703<br />conf.low: -0.1077297<br />conf.high: 0.6762703","event_time:  0<br />estimate:  0.8170639<br />conf.low:  0.4250639<br />conf.high: 1.2090639","event_time:  1<br />estimate:  1.5300583<br />conf.low:  1.1380583<br />conf.high: 1.9220583","event_time:  2<br />estimate:  2.5310378<br />conf.low:  2.1390378<br />conf.high: 2.9230378","event_time:  3<br />estimate:  2.6592586<br />conf.low:  2.2672586<br />conf.high: 3.0512586"],"type":"scatter","mode":"lines","opacity":1,"line":{"color":"transparent"},"error_y":{"array":[0.39200000000000002,0.39200000000000002,0.39200000000000002,0.39199999999999996,0.39200000000000002,0.3919999999999999,0.3919999999999999,0.3919999999999999],"arrayminus":[0.39200000000000002,0.39200000000000002,0.39200000000000002,0.39200000000000002,0.39200000000000002,0.3919999999999999,0.3919999999999999,0.3919999999999999],"type":"data","width":2.5740551583248248,"symmetric":false,"color":"rgba(0,0,0,1)"},"showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[-4,-3,-2,-1,0,1,2,3],"y":[-0.18378059038871739,0.11025743324923343,-0.33174509652761963,0.28427026140882367,0.81706387228813881,1.5300583325821058,2.5310377716823291,2.6592586481981719],"text":["event_time: -4<br />estimate: -0.1837806","event_time: -3<br />estimate:  0.1102574","event_time: -2<br />estimate: -0.3317451","event_time: -1<br />estimate:  0.2842703","event_time:  0<br />estimate:  0.8170639","event_time:  1<br />estimate:  1.5300583","event_time:  2<br />estimate:  2.5310378","event_time:  3<br />estimate:  2.6592586"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(0,0,0,1)","opacity":1,"size":9.8267716535433092,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)"}},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":23.970112079701121,"r":7.9701120797011216,"b":40.647571606475722,"l":34.271481942714829},"paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":15.940224159402241},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-4.4159999999999995,3.4159999999999999],"tickmode":"array","ticktext":["-4","-2","0","2"],"tickvals":[-4,-2,0,2],"categoryorder":"array","categoryarray":["-4","-2","0","2"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.9850560398505603,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":12.7521793275218},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.72455564360919278,"zeroline":false,"anchor":"y","title":{"text":"Event time","font":{"color":"rgba(0,0,0,1)","family":"","size":15.940224159402241}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-0.9124952837639092,3.2400088354344616],"tickmode":"array","ticktext":["0","1","2","3"],"tickvals":[0,0.99999999999999989,2,3],"categoryorder":"array","categoryarray":["0","1","2","3"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.9850560398505608,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":12.7521793275218},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.72455564360919289,"zeroline":false,"anchor":"x","title":{"text":"Estimate","font":{"color":"rgba(0,0,0,1)","family":"","size":15.940224159402241}},"hoverformat":".2f"},"shapes":[],"showlegend":false,"legend":{"bgcolor":null,"bordercolor":null,"borderwidth":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":12.7521793275218}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false,"displaylogo":false,"responsive":true},"source":"A","attrs":{"e5fc2fbf9ac2":{"yintercept":{},"type":"scatter"},"e5fc4c494f0b":{"x":{},"y":{},"ymin":{},"ymax":{}},"e5fc60e4824d":{"x":{},"y":{}}},"cur_data":"e5fc2fbf9ac2","visdat":{"e5fc2fbf9ac2":["function (y) ","x"],"e5fc4c494f0b":["function (y) ","x"],"e5fc60e4824d":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
-<h3 class="anchored">Figure 3. Average DID effect</h3>
-<div class="plotly html-widget html-fill-item" id="htmlwidget-3634d7f8d517caf231a9" style="width:100%;height:400px;"></div>
-<script type="application/json" data-for="htmlwidget-3634d7f8d517caf231a9">{"x":{"data":[{"x":[0,0],"y":[0.40000000000000002,1.6000000000000001],"text":"xintercept: 0","type":"scatter","mode":"lines","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)","dash":"dash"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[1.8843546561876865],"y":[1],"text":"estimate: 1.884355<br />reorder(model, estimate): DID ATT<br />conf.low: 1.570755<br />conf.high: 2.197955","type":"scatter","mode":"lines","opacity":1,"line":{"color":"transparent"},"error_x":{"array":[0.3136000000000001],"arrayminus":[0.3136000000000001],"type":"data","width":12.000000000000007,"symmetric":false,"color":"rgba(0,0,0,1)"},"showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[1.8843546561876865],"y":[1],"text":"estimate: 1.884355<br />reorder(model, estimate): DID ATT","type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(0,0,0,1)","opacity":1,"size":11.338582677165356,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)"}},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[1.8843546561876865],"y":[1],"text":"1.88 [1.57, 2.20]","hovertext":"estimate: 1.884355<br />reorder(model, estimate): DID ATT<br />sprintf(\"%.2f [%.2f, %.2f]\", estimate, conf.low, conf.high): 1.88 [1.57, 2.20]","textfont":{"size":13.606299212598428,"color":"rgba(0,0,0,1)"},"type":"scatter","mode":"text","hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":23.305936073059364,"r":119.55168119551684,"b":39.983395599833962,"l":55.923619759236217},"paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":15.940224159402241},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-0.10989773280938434,2.307852388997071],"tickmode":"array","ticktext":["0.0","0.5","1.0","1.5","2.0"],"tickvals":[0,0.5,1,1.5,2],"categoryorder":"array","categoryarray":["0.0","0.5","1.0","1.5","2.0"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.9850560398505603,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":12.7521793275218},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.72455564360919278,"zeroline":false,"anchor":"y","title":{"text":"Estimate","font":{"color":"rgba(0,0,0,1)","family":"","size":15.940224159402241}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[0.40000000000000002,1.6000000000000001],"tickmode":"array","ticktext":["DID ATT"],"tickvals":[1],"categoryorder":"array","categoryarray":["DID ATT"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.9850560398505608,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":12.7521793275218},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.72455564360919289,"zeroline":false,"anchor":"x","title":{"text":"","font":{"color":"rgba(0,0,0,1)","family":"","size":15.940224159402241}},"hoverformat":".2f"},"shapes":[],"showlegend":false,"legend":{"bgcolor":null,"bordercolor":null,"borderwidth":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":12.7521793275218}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false,"displaylogo":false,"responsive":true},"source":"A","attrs":{"e5fc58808afb":{"xintercept":{},"type":"scatter"},"e5fc5f249221":{"x":{},"y":{},"xmin":{},"xmax":{}},"e5fc59f5e553":{"x":{},"y":{}},"e5fc1ea2da49":{"x":{},"y":{},"label":{}}},"cur_data":"e5fc58808afb","visdat":{"e5fc58808afb":["function (y) ","x"],"e5fc5f249221":["function (y) ","x"],"e5fc59f5e553":["function (y) ","x"],"e5fc1ea2da49":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+<h3 class="anchored">Figure 1. First-stage relevance</h3>
+<div class="plotly html-widget html-fill-item" id="htmlwidget-d752936370f721b9481b" style="width:100%;height:400px;"></div>
+<script type="application/json" data-for="htmlwidget-d752936370f721b9481b">{"x":{"data":[{"orientation":"v","width":[0.89999999999999991,0.90000000000000013],"base":[0,0],"x":[1,2],"y":[0.48694029850746268,0.69237588652482274],"text":["factor(instrument): 0<br />treatment: 0.4869403","factor(instrument): 1<br />treatment: 0.6923759"],"type":"bar","textposition":"none","marker":{"autocolorscale":false,"color":"rgba(89,89,89,1)","line":{"width":1.8897637795275593,"color":"transparent"}},"showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":23.970112079701121,"r":7.9701120797011216,"b":40.647571606475722,"l":47.023661270236623},"paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":15.940224159402241},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[0.40000000000000002,2.6000000000000001],"tickmode":"array","ticktext":["0","1"],"tickvals":[1,2],"categoryorder":"array","categoryarray":["0","1"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.9850560398505603,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":12.7521793275218},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.72455564360919278,"zeroline":false,"anchor":"y","title":{"text":"Instrument","font":{"color":"rgba(0,0,0,1)","family":"","size":15.940224159402241}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-0.03461879432624114,0.72699468085106389],"tickmode":"array","ticktext":["0.0","0.2","0.4","0.6"],"tickvals":[0,0.20000000000000007,0.40000000000000002,0.60000000000000009],"categoryorder":"array","categoryarray":["0.0","0.2","0.4","0.6"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.9850560398505608,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":12.7521793275218},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.72455564360919289,"zeroline":false,"anchor":"x","title":{"text":"Pr(treatment)","font":{"color":"rgba(0,0,0,1)","family":"","size":15.940224159402241}},"hoverformat":".2f"},"shapes":[],"showlegend":false,"legend":{"bgcolor":null,"bordercolor":null,"borderwidth":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":12.7521793275218}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false,"displaylogo":false,"responsive":true},"source":"A","attrs":{"1175410ede750":{"x":{},"y":{},"type":"bar"}},"cur_data":"1175410ede750","visdat":{"1175410ede750":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+<h3 class="anchored">Figure 2. OLS versus IV estimate</h3>
+<div class="plotly html-widget html-fill-item" id="htmlwidget-9265a168f6719e994e5f" style="width:100%;height:400px;"></div>
+<script type="application/json" data-for="htmlwidget-9265a168f6719e994e5f">{"x":{"data":[{"x":[0,0],"y":[0.40000000000000002,2.6000000000000001],"text":"xintercept: 0","type":"scatter","mode":"lines","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)","dash":"dash"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[2.4500000000000002,1.6799999999999999],"y":[2,1],"text":["estimate: 2.45<br />reorder(model, estimate): OLS<br />conf.low: 2.1952<br />conf.high: 2.7048","estimate: 1.68<br />reorder(model, estimate): 2SLS / IV<br />conf.low: 1.2096<br />conf.high: 2.1504"],"type":"scatter","mode":"lines","opacity":1,"line":{"color":"transparent"},"error_x":{"array":[0.25479999999999992,0.47039999999999993],"arrayminus":[0.25479999999999992,0.47039999999999993],"type":"data","width":6.5454545454545512,"symmetric":false,"color":"rgba(0,0,0,1)"},"showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[2.4500000000000002,1.6799999999999999],"y":[2,1],"text":["estimate: 2.45<br />reorder(model, estimate): OLS","estimate: 1.68<br />reorder(model, estimate): 2SLS / IV"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(0,0,0,1)","opacity":1,"size":11.338582677165356,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)"}},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[2.4500000000000002,1.6799999999999999],"y":[2,1],"text":["2.45 [2.20, 2.70]","1.68 [1.21, 2.15]"],"hovertext":["estimate: 2.45<br />reorder(model, estimate): OLS<br />sprintf(\"%.2f [%.2f, %.2f]\", estimate, conf.low, conf.high): 2.45 [2.20, 2.70]","estimate: 1.68<br />reorder(model, estimate): 2SLS / IV<br />sprintf(\"%.2f [%.2f, %.2f]\", estimate, conf.low, conf.high): 1.68 [1.21, 2.15]"],"textfont":{"size":13.606299212598428,"color":"rgba(0,0,0,1)"},"type":"scatter","mode":"text","hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":23.305936073059364,"r":119.55168119551684,"b":39.983395599833962,"l":68.675799086758019},"paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":15.940224159402241},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-0.13524,2.8400400000000001],"tickmode":"array","ticktext":["0","1","2"],"tickvals":[0,1,2],"categoryorder":"array","categoryarray":["0","1","2"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.9850560398505603,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":12.7521793275218},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.72455564360919278,"zeroline":false,"anchor":"y","title":{"text":"Estimate","font":{"color":"rgba(0,0,0,1)","family":"","size":15.940224159402241}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[0.40000000000000002,2.6000000000000001],"tickmode":"array","ticktext":["2SLS / IV","OLS"],"tickvals":[1,2],"categoryorder":"array","categoryarray":["2SLS / IV","OLS"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.9850560398505608,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":12.7521793275218},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.72455564360919289,"zeroline":false,"anchor":"x","title":{"text":"","font":{"color":"rgba(0,0,0,1)","family":"","size":15.940224159402241}},"hoverformat":".2f"},"shapes":[],"showlegend":false,"legend":{"bgcolor":null,"bordercolor":null,"borderwidth":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":12.7521793275218}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false,"displaylogo":false,"responsive":true},"source":"A","attrs":{"117546bc930":{"xintercept":{},"type":"scatter"},"1175424656e87":{"x":{},"y":{},"xmin":{},"xmax":{}},"117547f3b73bb":{"x":{},"y":{}},"11754182b3b3f":{"x":{},"y":{},"label":{}}},"cur_data":"117546bc930","visdat":{"117546bc930":["function (y) ","x"],"1175424656e87":["function (y) ","x"],"117547f3b73bb":["function (y) ","x"],"11754182b3b3f":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
 </div>
 </div>
 </section>
+<section id="automatic-basic-interpretation" class="level2">
+<h2 class="anchored" data-anchor-id="automatic-basic-interpretation">Automatic basic interpretation</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">interpretation_text</span>(analysis, spec))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<p>IV에서는 2SLS 계수가 OLS와 다르다는 사실만으로 IV가 옳다고 결론내리지 않습니다. 도구변수의 relevance와 배제제약의 실질적 타당성, 그리고 LATE의 대상 집단을 함께 논의합니다.</p>
 </section>
-<section id="interpretation-template" class="level1">
-<h1>5. Interpretation template</h1>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">interpretation_text</span>(analysis, spec))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
-<p>DID에서는 처치 이후 계수보다 처치 이전 계수가 0 부근에서 안정적인지가 먼저 중요합니다. pre-trend가 뚜렷하면 단순 DID 결과의 인과적 해석을 약화시키고 다른 비교집단, trend specification 또는 연구설계 자체를 재검토합니다.</p>
 </section>
 <section id="supplementary-material" class="level1">
 <h1>Supplementary material</h1>
-<section id="a1.-missing-records-by-variable" class="level2">
-<h2 class="anchored" data-anchor-id="a1.-missing-records-by-variable">A1. Missing records by variable</h2>
+<section id="supplement-1.-missing-records-by-variable" class="level2">
+<h2 class="anchored" data-anchor-id="supplement-1.-missing-records-by-variable">Supplement 1. Missing records by variable</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(analysis<span class="sc">$</span>missingness, <span class="at">digits =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(analysis<span class="sc">$</span>missingness, <span class="at">digits =</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <thead>
@@ -4221,39 +4251,84 @@ Outcome type: <strong>continuous</strong>. Predictor structure: continuous 4, bi
 </thead>
 <tbody>
 <tr class="odd">
-<td style="text-align: left;">id</td>
+<td style="text-align: left;">row_id</td>
 <td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">time</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
+<td style="text-align: left;">x_cont_1</td>
+<td style="text-align: right;">152</td>
+<td style="text-align: right;">6.91</td>
 </tr>
 <tr class="odd">
-<td style="text-align: left;">treated</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
+<td style="text-align: left;">x_cont_2</td>
+<td style="text-align: right;">105</td>
+<td style="text-align: right;">4.77</td>
 </tr>
 <tr class="even">
-<td style="text-align: left;">post</td>
-<td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
+<td style="text-align: left;">x_cont_3</td>
+<td style="text-align: right;">119</td>
+<td style="text-align: right;">5.41</td>
 </tr>
 <tr class="odd">
+<td style="text-align: left;">x_cont_4</td>
+<td style="text-align: right;">156</td>
+<td style="text-align: right;">7.09</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">x_cont_5</td>
+<td style="text-align: right;">98</td>
+<td style="text-align: right;">4.45</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">x_cont_6</td>
+<td style="text-align: right;">140</td>
+<td style="text-align: right;">6.36</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">x_bin_1</td>
+<td style="text-align: right;">115</td>
+<td style="text-align: right;">5.23</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">x_bin_2</td>
+<td style="text-align: right;">64</td>
+<td style="text-align: right;">2.91</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">x_bin_3</td>
+<td style="text-align: right;">9</td>
+<td style="text-align: right;">0.41</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">x_cat_1</td>
+<td style="text-align: right;">44</td>
+<td style="text-align: right;">2.00</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">instrument</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">treatment</td>
+<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
+</tr>
+<tr class="even">
 <td style="text-align: left;">y</td>
 <td style="text-align: right;">0</td>
-<td style="text-align: right;">0</td>
+<td style="text-align: right;">0.00</td>
 </tr>
 </tbody>
 </table>
 </div>
 </div>
 </section>
-<section id="a2.-data-cleaning-flow" class="level2">
-<h2 class="anchored" data-anchor-id="a2.-data-cleaning-flow">A2. Data-cleaning flow</h2>
+<section id="supplement-2.-data-cleaning-flow" class="level2">
+<h2 class="anchored" data-anchor-id="supplement-2.-data-cleaning-flow">Supplement 2. Data-cleaning flow</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(analysis<span class="sc">$</span>cleaning_flow)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(analysis<span class="sc">$</span>cleaning_flow)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <table class="caption-top table table-sm table-striped small">
 <colgroup>
@@ -4271,17 +4346,17 @@ Outcome type: <strong>continuous</strong>. Predictor structure: continuous 4, bi
 <tbody>
 <tr class="odd">
 <td style="text-align: left;">Raw simulated records</td>
-<td style="text-align: right;">3200</td>
+<td style="text-align: right;">2200</td>
 <td style="text-align: left;">Generated from the student’s declared data structure</td>
 </tr>
 <tr class="even">
 <td style="text-align: left;">Records with any predictor missing flagged</td>
-<td style="text-align: right;">0</td>
+<td style="text-align: right;">825</td>
 <td style="text-align: left;">Do not automatically drop in a real study; define the missing-data strategy</td>
 </tr>
 <tr class="odd">
 <td style="text-align: left;">Complete-case analysis set (illustrative)</td>
-<td style="text-align: right;">3200</td>
+<td style="text-align: right;">1375</td>
 <td style="text-align: left;">Shown only as a transparent workflow example</td>
 </tr>
 </tbody>
@@ -4289,39 +4364,39 @@ Outcome type: <strong>continuous</strong>. Predictor structure: continuous 4, bi
 </div>
 </div>
 </section>
-<section id="a3.-design-specific-diagnostics" class="level2">
-<h2 class="anchored" data-anchor-id="a3.-design-specific-diagnostics">A3. Design-specific diagnostics</h2>
+<section id="supplement-3.-full-design-specific-diagnostics-and-sensitivity-analyses" class="level2">
+<h2 class="anchored" data-anchor-id="supplement-3.-full-design-specific-diagnostics-and-sensitivity-analyses">Supplement 3. Full design-specific diagnostics and sensitivity analyses</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>supp_figures <span class="ot">&lt;-</span> <span class="fu">make_supplement_figures</span>(analysis, spec)</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="fu">render_figure_list</span>(supp_figures)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>supp_figures <span class="ot">&lt;-</span> <span class="fu">make_supplement_figures</span>(analysis, spec)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="fu">render_figure_list</span>(supp_figures)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output-display">
 <h3 class="anchored">Figure S1. Missingness profile</h3>
-<div class="plotly html-widget html-fill-item" id="htmlwidget-9b9d1cb9e8b1c8bf4313" style="width:100%;height:400px;"></div>
-<script type="application/json" data-for="htmlwidget-9b9d1cb9e8b1c8bf4313">{"x":{"data":[{"orientation":"v","width":[0,0,0,0,0],"base":[0.55000000000000004,2.5499999999999998,3.5499999999999998,1.55,4.5499999999999998],"x":[0,0,0,0,0],"y":[0.89999999999999991,0.90000000000000036,0.90000000000000036,0.90000000000000013,0.90000000000000036],"text":["missing_pct: 0<br />reorder(variable, missing_pct): id","missing_pct: 0<br />reorder(variable, missing_pct): time","missing_pct: 0<br />reorder(variable, missing_pct): treated","missing_pct: 0<br />reorder(variable, missing_pct): post","missing_pct: 0<br />reorder(variable, missing_pct): y"],"type":"bar","textposition":"none","marker":{"autocolorscale":false,"color":"rgba(89,89,89,1)","line":{"width":1.8897637795275593,"color":"transparent"}},"showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":22.641760066417604,"r":6.6417600664176026,"b":33.872976338729771,"l":47.156496471564964},"paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":13.283520132835205},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-0.050000000000000003,0.050000000000000003],"tickmode":"array","ticktext":["-0.050","-0.025","0.000","0.025","0.050"],"tickvals":[-0.050000000000000003,-0.025000000000000001,0,0.025000000000000008,0.050000000000000003],"categoryorder":"array","categoryarray":["-0.050","-0.025","0.000","0.025","0.050"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.3208800332088013,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":10.62681610626816},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.60379636967432737,"zeroline":false,"anchor":"y","title":{"text":"Missing (%)","font":{"color":"rgba(0,0,0,1)","family":"","size":13.283520132835205}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[0.40000000000000002,5.5999999999999996],"tickmode":"array","ticktext":["id","post","time","treated","y"],"tickvals":[1,2,3,4,5],"categoryorder":"array","categoryarray":["id","post","time","treated","y"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.3208800332088013,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":10.62681610626816},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.60379636967432737,"zeroline":false,"anchor":"x","title":{"text":"","font":{"color":"rgba(0,0,0,1)","family":"","size":13.283520132835205}},"hoverformat":".2f"},"shapes":[],"showlegend":false,"legend":{"bgcolor":null,"bordercolor":null,"borderwidth":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":10.62681610626816}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false,"displaylogo":false,"responsive":true},"source":"A","attrs":{"e5fc2952b36b":{"x":{},"y":{},"type":"bar"}},"cur_data":"e5fc2952b36b","visdat":{"e5fc2952b36b":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
-<h3 class="anchored">Figure S2. Pre-treatment event-study coefficients only</h3>
-<div class="plotly html-widget html-fill-item" id="htmlwidget-fc5eb2c8742df35bcb27" style="width:100%;height:400px;"></div>
-<script type="application/json" data-for="htmlwidget-fc5eb2c8742df35bcb27">{"x":{"data":[{"x":[-4.2050000000000001,-0.79499999999999993],"y":[0,0],"text":"yintercept: 0","type":"scatter","mode":"lines","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)","dash":"dash"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[-4,-3,-2,-1],"y":[-0.18378059038871739,0.11025743324923343,-0.33174509652761963,0.28427026140882367],"text":["event_time: -4<br />estimate: -0.1837806<br />conf.low: -0.5757806<br />conf.high: 0.2082194","event_time: -3<br />estimate:  0.1102574<br />conf.low: -0.2817426<br />conf.high: 0.5022574","event_time: -2<br />estimate: -0.3317451<br />conf.low: -0.7237451<br />conf.high: 0.0602549","event_time: -1<br />estimate:  0.2842703<br />conf.low: -0.1077297<br />conf.high: 0.6762703"],"type":"scatter","mode":"lines","opacity":1,"line":{"color":"transparent"},"error_y":{"array":[0.39200000000000002,0.39200000000000002,0.39200000000000002,0.39199999999999996],"arrayminus":[0.39200000000000002,0.39200000000000002,0.39200000000000002,0.39200000000000002],"type":"data","width":4.9266862170087808,"symmetric":false,"color":"rgba(0,0,0,1)"},"showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[-4,-3,-2,-1],"y":[-0.18378059038871739,0.11025743324923343,-0.33174509652761963,0.28427026140882367],"text":["event_time: -4<br />estimate: -0.1837806","event_time: -3<br />estimate:  0.1102574","event_time: -2<br />estimate: -0.3317451","event_time: -1<br />estimate:  0.2842703"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(0,0,0,1)","opacity":1,"size":5.6692913385826778,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)"}},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":23.305936073059364,"r":7.3059360730593621,"b":37.260273972602747,"l":48.949771689497723},"paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-4.2050000000000001,-0.79499999999999993],"tickmode":"array","ticktext":["-4","-3","-2","-1"],"tickvals":[-4,-3,-2,-1],"categoryorder":"array","categoryarray":["-4","-3","-2","-1"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.66417600664176002,"zeroline":false,"anchor":"y","title":{"text":"event_time","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-0.79374586442444184,0.74627102930564582],"tickmode":"array","ticktext":["-0.4","0.0","0.4"],"tickvals":[-0.40000000000000002,1.1102230246251565e-16,0.40000000000000024],"categoryorder":"array","categoryarray":["-0.4","0.0","0.4"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.66417600664176002,"zeroline":false,"anchor":"x","title":{"text":"estimate","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"shapes":[],"showlegend":false,"legend":{"bgcolor":null,"bordercolor":null,"borderwidth":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false,"displaylogo":false,"responsive":true},"source":"A","attrs":{"e5fc73bf958d":{"yintercept":{},"type":"scatter"},"e5fc26f39759":{"x":{},"y":{},"ymin":{},"ymax":{}},"e5fc42556809":{"x":{},"y":{}}},"cur_data":"e5fc73bf958d","visdat":{"e5fc73bf958d":["function (y) ","x"],"e5fc26f39759":["function (y) ","x"],"e5fc42556809":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+<div class="plotly html-widget html-fill-item" id="htmlwidget-5e6271993028f9a2d6ac" style="width:100%;height:400px;"></div>
+<script type="application/json" data-for="htmlwidget-5e6271993028f9a2d6ac">{"x":{"data":[{"orientation":"v","width":[0,6.9100000000000001,4.7699999999999996,5.4100000000000001,7.0899999999999999,4.4500000000000002,6.3600000000000003,5.2300000000000004,2.9100000000000001,0.40999999999999998,2,0,0,0],"base":[1.55,12.550000000000001,8.5500000000000007,10.550000000000001,13.550000000000001,7.5499999999999998,11.550000000000001,9.5500000000000007,6.5499999999999998,4.5499999999999998,5.5499999999999998,0.55000000000000004,2.5499999999999998,3.5499999999999998],"x":[0,3.4550000000000001,2.3849999999999998,2.7050000000000001,3.5449999999999999,2.2250000000000001,3.1800000000000002,2.6150000000000002,1.4550000000000001,0.20499999999999999,1,0,0,0],"y":[0.90000000000000013,0.89999999999999858,0.89999999999999858,0.89999999999999858,0.89999999999999858,0.89999999999999947,0.89999999999999858,0.89999999999999858,0.90000000000000036,0.90000000000000036,0.90000000000000036,0.89999999999999991,0.90000000000000036,0.90000000000000036],"text":["missing_pct: 0.00<br />reorder(variable, missing_pct): row_id","missing_pct: 6.91<br />reorder(variable, missing_pct): x_cont_1","missing_pct: 4.77<br />reorder(variable, missing_pct): x_cont_2","missing_pct: 5.41<br />reorder(variable, missing_pct): x_cont_3","missing_pct: 7.09<br />reorder(variable, missing_pct): x_cont_4","missing_pct: 4.45<br />reorder(variable, missing_pct): x_cont_5","missing_pct: 6.36<br />reorder(variable, missing_pct): x_cont_6","missing_pct: 5.23<br />reorder(variable, missing_pct): x_bin_1","missing_pct: 2.91<br />reorder(variable, missing_pct): x_bin_2","missing_pct: 0.41<br />reorder(variable, missing_pct): x_bin_3","missing_pct: 2.00<br />reorder(variable, missing_pct): x_cat_1","missing_pct: 0.00<br />reorder(variable, missing_pct): instrument","missing_pct: 0.00<br />reorder(variable, missing_pct): treatment","missing_pct: 0.00<br />reorder(variable, missing_pct): y"],"type":"bar","textposition":"none","marker":{"autocolorscale":false,"color":"rgba(89,89,89,1)","line":{"width":1.8897637795275593,"color":"transparent"}},"showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":22.641760066417604,"r":6.6417600664176026,"b":33.872976338729771,"l":63.096720630967205},"paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":13.283520132835205},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-0.35450000000000004,7.4444999999999997],"tickmode":"array","ticktext":["0","2","4","6"],"tickvals":[0,1.9999999999999998,4,6],"categoryorder":"array","categoryarray":["0","2","4","6"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.3208800332088013,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":10.62681610626816},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.60379636967432737,"zeroline":false,"anchor":"y","title":{"text":"Missing (%)","font":{"color":"rgba(0,0,0,1)","family":"","size":13.283520132835205}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[0.40000000000000002,14.6],"tickmode":"array","ticktext":["instrument","row_id","treatment","y","x_bin_3","x_cat_1","x_bin_2","x_cont_5","x_cont_2","x_bin_1","x_cont_3","x_cont_6","x_cont_1","x_cont_4"],"tickvals":[1,2,3,3.9999999999999996,5,6,7,7.9999999999999991,9,10,11,12,13,14],"categoryorder":"array","categoryarray":["instrument","row_id","treatment","y","x_bin_3","x_cat_1","x_bin_2","x_cont_5","x_cont_2","x_bin_1","x_cont_3","x_cont_6","x_cont_1","x_cont_4"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.3208800332088013,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":10.62681610626816},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.60379636967432737,"zeroline":false,"anchor":"x","title":{"text":"","font":{"color":"rgba(0,0,0,1)","family":"","size":13.283520132835205}},"hoverformat":".2f"},"shapes":[],"showlegend":false,"legend":{"bgcolor":null,"bordercolor":null,"borderwidth":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":10.62681610626816}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false,"displaylogo":false,"responsive":true},"source":"A","attrs":{"1175434876654":{"x":{},"y":{},"type":"bar"}},"cur_data":"1175434876654","visdat":{"1175434876654":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
+<h3 class="anchored">Figure S2. First-stage strength (illustrative F = 40.0)</h3>
+<div class="plotly html-widget html-fill-item" id="htmlwidget-78815cac9d6457258d41" style="width:100%;height:400px;"></div>
+<script type="application/json" data-for="htmlwidget-78815cac9d6457258d41">{"x":{"data":[{"x":[1,2],"y":[0.48694029850746268,0.69237588652482274],"text":["factor(instrument): 0<br />treatment: 0.4869403","factor(instrument): 1<br />treatment: 0.6923759"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(0,0,0,1)","opacity":1,"size":15.118110236220474,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)"}},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":23.305936073059364,"r":7.3059360730593621,"b":37.260273972602747,"l":48.949771689497723},"paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[0.40000000000000002,2.6000000000000001],"tickmode":"array","ticktext":["0","1"],"tickvals":[1,2],"categoryorder":"array","categoryarray":["0","1"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.66417600664176002,"zeroline":false,"anchor":"y","title":{"text":"factor(instrument)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[0.47666851910659469,0.70264766592569072],"tickmode":"array","ticktext":["0.50","0.55","0.60","0.65","0.70"],"tickvals":[0.5,0.55000000000000004,0.59999999999999998,0.65000000000000002,0.69999999999999996],"categoryorder":"array","categoryarray":["0.50","0.55","0.60","0.65","0.70"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.66417600664176002,"zeroline":false,"anchor":"x","title":{"text":"treatment","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"shapes":[],"showlegend":false,"legend":{"bgcolor":null,"bordercolor":null,"borderwidth":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false,"displaylogo":false,"responsive":true},"source":"A","attrs":{"117544d431a76":{"x":{},"y":{},"type":"scatter"}},"cur_data":"117544d431a76","visdat":{"117544d431a76":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
 </div>
 </div>
 </section>
-<section id="a4.-required-robustness-and-sensitivity-checks" class="level2">
-<h2 class="anchored" data-anchor-id="a4.-required-robustness-and-sensitivity-checks">A4. Required robustness and sensitivity checks</h2>
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">supplement_checklist_text</span>(spec))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<section id="supplement-4.-required-robustness-and-sensitivity-checklist" class="level2">
+<h2 class="anchored" data-anchor-id="supplement-4.-required-robustness-and-sensitivity-checklist">Supplement 4. Required robustness and sensitivity checklist</h2>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">supplement_checklist_text</span>(spec))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <ul>
 <li>변수별 missing n/%와 missing-data 처리 규칙</li>
 <li>데이터 cleaning 및 제외 단계별 표본수</li>
 <li>모든 주요 변수 coding과 분석 표본 정의</li>
 <li>software/package version, seed, session information</li>
-<li>처치 이전 group trends</li>
-<li>event-study pre-period coefficients</li>
-<li>placebo timing/outcome</li>
-<li>alternative control groups 또는 staggered-adoption estimator</li>
+<li>first-stage coefficient와 F statistic</li>
+<li>reduced form</li>
+<li>instrument balance/exogeneity evidence</li>
+<li>weak-IV robust inference</li>
 </ul>
 </section>
-<section id="a5.-reproducibility-record" class="level2">
-<h2 class="anchored" data-anchor-id="a5.-reproducibility-record">A5. Reproducibility record</h2>
+<section id="supplement-5.-reproducibility-record" class="level2">
+<h2 class="anchored" data-anchor-id="supplement-5.-reproducibility-record">Supplement 5. Reproducibility record</h2>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sessionInfo</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>R version 4.6.0 (2026-04-24)
 Platform: aarch64-apple-darwin23
@@ -4357,21 +4432,19 @@ loaded via a namespace (and not attached):
 </section>
 </section>
 <section id="render-outputs" class="level1">
-<h1>6. Render outputs</h1>
-<p>최종 확인 후 아래 셀을 실행하면 HTML, Word, PDF, RevealJS slides를 순차적으로 렌더링합니다. HTML/RevealJS에서는 Plotly가 interactive하게 표시되고, Word/PDF에서는 같은 시각화를 static ggplot으로 출력합니다.</p>
+<h1>5. Render outputs</h1>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">render_project_outputs</span>(knitr<span class="sc">::</span><span class="fu">current_input</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">render_project_outputs</span>(knitr<span class="sc">::</span><span class="fu">current_input</span>())</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 <section id="submission" class="level1">
 <h1>Submission</h1>
-<p>작업을 마친 뒤 아래 셀을 실행합니다. 제출 API가 활성화되어 있으면 현재 QMD가 <code>projects/submissions/</code>에 자동 제출됩니다. API가 아직 설정되지 않았으면 로컬 제출 패키지를 생성합니다.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">submit_project</span>(</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">qmd_path =</span> knitr<span class="sc">::</span><span class="fu">current_input</span>(),</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">endpoint =</span> submission_endpoint,</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">course_key =</span> course_key</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">submit_project</span>(</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">qmd_path =</span> knitr<span class="sc">::</span><span class="fu">current_input</span>(),</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">endpoint =</span> submission_endpoint,</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">course_key =</span> course_key</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 </section>
 
