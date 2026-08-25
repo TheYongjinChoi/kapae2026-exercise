@@ -25,7 +25,7 @@ execute:
 # - 3~30자
 # - 이름, 이메일, 학번처럼 직접 식별 가능한 정보는 피하고 수업용 ID를 사용하세요.
 # 예: "KAPAE_021"
-student_id <- "여기에_ID_입력"
+student_id <- "YongjinChoi"
 
 # 연구설계 유형: 아래 7개 중 정확히 하나를 입력합니다.
 # "prediction"     : 머신러닝 예측 비교 (RF, XGBoost, neural network)
@@ -35,7 +35,9 @@ student_id <- "여기에_ID_입력"
 # "matching"       : Propensity-score matching/weighting + overlap/balance diagnostics
 # "causal_forest"  : Causal forest / heterogeneous treatment effects
 # "rd"             : Regression discontinuity + cutoff 사전 visual inspection
-method <- "prediction"
+method <- "rd"
+
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/lab_helpers.R"); create_design_qmd(student_id, method, output_dir = getwd())
 ```
 
 # 2. Step 2 작업파일 자동 생성

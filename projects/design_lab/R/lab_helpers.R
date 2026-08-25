@@ -681,196 +681,110 @@ simulate_project <- function(spec) {
   )
 }
 
-kapae_palette <- function() {
-  c(
-    blue = "#2F6BFF",
-    sky = "#64B5F6",
-    teal = "#22A699",
-    orange = "#F28E2B",
-    coral = "#E76F51",
-    purple = "#7B61FF",
-    pink = "#D65DB1",
-    green = "#59A14F",
-    red = "#D1495B",
-    navy = "#23395B",
-    grey = "#7A869A",
-    light = "#E9EEF6"
-  )
-}
-
-kapae_theme <- function(base_size = 12) {
-  pal <- kapae_palette()
-  ggplot2::theme_minimal(base_size = base_size) +
-    ggplot2::theme(
-      plot.title = ggplot2::element_text(face = "bold", colour = pal[["navy"]], size = base_size + 2),
-      plot.subtitle = ggplot2::element_text(colour = pal[["grey"]]),
-      axis.title = ggplot2::element_text(face = "bold", colour = pal[["navy"]]),
-      axis.text = ggplot2::element_text(colour = "#4B5563"),
-      panel.grid.minor = ggplot2::element_blank(),
-      panel.grid.major = ggplot2::element_line(colour = "#E8EDF4", linewidth = .45),
-      legend.position = "top",
-      legend.title = ggplot2::element_text(face = "bold"),
-      strip.text = ggplot2::element_text(face = "bold", colour = pal[["navy"]]),
-      plot.margin = ggplot2::margin(8, 12, 8, 8)
-    )
-}
-
 coef_plot <- function(df, title = NULL, xlab = "Estimate") {
-  pal <- kapae_palette()
-  d <- df
-  rng <- range(c(d$conf.low, d$conf.high), na.rm = TRUE)
-  pad <- max(diff(rng) * .07, .05)
-  d$label_x <- d$conf.high + pad
-
-  ggplot2::ggplot(d, ggplot2::aes(y = reorder(model, estimate), x = estimate)) +
-    ggplot2::geom_vline(xintercept = 0, linetype = 2, colour = pal[["grey"]], linewidth = .7) +
-    ggplot2::geom_errorbarh(
-      ggplot2::aes(xmin = conf.low, xmax = conf.high),
-      height = 0,
-      linewidth = 1.15,
-      colour = pal[["sky"]]
-    ) +
-    # Marker is nudged vertically so it does not sit on top of the CI line.
-    ggplot2::geom_point(
-      position = ggplot2::position_nudge(y = .13),
-      size = 3.8,
-      shape = 21,
-      stroke = 1.1,
-      fill = pal[["orange"]],
-      colour = "white"
-    ) +
+  ggplot2::ggplot(df, ggplot2::aes(y = reorder(model, estimate), x = estimate)) +
+    ggplot2::geom_vline(xintercept = 0, linetype = 2) +
+    ggplot2::geom_errorbarh(ggplot2::aes(xmin = conf.low, xmax = conf.high), height = .12) +
+    ggplot2::geom_point(size = 3) +
     ggplot2::geom_text(
-      ggplot2::aes(
-        x = label_x,
-        label = sprintf("%.2f [%.2f, %.2f]", estimate, conf.low, conf.high)
-      ),
-      hjust = 0,
-      size = 3.7,
-      fontface = "bold",
-      colour = pal[["navy"]]
+      ggplot2::aes(label = sprintf("%.2f [%.2f, %.2f]", estimate, conf.low, conf.high)),
+      hjust = -0.05, size = 3.6
     ) +
-    ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = c(.04, .28))) +
     ggplot2::labs(title = title, x = xlab, y = NULL) +
-    kapae_theme(12)
+    ggplot2::theme_minimal(base_size = 12) +
+    ggplot2::theme(plot.margin = ggplot2::margin(5.5, 90, 5.5, 5.5))
 }
 
 make_main_figures <- function(analysis, spec) {
   d <- analysis$data
   r <- analysis$results
   figs <- list()
-  pal <- kapae_palette()
 
   if (spec$method == "prediction") {
     figs[["Figure 1. Cross-validated performance by algorithm"]] <-
-      ggplot2::ggplot(r$cv, ggplot2::aes(x = algorithm, y = score, fill = algorithm)) +
-      ggplot2::geom_boxplot(width = .62, alpha = .82, outlier.shape = NA, colour = "white", linewidth = .6) +
-      ggplot2::geom_jitter(ggplot2::aes(colour = algorithm), width = .12, alpha = .30, size = 1.5, show.legend = FALSE) +
-      ggplot2::scale_fill_manual(values = c("Random forest" = pal[["blue"]], "XGBoost" = pal[["orange"]], "Neural network" = pal[["purple"]])) +
-      ggplot2::scale_colour_manual(values = c("Random forest" = pal[["blue"]], "XGBoost" = pal[["orange"]], "Neural network" = pal[["purple"]])) +
-      ggplot2::labs(x = NULL, y = unique(r$cv$metric), fill = NULL) +
-      kapae_theme(12) + ggplot2::theme(legend.position = "none")
+      ggplot2::ggplot(r$cv, ggplot2::aes(x = algorithm, y = score)) +
+      ggplot2::geom_boxplot() +
+      ggplot2::geom_jitter(width = .12, alpha = .18) +
+      ggplot2::labs(x = NULL, y = unique(r$cv$metric)) +
+      ggplot2::theme_minimal(base_size = 12)
 
     figs[["Figure 2. Hyperparameter comparison across all tested settings"]] <-
-      ggplot2::ggplot(r$cv, ggplot2::aes(x = score, y = reorder(setting, score), fill = algorithm)) +
-      ggplot2::geom_boxplot(alpha = .86, outlier.shape = NA, colour = "white", linewidth = .5) +
+      ggplot2::ggplot(r$cv, ggplot2::aes(x = score, y = reorder(setting, score))) +
+      ggplot2::geom_boxplot() +
       ggplot2::facet_wrap(~algorithm, scales = "free_y") +
-      ggplot2::scale_fill_manual(values = c("Random forest" = pal[["blue"]], "XGBoost" = pal[["orange"]], "Neural network" = pal[["purple"]])) +
-      ggplot2::labs(x = unique(r$cv$metric), y = NULL, fill = NULL) +
-      kapae_theme(10) + ggplot2::theme(legend.position = "none")
+      ggplot2::labs(x = unique(r$cv$metric), y = NULL) +
+      ggplot2::theme_minimal(base_size = 10)
 
     if (nrow(r$importance)) {
       figs[["Figure 3. Illustrative variable importance"]] <-
         ggplot2::ggplot(r$importance, ggplot2::aes(x = importance, y = reorder(variable, importance))) +
-        ggplot2::geom_col(fill = pal[["teal"]], width = .72) +
+        ggplot2::geom_col() +
         ggplot2::labs(x = "Relative importance", y = NULL) +
-        kapae_theme(12)
+        ggplot2::theme_minimal(base_size = 12)
     }
   }
 
   if (spec$method == "dml") {
     figs[["Figure 1. DML estimate versus conventional OLS"]] <- coef_plot(r$coef)
     figs[["Figure 2. Nuisance-model predictive performance"]] <-
-      ggplot2::ggplot(r$nuisance, ggplot2::aes(x = model, y = score, fill = model)) +
-      ggplot2::geom_col(width = .62, alpha = .9) +
-      ggplot2::geom_text(ggplot2::aes(label = sprintf("%.2f", score)), vjust = -0.5, fontface = "bold", colour = pal[["navy"]]) +
-      ggplot2::scale_fill_manual(values = c("Outcome nuisance" = pal[["teal"]], "Treatment nuisance" = pal[["purple"]])) +
-      ggplot2::coord_cartesian(ylim = c(0, 1)) +
-      ggplot2::labs(x = NULL, y = "Illustrative score", fill = NULL) +
-      kapae_theme(12) + ggplot2::theme(legend.position = "none")
+      ggplot2::ggplot(r$nuisance, ggplot2::aes(x = model, y = score)) + ggplot2::geom_col() +
+      ggplot2::coord_cartesian(ylim = c(0, 1)) + ggplot2::labs(x = NULL, y = "Illustrative score") + ggplot2::theme_minimal(base_size = 12)
   }
 
   if (spec$method == "did") {
     means <- aggregate(y ~ time + treated, d, mean)
     means$group <- ifelse(means$treated == 1, "Treated", "Control")
     figs[["Figure 1. Mandatory pre-estimation visual inspection"]] <-
-      ggplot2::ggplot(means, ggplot2::aes(x = time, y = y, colour = group, group = group)) +
-      ggplot2::geom_line(linewidth = 1.2) +
-      ggplot2::geom_point(size = 2.8, shape = 21, fill = "white", stroke = 1) +
-      ggplot2::geom_vline(xintercept = spec$treatment_start - .5, linetype = 2, colour = pal[["red"]], linewidth = .8) +
-      ggplot2::scale_colour_manual(values = c("Treated" = pal[["blue"]], "Control" = pal[["grey"]])) +
-      ggplot2::labs(x = "Time", y = "Mean outcome", colour = NULL) + kapae_theme(12)
-
+      ggplot2::ggplot(means, ggplot2::aes(x = time, y = y, linetype = group, group = group)) +
+      ggplot2::geom_line(linewidth = 1) + ggplot2::geom_point() +
+      ggplot2::geom_vline(xintercept = spec$treatment_start - .5, linetype = 2) +
+      ggplot2::labs(x = "Time", y = "Mean outcome", linetype = NULL) + ggplot2::theme_minimal(base_size = 12)
     figs[["Figure 2. Event-study coefficients"]] <-
       ggplot2::ggplot(r$event, ggplot2::aes(x = event_time, y = estimate)) +
-      ggplot2::geom_hline(yintercept = 0, linetype = 2, colour = pal[["grey"]]) +
-      ggplot2::geom_errorbar(ggplot2::aes(ymin = conf.low, ymax = conf.high), width = 0, linewidth = 1.05, colour = pal[["sky"]]) +
-      ggplot2::geom_point(position = ggplot2::position_nudge(x = .10), size = 3.2, shape = 21, fill = pal[["orange"]], colour = "white", stroke = 1) +
-      ggplot2::labs(x = "Event time", y = "Estimate") + kapae_theme(12)
-
+      ggplot2::geom_hline(yintercept = 0, linetype = 2) +
+      ggplot2::geom_errorbar(ggplot2::aes(ymin = conf.low, ymax = conf.high), width = .12) +
+      ggplot2::geom_point(size = 2.6) +
+      ggplot2::labs(x = "Event time", y = "Estimate") + ggplot2::theme_minimal(base_size = 12)
     figs[["Figure 3. Average DID effect"]] <- coef_plot(r$coef)
   }
 
   if (spec$method == "iv") {
     figs[["Figure 1. First-stage relevance"]] <-
-      ggplot2::ggplot(r$first, ggplot2::aes(x = factor(instrument), y = treatment, fill = factor(instrument))) +
-      ggplot2::geom_col(width = .62, alpha = .9) +
-      ggplot2::scale_fill_manual(values = c("0" = pal[["grey"]], "1" = pal[["blue"]])) +
-      ggplot2::labs(x = "Instrument", y = "Pr(treatment)", fill = NULL) + kapae_theme(12) + ggplot2::theme(legend.position = "none")
+      ggplot2::ggplot(r$first, ggplot2::aes(x = factor(instrument), y = treatment)) +
+      ggplot2::geom_col() + ggplot2::labs(x = "Instrument", y = "Pr(treatment)") + ggplot2::theme_minimal(base_size = 12)
     figs[["Figure 2. OLS versus IV estimate"]] <- coef_plot(r$coef)
   }
 
   if (spec$method == "matching") {
     figs[["Figure 1. Propensity-score overlap before adjustment"]] <-
-      ggplot2::ggplot(r$matched, ggplot2::aes(x = ps_hat, colour = factor(treatment), fill = factor(treatment))) +
-      ggplot2::geom_density(alpha = .14, linewidth = 1.15) +
-      ggplot2::scale_colour_manual(values = c("0" = pal[["grey"]], "1" = pal[["blue"]]), labels = c("Control", "Treated")) +
-      ggplot2::scale_fill_manual(values = c("0" = pal[["grey"]], "1" = pal[["blue"]]), labels = c("Control", "Treated")) +
-      ggplot2::labs(x = "Estimated propensity score", y = "Density", colour = "Treatment", fill = "Treatment") + kapae_theme(12)
+      ggplot2::ggplot(r$matched, ggplot2::aes(x = ps_hat, linetype = factor(treatment))) +
+      ggplot2::geom_density(linewidth = 1) + ggplot2::labs(x = "Estimated propensity score", y = "Density", linetype = "Treatment") + ggplot2::theme_minimal(base_size = 12)
     figs[["Figure 2. Unadjusted and propensity-score-adjusted effects"]] <- coef_plot(r$coef)
   }
 
   if (spec$method == "causal_forest") {
     figs[["Figure 1. Estimated CATE distribution"]] <-
-      ggplot2::ggplot(r$cate, ggplot2::aes(x = cate_hat)) +
-      ggplot2::geom_histogram(bins = 35, fill = pal[["purple"]], colour = "white", linewidth = .35, alpha = .9) +
-      ggplot2::geom_vline(xintercept = mean(r$cate$cate_hat, na.rm = TRUE), linetype = 2, colour = pal[["orange"]], linewidth = .9) +
-      ggplot2::labs(x = "Estimated CATE", y = "Count") + kapae_theme(12)
+      ggplot2::ggplot(r$cate, ggplot2::aes(x = cate_hat)) + ggplot2::geom_histogram(bins = 35) +
+      ggplot2::labs(x = "Estimated CATE", y = "Count") + ggplot2::theme_minimal(base_size = 12)
     figs[["Figure 2. Average CATE by CATE quartile"]] <-
-      ggplot2::ggplot(r$groups, ggplot2::aes(x = group, y = cate_hat, fill = group)) +
-      ggplot2::geom_col(width = .68) +
-      ggplot2::scale_fill_manual(values = c("Q1" = pal[["sky"]], "Q2" = pal[["teal"]], "Q3" = pal[["orange"]], "Q4" = pal[["purple"]])) +
-      ggplot2::labs(x = "CATE quartile", y = "Mean estimated CATE", fill = NULL) + kapae_theme(12) + ggplot2::theme(legend.position = "none")
+      ggplot2::ggplot(r$groups, ggplot2::aes(x = group, y = cate_hat)) + ggplot2::geom_col() +
+      ggplot2::labs(x = "CATE quartile", y = "Mean estimated CATE") + ggplot2::theme_minimal(base_size = 12)
     figs[["Figure 3. Overall causal-forest ATE"]] <- coef_plot(r$coef)
   }
 
   if (spec$method == "rd") {
     figs[["Figure 1. Mandatory running-variable inspection"]] <-
-      ggplot2::ggplot(d, ggplot2::aes(x = running)) +
-      ggplot2::geom_histogram(bins = 40, fill = pal[["blue"]], colour = "white", linewidth = .3, alpha = .86) +
-      ggplot2::geom_vline(xintercept = spec$cutoff, linetype = 2, colour = pal[["red"]], linewidth = 1) +
-      ggplot2::labs(x = "Running variable", y = "Count") + kapae_theme(12)
+      ggplot2::ggplot(d, ggplot2::aes(x = running)) + ggplot2::geom_histogram(bins = 40) +
+      ggplot2::geom_vline(xintercept = spec$cutoff, linetype = 2) + ggplot2::labs(x = "Running variable", y = "Count") + ggplot2::theme_minimal(base_size = 12)
     figs[["Figure 2. Outcome around the cutoff"]] <-
-      ggplot2::ggplot(d, ggplot2::aes(x = running, y = y)) +
-      ggplot2::geom_point(alpha = .20, colour = pal[["grey"]], size = 1.5) +
-      ggplot2::geom_smooth(data = d[d$running < spec$cutoff,], method = "lm", formula = y ~ poly(x, 2), se = FALSE, colour = pal[["blue"]], linewidth = 1.2) +
-      ggplot2::geom_smooth(data = d[d$running >= spec$cutoff,], method = "lm", formula = y ~ poly(x, 2), se = FALSE, colour = pal[["orange"]], linewidth = 1.2) +
-      ggplot2::geom_vline(xintercept = spec$cutoff, linetype = 2, colour = pal[["red"]], linewidth = .9) + kapae_theme(12)
+      ggplot2::ggplot(d, ggplot2::aes(x = running, y = y)) + ggplot2::geom_point(alpha = .18) +
+      ggplot2::geom_smooth(data = d[d$running < spec$cutoff,], method = "lm", formula = y ~ poly(x, 2), se = FALSE) +
+      ggplot2::geom_smooth(data = d[d$running >= spec$cutoff,], method = "lm", formula = y ~ poly(x, 2), se = FALSE) +
+      ggplot2::geom_vline(xintercept = spec$cutoff, linetype = 2) + ggplot2::theme_minimal(base_size = 12)
     figs[["Figure 3. Bandwidth sensitivity"]] <-
       ggplot2::ggplot(r$sensitivity, ggplot2::aes(x = bandwidth, y = estimate)) +
-      ggplot2::geom_errorbar(ggplot2::aes(ymin = conf.low, ymax = conf.high), width = 0, linewidth = 1.05, colour = pal[["sky"]]) +
-      ggplot2::geom_point(position = ggplot2::position_nudge(x = .015), size = 3.2, shape = 21, fill = pal[["orange"]], colour = "white", stroke = 1) +
-      ggplot2::geom_line(colour = pal[["navy"]], linewidth = .75, alpha = .7) +
-      ggplot2::labs(x = "Bandwidth", y = "RD estimate") + kapae_theme(12)
+      ggplot2::geom_errorbar(ggplot2::aes(ymin = conf.low, ymax = conf.high), width = .025) + ggplot2::geom_point(size = 2.5) +
+      ggplot2::labs(x = "Bandwidth", y = "RD estimate") + ggplot2::theme_minimal(base_size = 12)
     figs[["Figure 4. Main RD estimate"]] <- coef_plot(r$coef)
   }
 
@@ -880,68 +794,46 @@ make_main_figures <- function(analysis, spec) {
 make_supplement_figures <- function(analysis, spec) {
   r <- analysis$results
   figs <- list()
-  pal <- kapae_palette()
 
   figs[["Figure S1. Missingness profile"]] <-
     ggplot2::ggplot(analysis$missingness, ggplot2::aes(x = missing_pct, y = reorder(variable, missing_pct))) +
-    ggplot2::geom_col(fill = pal[["teal"]], width = .72, alpha = .88) +
-    ggplot2::labs(x = "Missing (%)", y = NULL) + kapae_theme(10)
+    ggplot2::geom_col() + ggplot2::labs(x = "Missing (%)", y = NULL) + ggplot2::theme_minimal(base_size = 10)
 
   if (spec$method == "prediction") {
     figs[["Figure S2. Complete tuning-result distribution"]] <-
-      ggplot2::ggplot(r$cv, ggplot2::aes(x = score, y = algorithm, fill = algorithm, colour = algorithm)) +
-      ggplot2::geom_boxplot(alpha = .78, outlier.shape = NA) +
-      ggplot2::geom_jitter(height = .12, alpha = .20, size = 1.3) +
-      ggplot2::scale_fill_manual(values = c("Random forest" = pal[["blue"]], "XGBoost" = pal[["orange"]], "Neural network" = pal[["purple"]])) +
-      ggplot2::scale_colour_manual(values = c("Random forest" = pal[["blue"]], "XGBoost" = pal[["orange"]], "Neural network" = pal[["purple"]])) +
-      kapae_theme(11) + ggplot2::theme(legend.position = "none")
+      ggplot2::ggplot(r$cv, ggplot2::aes(x = score, y = algorithm)) + ggplot2::geom_boxplot() + ggplot2::geom_jitter(height = .12, alpha = .15) + ggplot2::theme_minimal(base_size = 11)
   }
   if (spec$method == "matching") {
     bal_long <- tidyr::pivot_longer(r$balance, c(before, after), names_to = "stage", values_to = "smd")
     figs[["Figure S2. Covariate balance (Love plot)"]] <-
-      ggplot2::ggplot(bal_long, ggplot2::aes(x = abs(smd), y = reorder(variable, abs(smd)), colour = stage)) +
-      ggplot2::geom_vline(xintercept = .10, linetype = 2, colour = pal[["red"]], linewidth = .8) +
-      ggplot2::geom_point(size = 3, alpha = .9) +
-      ggplot2::scale_colour_manual(values = c("before" = pal[["grey"]], "after" = pal[["blue"]]), labels = c("Before", "After")) +
-      ggplot2::labs(x = "Absolute standardized mean difference", y = NULL, colour = NULL) + kapae_theme(11)
+      ggplot2::ggplot(bal_long, ggplot2::aes(x = abs(smd), y = reorder(variable, abs(smd)), shape = stage)) +
+      ggplot2::geom_vline(xintercept = .10, linetype = 2) + ggplot2::geom_point(size = 2.5) +
+      ggplot2::labs(x = "Absolute standardized mean difference", y = NULL, shape = NULL) + ggplot2::theme_minimal(base_size = 11)
   }
   if (spec$method == "iv") {
     figs[[sprintf("Figure S2. First-stage strength (illustrative F = %.1f)", r$first_stage_f)]] <-
-      ggplot2::ggplot(r$first, ggplot2::aes(x = factor(instrument), y = treatment, colour = factor(instrument))) +
-      ggplot2::geom_point(size = 4, alpha = .9) +
-      ggplot2::scale_colour_manual(values = c("0" = pal[["grey"]], "1" = pal[["blue"]])) + kapae_theme(11) + ggplot2::theme(legend.position = "none")
+      ggplot2::ggplot(r$first, ggplot2::aes(x = factor(instrument), y = treatment)) + ggplot2::geom_point(size = 4) + ggplot2::theme_minimal(base_size = 11)
   }
   if (spec$method == "did") {
     pre <- r$event[r$event$event_time < 0,]
     figs[["Figure S2. Pre-treatment event-study coefficients only"]] <-
-      ggplot2::ggplot(pre, ggplot2::aes(x = event_time, y = estimate)) +
-      ggplot2::geom_hline(yintercept = 0, linetype = 2, colour = pal[["grey"]]) +
-      ggplot2::geom_errorbar(ggplot2::aes(ymin = conf.low, ymax = conf.high), width = 0, linewidth = 1.05, colour = pal[["sky"]]) +
-      ggplot2::geom_point(position = ggplot2::position_nudge(x = .10), size = 3, shape = 21, fill = pal[["orange"]], colour = "white", stroke = 1) + kapae_theme(11)
+      ggplot2::ggplot(pre, ggplot2::aes(x = event_time, y = estimate)) + ggplot2::geom_hline(yintercept = 0, linetype = 2) +
+      ggplot2::geom_errorbar(ggplot2::aes(ymin = conf.low, ymax = conf.high), width = .1) + ggplot2::geom_point() + ggplot2::theme_minimal(base_size = 11)
   }
   if (spec$method == "rd") {
     local <- analysis$data[abs(analysis$data$running - spec$cutoff) <= spec$bandwidth, ]
     figs[["Figure S2. Local bandwidth sample"]] <-
-      ggplot2::ggplot(local, ggplot2::aes(x = running, y = y, colour = running >= spec$cutoff)) +
-      ggplot2::geom_point(alpha = .28, size = 1.7) +
-      ggplot2::geom_vline(xintercept = spec$cutoff, linetype = 2, colour = pal[["red"]], linewidth = .9) +
-      ggplot2::scale_colour_manual(values = c("FALSE" = pal[["blue"]], "TRUE" = pal[["orange"]])) + kapae_theme(11) + ggplot2::theme(legend.position = "none")
+      ggplot2::ggplot(local, ggplot2::aes(x = running, y = y)) + ggplot2::geom_point(alpha = .25) +
+      ggplot2::geom_vline(xintercept = spec$cutoff, linetype = 2) + ggplot2::theme_minimal(base_size = 11)
   }
   if (spec$method == "causal_forest") {
     figs[["Figure S2. Predicted versus true CATE in simulation"]] <-
-      ggplot2::ggplot(r$cate, ggplot2::aes(x = true_tau, y = cate_hat)) +
-      ggplot2::geom_point(alpha = .20, colour = pal[["purple"]], size = 1.6) +
-      ggplot2::geom_abline(intercept = 0, slope = 1, linetype = 2, colour = pal[["grey"]]) +
-      ggplot2::geom_smooth(method = "lm", se = FALSE, colour = pal[["orange"]], linewidth = 1) +
-      ggplot2::labs(x = "True simulated CATE", y = "Estimated CATE") + kapae_theme(11)
+      ggplot2::ggplot(r$cate, ggplot2::aes(x = true_tau, y = cate_hat)) + ggplot2::geom_point(alpha = .18) +
+      ggplot2::geom_smooth(method = "lm", se = FALSE) + ggplot2::labs(x = "True simulated CATE", y = "Estimated CATE") + ggplot2::theme_minimal(base_size = 11)
   }
   if (spec$method == "dml") {
     figs[["Figure S2. Orthogonal-learning diagnostic placeholder"]] <-
-      ggplot2::ggplot(r$nuisance, ggplot2::aes(x = score, y = model, colour = model)) +
-      ggplot2::geom_segment(ggplot2::aes(x = 0, xend = score, yend = model), linewidth = 1.1, alpha = .45) +
-      ggplot2::geom_point(size = 3.8) +
-      ggplot2::scale_colour_manual(values = c("Outcome nuisance" = pal[["teal"]], "Treatment nuisance" = pal[["purple"]])) +
-      ggplot2::coord_cartesian(xlim = c(0,1)) + kapae_theme(11) + ggplot2::theme(legend.position = "none")
+      ggplot2::ggplot(r$nuisance, ggplot2::aes(x = score, y = model)) + ggplot2::geom_point(size = 3) + ggplot2::coord_cartesian(xlim = c(0,1)) + ggplot2::theme_minimal(base_size = 11)
   }
   figs
 }
