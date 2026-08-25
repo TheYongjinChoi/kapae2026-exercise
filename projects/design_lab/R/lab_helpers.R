@@ -251,7 +251,6 @@ analysis <- simulate_project(spec)
 
 ```{r}
 #| label: main-results
-#| results: asis
 main_figures <- make_main_figures(analysis, spec)
 render_figure_list(main_figures)
 ```
@@ -280,7 +279,6 @@ knitr::kable(analysis$cleaning_flow)
 ## A3. Design-specific diagnostics
 
 ```{r}
-#| results: asis
 supp_figures <- make_supplement_figures(analysis, spec)
 render_figure_list(supp_figures)
 ```
@@ -376,7 +374,7 @@ build_spec_from_environment <- function(env = parent.frame()) {
 }
 
 ensure_packages <- function(extra = character()) {
-  pkgs <- unique(c("ggplot2", "plotly", "tidyr", "knitr", extra))
+  pkgs <- unique(c("ggplot2", "plotly", "tidyr", "knitr", "htmltools", extra))
   missing <- pkgs[!vapply(pkgs, requireNamespace, logical(1), quietly = TRUE)]
   if (length(missing)) {
     stop(
@@ -842,18 +840,35 @@ make_supplement_figures <- function(analysis, spec) {
 
 render_figure_list <- function(figs) {
   ensure_packages()
-  if (!length(figs)) return(invisible(NULL))
+
+  if (!length(figs)) {
+    return(invisible(NULL))
+  }
+
+  # HTML / RevealJS: return the widgets as one HTML object.
+  # Returning (rather than print() inside a loop) lets knitr register
+  # the htmlwidget dependencies and embed the Plotly figures correctly.
+  if (knitr::is_html_output()) {
+    blocks <- lapply(names(figs), function(nm) {
+      widget <- plotly::ggplotly(figs[[nm]])
+      widget <- plotly::config(widget, displaylogo = FALSE, responsive = TRUE)
+
+      htmltools::tagList(
+        htmltools::tags$h3(nm),
+        widget
+      )
+    })
+
+    return(htmltools::tagList(blocks))
+  }
+
+  # Word / PDF: use the original static ggplot objects.
   for (nm in names(figs)) {
     cat("\n\n### ", nm, "\n\n", sep = "")
-    p <- figs[[nm]]
-    if (knitr::is_html_output()) {
-      widget <- plotly::ggplotly(p)
-      print(widget)
-    } else {
-      print(p)
-    }
+    print(figs[[nm]])
     cat("\n\n")
   }
+
   invisible(NULL)
 }
 

@@ -1,0 +1,179 @@
+---
+title: "Research Design Lab: Double/debiased machine learning (DML)"
+author: "EXAMPLE_01"
+student-id: "EXAMPLE_01"
+design-method: "dml"
+format:
+  html:
+    toc: true
+    embed-resources: true
+  docx:
+    toc: true
+  pdf:
+    toc: true
+    keep-tex: false
+  revealjs:
+    slide-number: true
+    scrollable: true
+execute:
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/lab_helpers.R")
+
+# ============================================================
+# 학생 입력 영역: 아래 값만 수정하세요.
+# ============================================================
+
+student_id <- "EXAMPLE_01"
+method <- "dml"
+
+# 연구 제목 예시: "Predicting ...", "The effect of X on Y ..."
+research_title <- "예방접종 인식"
+
+# 데이터셋 이름 또는 출처 예시: "Korea Community Health Survey 2025"
+data_name <- "VCI"
+
+# 데이터의 관측단위와 핵심 특성을 1~3문장으로 적습니다.
+# 예: "개인 단위 횡단면 자료이며 지역 식별자가 있다."
+data_description <- "데이터 특성"
+
+# 결과변수 유형: "continuous" "binary" 중 하나 입력하세요.
+outcome_type <- "continuous"
+# 결과변수 값의 범위: "continuous"는 값의 실제 범위. 정확하지 않아도 됩니다. "binary" 인 경우 c(0, 1)을  입력.
+outcome_range <- c(0, 100)
+
+# 교란변수의 대략적인 구성
+n_continuous_predictors <- 8
+n_binary_predictors <- 4
+n_categorical_predictors <- 2
+n_obs <- 1500
+
+# 처치는 이 예제에서 binary treatment로 가정합니다.
+treatment_type <- "binary"
+# 교차적합 fold 수: 보통 2~10, 여기서는 5 권장
+n_folds <- 5
+
+# 변수별 결측률을 교육용으로 재현하기 위한 최대값입니다. 0~0.20 권장.
+max_missing_rate <- 0.08
+
+# 재현 가능한 가짜 데이터를 위한 seed입니다.
+seed <- 2026
+
+# 제출 API가 활성화되면 비워두어도 원격 config를 자동 확인합니다.
+submission_endpoint <- ""
+course_key <- ""
+
+spec <- build_spec_from_environment(environment())
+```
+
+# 1. Research question and design
+
+```{r}
+#| results: asis
+cat(project_overview_text(spec))
+```
+
+# 2. Data and expected structure
+
+학생은 실제 분석을 수행하는 것이 아니라, 자신이 알고 있는 데이터의 구조를 바탕으로 **논문에 필요한 분석 설계와 결과의 흐름**을 먼저 설계합니다. 아래 결과는 입력한 구조에 맞춰 자동 생성한 교육용 가상 데이터에 기반합니다.
+
+```{r}
+#| results: asis
+cat(data_structure_text(spec))
+```
+
+# 3. Methods
+
+```{r}
+#| results: asis
+cat(methods_text(spec))
+```
+
+# 4. Simulated analysis
+
+```{r}
+#| label: simulate
+analysis <- simulate_project(spec)
+```
+
+## Main results
+
+메인 본문에는 표와 그림을 합쳐 **최대 4개**만 배치합니다. 인과추론 설계는 진단 또는 식별 가정 확인을 결과 추정치보다 앞에 둡니다.
+
+```{r}
+#| label: main-results
+#| results: asis
+main_figures <- make_main_figures(analysis, spec)
+render_figure_list(main_figures)
+```
+
+# 5. Interpretation template
+
+```{r}
+#| results: asis
+cat(interpretation_text(analysis, spec))
+```
+
+# Supplementary material
+
+## A1. Missing records by variable
+
+```{r}
+knitr::kable(analysis$missingness, digits = 2)
+```
+
+## A2. Data-cleaning flow
+
+```{r}
+knitr::kable(analysis$cleaning_flow)
+```
+
+## A3. Design-specific diagnostics
+
+```{r}
+#| results: asis
+supp_figures <- make_supplement_figures(analysis, spec)
+render_figure_list(supp_figures)
+```
+
+## A4. Required robustness and sensitivity checks
+
+```{r}
+#| results: asis
+cat(supplement_checklist_text(spec))
+```
+
+## A5. Reproducibility record
+
+```{r}
+sessionInfo()
+```
+
+# 6. Render outputs
+
+최종 확인 후 아래 셀을 실행하면 HTML, Word, PDF, RevealJS slides를 순차적으로 렌더링합니다. HTML/RevealJS에서는 Plotly가 interactive하게 표시되고, Word/PDF에서는 같은 시각화를 static ggplot으로 출력합니다.
+
+```{r}
+#| eval: false
+render_project_outputs(knitr::current_input())
+```
+
+# Submission
+
+작업을 마친 뒤 아래 셀을 실행합니다. 제출 API가 활성화되어 있으면 현재 QMD가 `projects/submissions/`에 자동 제출됩니다. API가 아직 설정되지 않았으면 로컬 제출 패키지를 생성합니다.
+
+```{r}
+#| eval: false
+submit_project(
+  qmd_path = knitr::current_input(),
+  endpoint = submission_endpoint,
+  course_key = course_key
+)
+```
+
