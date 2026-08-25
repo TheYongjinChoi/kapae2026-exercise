@@ -15,6 +15,7 @@ format:
     slide-number: true
     scrollable: true
 execute:
+  echo: false
   warning: false
   message: false
 ---
@@ -23,13 +24,13 @@ execute:
 #| label: setup
 #| include: false
 source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/lab_helpers.R")
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/report_helpers.R")
 student_id <- "eva_shinji"
 method <- "dml"
 ```
 
-# 학생 입력 1. 연구 배경
 
-각 항목은 **1~3문장**으로 짧게 작성하세요. 수업 마지막 약 **30분 동안** 서로의 연구설계를 함께 살펴보고 토론합니다.
+```{r}
 #| label: research-background
 #| include: false
 
@@ -43,13 +44,15 @@ theoretical_background <- "
 "
 
 research_need <- "
-지방교부세는 지방정부 간 재정격차를 완화하고 일정 수준의 행정서비스를 보장하기 위한 재원이다. 그러나 지방교부세 의존도가 높은 지방정부가 자체수입 중심 지방
+지방교부세는 지방정부 간 재정격차를 완화하고 일정 수준의 행정서비스를 보장하기 위한 재원이다.
+"
 
-# 학생 입력 2. 데이터와 방법론
+# 원본 제출 파일에서 이 두 항목의 내용은 확인되지 않아 임의로 작성하지 않고 비워 둡니다.
+research_question <- ""
+expected_contribution <- ""
+```
 
-실제로 사용할 데이터를 **직접 확인하거나 구체적으로 떠올리며** 아래 질문에 답하세요.  
-이 질문에 답하는 과정 자체가 현재 데이터가 선택한 방법론에 적절한지 확인하는 과정입니다. 필수 질문에 답하기 어렵다면 다른 방법론이 더 적절할 수 있습니다.
-
+```{r}
 #| label: method-data-inputs
 #| include: false
 
@@ -68,11 +71,6 @@ outcome_label <- "주민 1인당 문화예술 지출"
 outcome_type <- "continuous"
 
 # 4. 효과를 추정하려는 처치 또는 노출은 무엇인가요?
-# 지방교부세 의존도 =
-# 지방교부세 / (자체수입 + 지방교부세 + 조정교부금 등)
-#
-# 실제 분석에서는 지방정부 유형과 연도별 중위값보다 높으면 1,
-# 그렇지 않으면 0으로 분류하는 방안을 고려함.
 treatment_var <- "high_local_allocation_tax_dependence"
 treatment_label <- "높은 지방교부세 의존도 여부"
 
@@ -113,6 +111,7 @@ confounding_set_justification <- "
 sample_size <- 1356
 
 spec <- build_spec_from_environment(environment())
+```
 
 # 1. 연구 배경과 연구질문
 
