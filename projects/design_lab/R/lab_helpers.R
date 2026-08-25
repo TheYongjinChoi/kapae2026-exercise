@@ -31,115 +31,106 @@ check_method <- function(method) {
   method
 }
 
+
 method_label <- function(method) {
   c(
-    prediction = "Machine-learning prediction",
-    dml = "Double/debiased machine learning (DML)",
-    did = "Difference-in-differences (DID)",
-    iv = "Instrumental variables (IV)",
-    matching = "Propensity-score matching/weighting",
-    causal_forest = "Causal forest",
-    rd = "Regression discontinuity (RD)"
+    prediction = "머신러닝 예측",
+    dml = "이중/디바이어스드 머신러닝(DML)",
+    did = "차분의 차분법(DID)",
+    iv = "도구변수(IV)",
+    matching = "성향점수 매칭/가중치",
+    causal_forest = "인과 포리스트",
+    rd = "회귀불연속설계(RD/RKD)"
   )[[method]]
 }
+
 
 method_input_block <- function(method) {
   blocks <- list(
     prediction = c(
-      '# 결과변수 유형: "continuous" 또는 "binary"',
-      'outcome_type <- "binary"',
-      '',
-      '# 연속형이면 대략적인 범위 예: c(0, 100). 이진이면 c(0, 1)을 유지합니다.',
-      'outcome_range <- c(0, 1)',
-      '',
-      '# 예측변수 개수. 0 이상의 정수로 입력합니다.',
-      'n_continuous_predictors <- 8',
-      'n_binary_predictors <- 4',
-      'n_categorical_predictors <- 2',
-      '',
-      '# 대략적인 표본크기. 교육용 시뮬레이션은 300~5000 정도를 권장합니다.',
-      'n_obs <- 1200'
+      'outcome_var <- "outcome"', 'outcome_label <- "결과변수 레이블"',
+      'outcome_type <- "binary"', 'outcome_range <- c(0, 1)', '',
+      'covariate_names <- c("x1", "x2", "x3")',
+      'covariate_labels <- c("예측변수 1", "예측변수 2", "예측변수 3")', '',
+      'n_obs <- 1200', 'n_continuous_predictors <- 8',
+      'n_binary_predictors <- 4', 'n_categorical_predictors <- 2', '',
+      'has_independent_test <- TRUE',
+      'prediction_use <- "예측값을 실제 연구 또는 정책에서 어떻게 사용할지 1~2문장으로 적으세요."'
     ),
     dml = c(
-      '# 결과변수 유형: "continuous" 권장. binary도 허용합니다.',
-      'outcome_type <- "continuous"',
-      'outcome_range <- c(0, 100)',
-      '',
-      '# 교란변수의 대략적인 구성',
-      'n_continuous_predictors <- 8',
-      'n_binary_predictors <- 4',
-      'n_categorical_predictors <- 2',
-      'n_obs <- 1500',
-      '',
-      '# 처치는 이 예제에서 binary treatment로 가정합니다.',
-      'treatment_type <- "binary"',
-      '# 교차적합 fold 수: 보통 2~10, 여기서는 5 권장',
+      'outcome_var <- "outcome"', 'outcome_label <- "결과변수 레이블"',
+      'treatment_var <- "treatment"', 'treatment_label <- "처치/노출 변수 레이블"',
+      'treatment_type <- "binary"', 'outcome_type <- "continuous"',
+      'outcome_range <- c(0, 100)', '',
+      'covariate_names <- c("x1", "x2", "x3")',
+      'covariate_labels <- c("교란변수 1", "교란변수 2", "교란변수 3")',
+      'confounding_set_justification <- "이 변수들이 처치와 결과 모두에 관련된 교란변수라고 판단한 이유를 1~3문장으로 적으세요."', '',
+      'n_obs <- 1500', 'n_continuous_predictors <- 8',
+      'n_binary_predictors <- 4', 'n_categorical_predictors <- 2',
       'n_folds <- 5'
     ),
     did = c(
-      '# 패널의 개체 수와 시점 수. 최소 4개 시점을 권장합니다.',
-      'n_units <- 400',
-      'n_periods <- 8',
-      '# 처치가 시작되는 시점. 1 < treatment_start <= n_periods',
-      'treatment_start <- 5',
-      '# 처치집단 비율: 0.1~0.9 권장',
-      'treated_share <- 0.45',
-      '',
-      'outcome_type <- "continuous"',
-      'outcome_range <- c(0, 100)',
-      'n_continuous_predictors <- 4',
-      'n_binary_predictors <- 2',
-      'n_categorical_predictors <- 1'
+      'did_design <- "standard"', '',
+      'outcome_var <- "outcome"', 'outcome_label <- "결과변수 레이블"',
+      'unit_id_var <- "unit_id"', 'unit_id_label <- "분석 단위"',
+      'time_var <- "time"', 'time_label <- "시간"',
+      'treatment_group_var <- "treated"', 'treatment_group_label <- "처치집단 구분 변수"', '',
+      'treated_definition <- "어떤 관측치가 처치집단인지 구체적으로 적으세요."',
+      'control_definition <- "어떤 관측치가 비교집단인지 구체적으로 적으세요."', '',
+      'n_units <- 400', 'n_periods <- 8',
+      'time_values <- c("T1","T2","T3","T4","T5","T6","T7","T8")',
+      'treatment_start <- 5', 'treatment_start_label <- "T5"',
+      'treated_share <- 0.45', '',
+      'cohort_var <- "first_treated_period"', 'cohort_label <- "최초 처치시점"',
+      'outcome_type <- "continuous"', 'outcome_range <- c(0, 100)',
+      'n_continuous_predictors <- 4', 'n_binary_predictors <- 2', 'n_categorical_predictors <- 1'
     ),
     iv = c(
-      'n_obs <- 1800',
-      'outcome_type <- "continuous"',
-      'outcome_range <- c(0, 100)',
-      'n_continuous_predictors <- 6',
-      'n_binary_predictors <- 3',
-      'n_categorical_predictors <- 1',
-      '# first-stage strength의 교육용 설정: 0.15~0.60 정도',
-      'instrument_strength <- 0.35'
+      'outcome_var <- "outcome"', 'outcome_label <- "결과변수 레이블"',
+      'treatment_var <- "treatment"', 'treatment_label <- "내생적 처치/노출 레이블"',
+      'instrument_var <- "instrument"', 'instrument_label <- "도구변수 레이블"',
+      'instrument_justification <- "도구변수가 처치에는 영향을 주지만 결과에는 직접 영향을 주지 않는다고 볼 근거를 1~3문장으로 적으세요."', '',
+      'n_obs <- 1800', 'outcome_type <- "continuous"', 'outcome_range <- c(0, 100)',
+      'n_continuous_predictors <- 6', 'n_binary_predictors <- 3',
+      'n_categorical_predictors <- 1', 'instrument_strength <- 0.35'
     ),
     matching = c(
-      'n_obs <- 1600',
-      'outcome_type <- "continuous"',
-      'outcome_range <- c(0, 100)',
-      'n_continuous_predictors <- 8',
-      'n_binary_predictors <- 4',
-      'n_categorical_predictors <- 2',
-      '# 추정대상: "ATE" 또는 "ATT"',
-      'estimand <- "ATE"',
-      '# caliper는 propensity score의 SD 단위 예시입니다.',
-      'caliper <- 0.2'
+      'ps_method <- "matching"', '',
+      'outcome_var <- "outcome"', 'outcome_label <- "결과변수 레이블"',
+      'treatment_var <- "treatment"', 'treatment_label <- "처치/노출 레이블"',
+      'covariate_names <- c("x1", "x2", "x3")',
+      'covariate_labels <- c("공변량 1", "공변량 2", "공변량 3")',
+      'covariate_timing_note <- "위 공변량들이 처치 이전에 측정되었거나 처치에 의해 영향을 받지 않았는지 확인해 적으세요."', '',
+      'estimand <- "ATE"', 'caliper <- 0.2',
+      'n_obs <- 1600', 'outcome_type <- "continuous"', 'outcome_range <- c(0, 100)',
+      'n_continuous_predictors <- 8', 'n_binary_predictors <- 4', 'n_categorical_predictors <- 2'
     ),
     causal_forest = c(
-      'n_obs <- 2000',
-      'outcome_type <- "continuous"',
-      'outcome_range <- c(0, 100)',
-      'n_continuous_predictors <- 10',
-      'n_binary_predictors <- 4',
-      'n_categorical_predictors <- 2',
-      '# causal forest tree 수의 논문 specification 예시',
-      'num_trees <- 2000',
-      '# honesty를 기본 원칙으로 둡니다.',
-      'honesty <- TRUE'
+      'outcome_var <- "outcome"', 'outcome_label <- "결과변수 레이블"',
+      'treatment_var <- "treatment"', 'treatment_label <- "처치/노출 레이블"',
+      'covariate_names <- c("x1", "x2", "x3")',
+      'covariate_labels <- c("공변량 1", "공변량 2", "공변량 3")',
+      'modifier_names <- c("x1", "x2")',
+      'modifier_labels <- c("사전에 관심 있는 효과수정변수 1", "효과수정변수 2")',
+      'heterogeneity_rationale <- "왜 이 변수들에서 처치효과 이질성이 예상되는지 1~3문장으로 적으세요."', '',
+      'n_obs <- 2000', 'outcome_type <- "continuous"', 'outcome_range <- c(0, 100)',
+      'n_continuous_predictors <- 10', 'n_binary_predictors <- 4', 'n_categorical_predictors <- 2',
+      'num_trees <- 2000', 'honesty <- TRUE'
     ),
     rd = c(
-      'n_obs <- 1800',
-      'outcome_type <- "continuous"',
-      'outcome_range <- c(0, 100)',
-      '# cutoff는 running variable의 0으로 고정한 교육용 예시입니다.',
-      'cutoff <- 0',
-      '# 분석 bandwidth 예: 0.2~0.8',
-      'bandwidth <- 0.45',
-      'n_continuous_predictors <- 3',
-      'n_binary_predictors <- 2',
-      'n_categorical_predictors <- 1'
+      'rd_design <- "discontinuity"', '',
+      'outcome_var <- "outcome"', 'outcome_label <- "결과변수 레이블"',
+      'running_var <- "running_variable"', 'running_label <- "할당변수 레이블"',
+      'cutoff <- 0', 'cutoff_label <- "정책/처치 기준점"',
+      'assignment_rule <- "기준점에서 처치 여부 또는 처치 강도가 어떻게 달라지는지 1~3문장으로 적으세요."', '',
+      'bandwidth <- 0.45', 'n_obs <- 1800',
+      'outcome_type <- "continuous"', 'outcome_range <- c(0, 100)',
+      'n_continuous_predictors <- 3', 'n_binary_predictors <- 2', 'n_categorical_predictors <- 1'
     )
   )
-  paste(blocks[[method]], collapse = "\n")
+  paste(blocks[[method]], collapse = "\\n")
 }
+
 
 create_design_qmd <- function(student_id,
                               method,
@@ -152,11 +143,11 @@ create_design_qmd <- function(student_id,
   filename <- sprintf("02_%s_%s_research_design.qmd", student_id, method)
   path <- file.path(output_dir, filename)
   if (file.exists(path) && !isTRUE(overwrite)) {
-    stop("이미 파일이 있습니다: ", path, "\noverwrite = TRUE로 다시 생성할 수 있습니다.")
+    stop("이미 파일이 있습니다: ", path, "\\noverwrite = TRUE로 다시 생성할 수 있습니다.")
   }
 
   txt <- sprintf('---
-title: "Research Design Lab: %s"
+title: "연구설계 실습: %s"
 author: "%s"
 student-id: "%s"
 design-method: "%s"
@@ -168,7 +159,6 @@ format:
     toc: true
   pdf:
     toc: true
-    keep-tex: false
   revealjs:
     slide-number: true
     scrollable: true
@@ -180,74 +170,80 @@ execute:
 ```{r}
 #| label: setup
 #| include: false
-
 source("%s")
-
-# ============================================================
-# 학생 입력 영역: 아래 값만 수정하세요.
-# ============================================================
-
 student_id <- "%s"
 method <- "%s"
+```
 
-# 연구 제목 예시: "Predicting ...", "The effect of X on Y ..."
-research_title <- "여기에 연구 제목을 입력하세요"
+# 학생 입력 1. 연구 배경
 
-# 데이터셋 이름 또는 출처 예시: "Korea Community Health Survey 2025"
-data_name <- "여기에 데이터셋 이름을 입력하세요"
+각 항목은 **1~3문장**으로 짧게 작성하세요. 수업 마지막 약 **30분 동안** 서로의 연구설계를 함께 살펴보고 토론합니다.
 
-# 데이터의 관측단위와 핵심 특성을 1~3문장으로 적습니다.
-# 예: "개인 단위 횡단면 자료이며 지역 식별자가 있다."
-data_description <- "여기에 데이터 특성을 간략히 입력하세요"
+```{r}
+#| label: research-background
+#| include: false
+research_title <- "연구 제목을 입력하세요"
+theoretical_background <- "이론적 또는 정책적 배경을 1~3문장으로 적으세요."
+research_need <- "왜 이 연구가 필요한지 1~3문장으로 적으세요."
+research_question <- "핵심 연구질문을 1~2문장으로 적으세요."
+expected_contribution <- "학술적 또는 정책적 기여를 1~3문장으로 적으세요."
+```
+
+# 학생 입력 2. 방법론과 데이터 구조
+
+실제 연구에 사용할 데이터를 직접 확인하거나 구체적으로 떠올리며 아래 질문에 답하세요. 이 과정 자체가 **현재 데이터가 선택한 방법론에 적절한지 확인하는 절차**입니다. 필수 질문에 답하기 어렵다면 다른 방법론이 더 적절할 수 있습니다.
+
+```{r}
+#| label: method-data-inputs
+#| include: false
+data_name <- "실제 데이터셋 이름 또는 출처"
+unit_of_observation <- "관측단위를 적으세요"
+data_description <- "자료의 설계, 조사/관측 시점, 반복측정 여부 등 핵심 구조를 1~3문장으로 적으세요."
 
 %s
 
-# 변수별 결측률을 교육용으로 재현하기 위한 최대값입니다. 0~0.20 권장.
 max_missing_rate <- 0.08
-
-# 재현 가능한 가짜 데이터를 위한 seed입니다.
 seed <- 2026
-
-# 제출 API가 활성화되면 비워두어도 원격 config를 자동 확인합니다.
 submission_endpoint <- ""
 course_key <- ""
 
 spec <- build_spec_from_environment(environment())
 ```
 
-# 1. Research question and design
+# 1. 연구 배경과 연구질문
 
 ```{r}
 #| results: asis
 cat(project_overview_text(spec))
 ```
 
-# 2. Data and expected structure
-
-학생은 실제 분석을 수행하는 것이 아니라, 자신이 알고 있는 데이터의 구조를 바탕으로 **논문에 필요한 분석 설계와 결과의 흐름**을 먼저 설계합니다. 아래 결과는 입력한 구조에 맞춰 자동 생성한 교육용 가상 데이터에 기반합니다.
+# 2. 데이터와 방법론 적합성
 
 ```{r}
 #| results: asis
 cat(data_structure_text(spec))
+cat(data_compatibility_text(spec))
 ```
 
-# 3. Methods
+# 3. 분석 방법
 
 ```{r}
 #| results: asis
 cat(methods_text(spec))
 ```
 
-# 4. Simulated analysis
-
 ```{r}
 #| label: simulate
+#| include: false
 analysis <- simulate_project(spec)
 ```
 
-## Main results
+# 4. 주요 분석 결과
 
-메인 본문에는 표와 그림을 합쳐 **최대 4개**만 배치합니다. 인과추론 설계는 진단 또는 식별 가정 확인을 결과 추정치보다 앞에 둡니다.
+```{r}
+#| results: asis
+cat(main_results_text(analysis, spec))
+```
 
 ```{r}
 #| label: main-results
@@ -255,61 +251,37 @@ main_figures <- make_main_figures(analysis, spec)
 render_figure_list(main_figures)
 ```
 
-# 5. Interpretation template
+# 5. 부록 결과
+
+## 부록 1. 변수별 결측치
+
+```{r}
+knitr::kable(
+  analysis$missingness,
+  digits = 2,
+  caption = "표 S1. 변수별 결측치 현황",
+  col.names = c("변수명", "결측치 수", "결측치 비율(%%)")
+)
+```
 
 ```{r}
 #| results: asis
-cat(interpretation_text(analysis, spec))
+cat(supplement_intro_text(spec))
 ```
-
-# Supplementary material
-
-## A1. Missing records by variable
-
-```{r}
-knitr::kable(analysis$missingness, digits = 2)
-```
-
-## A2. Data-cleaning flow
-
-```{r}
-knitr::kable(analysis$cleaning_flow)
-```
-
-## A3. Design-specific diagnostics
 
 ```{r}
 supp_figures <- make_supplement_figures(analysis, spec)
 render_figure_list(supp_figures)
 ```
 
-## A4. Required robustness and sensitivity checks
-
 ```{r}
-#| results: asis
-cat(supplement_checklist_text(spec))
-```
-
-## A5. Reproducibility record
-
-```{r}
-sessionInfo()
-```
-
-# 6. Render outputs
-
-최종 확인 후 아래 셀을 실행하면 HTML, Word, PDF, RevealJS slides를 순차적으로 렌더링합니다. HTML/RevealJS에서는 Plotly가 interactive하게 표시되고, Word/PDF에서는 같은 시각화를 static ggplot으로 출력합니다.
-
-```{r}
+#| include: false
 #| eval: false
 render_project_outputs(knitr::current_input())
 ```
 
-# Submission
-
-작업을 마친 뒤 아래 셀을 실행합니다. 제출 API가 활성화되어 있으면 현재 QMD가 `projects/submissions/`에 자동 제출됩니다. API가 아직 설정되지 않았으면 로컬 제출 패키지를 생성합니다.
-
 ```{r}
+#| include: false
 #| eval: false
 submit_project(
   qmd_path = knitr::current_input(),
@@ -426,59 +398,40 @@ ensure_packages <- function(extra = character()) {
   invisible(TRUE)
 }
 
+
 project_overview_text <- function(spec) {
   paste0(
-    "## Proposed study
-
-",
-    "**Title.** ", spec$research_title, "  
-",
-    "**Design.** ", method_label(spec$method), "  
-",
-    "**Data.** ", spec$data_name, "  
-",
-    if (nzchar(spec$unit_of_observation %||% "")) paste0("**Unit of observation.** ", spec$unit_of_observation, "  
-") else "",
-    "
-### Research background
-
-",
-    if (nzchar(spec$theoretical_background %||% "")) paste0("**Theoretical/policy background.** ", spec$theoretical_background, "
-
-") else "",
-    if (nzchar(spec$research_need %||% "")) paste0("**Why this study is needed.** ", spec$research_need, "
-
-") else "",
-    if (nzchar(spec$research_question %||% "")) paste0("**Research question.** ", spec$research_question, "
-
-") else "",
-    if (nzchar(spec$expected_contribution %||% "")) paste0("**Expected contribution.** ", spec$expected_contribution, "
-
-") else "",
-    "수업 마지막 약 **30분 동안** 각 연구설계를 함께 살펴보고 데이터-방법론 적합성, 식별가정, 필요한 진단을 중심으로 토론합니다.
-
-"
+    "## 제안 연구\\n\\n",
+    "**연구 제목.** ", spec$research_title, "  \\n",
+    "**연구방법.** ", method_label(spec$method), "  \\n",
+    "**데이터.** ", spec$data_name, "  \\n",
+    if (nzchar(spec$unit_of_observation %||% "")) paste0("**관측단위.** ", spec$unit_of_observation, "  \\n") else "",
+    "\\n### 연구 배경\\n\\n",
+    if (nzchar(spec$theoretical_background %||% "")) paste0("**이론적·정책적 배경.** ", spec$theoretical_background, "\\n\\n") else "",
+    if (nzchar(spec$research_need %||% "")) paste0("**연구의 필요성.** ", spec$research_need, "\\n\\n") else "",
+    if (nzchar(spec$research_question %||% "")) paste0("**연구질문.** ", spec$research_question, "\\n\\n") else "",
+    if (nzchar(spec$expected_contribution %||% "")) paste0("**예상 기여.** ", spec$expected_contribution, "\\n\\n") else ""
   )
 }
+
 
 data_structure_text <- function(spec) {
   extra <- switch(
     spec$method,
-    did = sprintf("패널 구조는 약 %d개 단위 × %d개 시점이며 처치는 %d번째 시점부터 시작한다고 가정합니다.", spec$n_units, spec$n_periods, spec$treatment_start),
-    rd = sprintf("running variable의 cutoff는 %.2f이고 주 분석 bandwidth는 %.2f로 계획합니다.", spec$cutoff, spec$bandwidth),
-    iv = sprintf("도구변수의 first-stage strength를 교육용으로 %.2f 수준으로 설정합니다.", spec$instrument_strength),
-    matching = sprintf("추정대상은 %s이며 caliper 예시는 %.2f입니다.", spec$estimand, spec$caliper),
-    causal_forest = sprintf("causal forest는 %d trees와 honesty=%s를 논문 specification 예시로 둡니다.", spec$num_trees, spec$honesty),
-    dml = sprintf("cross-fitting은 %d folds로 계획합니다.", spec$n_folds),
+    did = sprintf("약 %d개 단위와 %d개 시점을 가정하며 처치는 %s부터 시작하도록 설정했습니다.", spec$n_units, spec$n_periods, spec$treatment_start_label %||% as.character(spec$treatment_start)),
+    rd = sprintf("기준점은 %.2f이고 주 분석 bandwidth는 %.2f로 설정했습니다.", spec$cutoff, spec$bandwidth),
+    iv = sprintf("교육용 가상자료의 도구변수 강도 설정값은 %.2f입니다.", spec$instrument_strength),
+    matching = sprintf("목표 estimand는 %s이고 caliper 설정값은 %.2f입니다.", spec$estimand, spec$caliper),
+    causal_forest = sprintf("인과 포리스트는 %d개 tree와 honesty=%s로 설정했습니다.", spec$num_trees, spec$honesty),
+    dml = sprintf("cross-fitting은 %d개 fold로 설정했습니다.", spec$n_folds),
     prediction = sprintf("연속형 %d개, 이진형 %d개, 범주형 %d개 예측변수를 가정합니다.", spec$n_cont, spec$n_bin, spec$n_cat)
   )
-
-  sprintf(
-    "**Known data characteristics.** %s  \nOutcome type: **%s**. Predictor structure: continuous %d, binary %d, categorical %d. %s\n\n",
-    spec$data_description, spec$outcome_type, spec$n_cont, spec$n_bin, spec$n_cat, extra
+  paste0(
+    "**데이터 특성.** ", spec$data_description, "  \\n",
+    "**결과변수 유형.** ", ifelse(spec$outcome_type == "binary", "이진형", "연속형"), "  \\n",
+    extra, "\\n\\n"
   )
 }
-
 
 data_compatibility_text <- function(spec) {
   bullet <- function(ok, yes, no) {
@@ -488,7 +441,7 @@ data_compatibility_text <- function(spec) {
   has_covs <- length(spec$covariate_names %||% character()) > 0
 
   intro <- paste0(
-    "### Method-data compatibility check\n\n",
+    "### 방법론-데이터 적합성 점검\n\n",
     "아래 항목은 입력한 답변을 바탕으로 한 **설계 점검용 안내**입니다. ",
     "경고가 있다고 해서 분석이 불가능하다는 뜻은 아니지만, 해당 질문에 답하기 어렵다면 현재 데이터가 이 방법론의 핵심 식별조건을 충족하는지 다시 확인해야 합니다.\n\n"
   )
@@ -542,40 +495,19 @@ data_compatibility_text <- function(spec) {
 }
 
 
+
 methods_text <- function(spec) {
-  common <- "모든 specification은 결과를 본 뒤 임의로 선택하지 않는다는 원칙을 둡니다. 결측자료 처리, 표본 제외, 변수 coding, 주요 hyperparameter 또는 bandwidth/caliper를 Methods 또는 supplement에 명시합니다."
   specific <- switch(
     spec$method,
-    prediction = paste0(
-      "예측 분석은 random forest, XGBoost, feed-forward neural network를 비교합니다. 동일한 resampling folds를 사용해 공정하게 비교하고, binary outcome은 ROC AUC와 보조적으로 PR AUC/분류 임계값을, continuous outcome은 RMSE와 MAE를 보고하도록 설계합니다. ",
-      "Random forest는 mtry와 minimum node size, XGBoost는 tree depth/learning rate/number of trees, neural network는 hidden units/penalty/epochs를 tuning 대상으로 기술합니다. 최종 모델은 test set 또는 nested/resampled estimate와 분리해 평가합니다."
-    ),
-    dml = paste0(
-      "DML은 treatment model과 outcome model을 유연한 ML로 적합하고 cross-fitting으로 nuisance-function overfitting bias를 줄인 뒤 orthogonal score로 평균 처치효과를 추정하는 구조로 기술합니다. ",
-      "Robustness check로 동일한 공변량을 사용한 conventional OLS를 함께 제시하되, 비선형 교란이 있을 때 OLS와 DML이 어떻게 달라질 수 있는지 시각적으로 비교합니다."
-    ),
-    did = paste0(
-      "DID는 treated/control group과 pre/post timing을 명시하고 unit 및 time fixed effects와 적절한 clustered standard errors를 사용합니다. ",
-      "효과 추정보다 먼저 raw group-time trajectories와 event-study pre-period coefficients를 시각적으로 확인해 parallel-trends 가정의 개연성을 점검합니다. staggered adoption이 있으면 단순 TWFE 대신 cohort-time ATT 계열 추정량을 고려합니다."
-    ),
-    iv = paste0(
-      "IV 분석은 instrument relevance, independence/exogeneity, exclusion restriction, monotonicity가 요구됨을 명시합니다. ",
-      "first-stage coefficient/F statistic을 먼저 제시하고, 2SLS 추정치는 OLS와 같은 축에서 비교합니다. 결과 해석은 instrument가 영향을 미치는 compliers의 LATE라는 점을 분명히 합니다."
-    ),
-    matching = paste0(
-      "Propensity-score 분석은 treatment assignment model을 먼저 정의하고 common support를 점검합니다. 매칭 또는 weighting 후에는 outcome model보다 먼저 covariate balance를 평가합니다. ",
-      "Love plot, propensity-score overlap, effective sample size/weight distribution을 supplement에 포함하고, 결과는 지정한 estimand에 맞춰 해석합니다."
-    ),
-    causal_forest = paste0(
-      "Causal forest는 평균효과뿐 아니라 CATE의 이질성을 탐색하기 위해 사용합니다. treatment/outcome nuisance components와 honesty를 활용해 과적합을 줄이고, ATE와 CATE 분포를 함께 보고합니다. ",
-      "변수 중요도를 인과적 effect modifier의 증거로 단정하지 않고, calibration/heterogeneity 검정과 정책적으로 해석 가능한 subgroup summary를 supplement에 둡니다."
-    ),
-    rd = paste0(
-      "RD는 cutoff 주변에서 처치확률이 불연속적으로 바뀐다는 설계를 이용합니다. 효과 추정보다 먼저 running variable 분포, cutoff 주변 관측치 밀도, outcome-running-variable 관계를 시각적으로 확인합니다. ",
-      "주 추정은 local polynomial과 data-driven 또는 사전 지정 bandwidth를 사용하고, bandwidth/order 변화 및 donut RD를 sensitivity analysis로 제시합니다."
-    )
+    prediction = "동일한 resampling fold에서 random forest, XGBoost, neural network의 예측성능을 비교합니다. 최종 평가는 tuning과 분리하며, 이진 결과에서는 ROC AUC와 calibration을 함께 확인하는 것이 핵심입니다.",
+    dml = "처치모형과 결과모형을 유연한 머신러닝으로 적합하고 cross-fitting을 적용한 뒤 orthogonal score로 평균 처치효과를 추정합니다. 동일 공변량을 사용한 conventional OLS와 비교하되 OLS-DML 차이 자체를 우월성의 증거로 해석하지 않습니다.",
+    did = if (identical(spec$did_design, "staggered")) "처치 도입시점이 단위마다 다른 staggered DID를 가정합니다. cohort별 최초 처치시점을 명시하고 효과 추정 전에 처치 이전 추세와 event-study를 확인합니다." else "처치집단과 비교집단의 처치 전후 변화를 비교합니다. 효과 추정 전에 raw group-time trend와 처치 이전 event-study 계수를 확인하여 parallel trends의 개연성을 점검합니다.",
+    iv = "도구변수의 relevance를 first stage에서 먼저 확인하고 2SLS 추정치를 conventional OLS와 비교합니다. 인과해석에는 exclusion restriction, independence, monotonicity가 추가로 요구되며 추정대상은 일반적으로 compliers의 LATE입니다.",
+    matching = "성향점수 조정 전에 common support를 확인하고 조정 후에는 결과 추정치보다 covariate balance가 충분히 개선되었는지를 먼저 평가합니다. 매칭/가중치 방식과 estimand를 사전에 명확히 합니다.",
+    causal_forest = "평균효과와 함께 조건부 처치효과의 이질성을 탐색합니다. CATE 분포 자체를 실질적 이질성의 증거로 단정하지 않고 사전에 지정한 효과수정변수와 안정성을 중심으로 해석합니다.",
+    rd = if (identical(spec$rd_design, "kink")) "기준점에서 결과 수준의 점프가 아니라 기울기 변화를 이용하는 regression kink design을 가정합니다. 기준점 주변 자료 분포와 국소적 관계를 확인하고 bandwidth 민감도를 평가합니다." else "기준점에서 처치상태가 불연속적으로 변하는 구조를 이용합니다. 효과 추정 전에 running variable 분포와 기준점 주변 outcome-running variable 관계를 확인하고 bandwidth 민감도를 평가합니다."
   )
-  paste0(specific, "\n\n", common, "\n\n")
+  paste0(specific, "\\n\\n")
 }
 
 base_predictor_data <- function(n, spec) {
@@ -812,230 +744,327 @@ simulate_project <- function(spec) {
   )
 }
 
-coef_plot <- function(df, title = NULL, xlab = "Estimate") {
-  ggplot2::ggplot(df, ggplot2::aes(y = reorder(model, estimate), x = estimate)) +
-    ggplot2::geom_vline(xintercept = 0, linetype = 2) +
-    ggplot2::geom_errorbarh(ggplot2::aes(xmin = conf.low, xmax = conf.high), height = .12) +
-    ggplot2::geom_point(size = 3) +
-    ggplot2::geom_text(
-      ggplot2::aes(label = sprintf("%.2f [%.2f, %.2f]", estimate, conf.low, conf.high)),
-      hjust = -0.05, size = 3.6
-    ) +
-    ggplot2::labs(title = title, x = xlab, y = NULL) +
-    ggplot2::theme_minimal(base_size = 12) +
-    ggplot2::theme(plot.margin = ggplot2::margin(5.5, 90, 5.5, 5.5))
+
+kapae_palette <- function() {
+  c(
+    blue="#2F6BFF", sky="#64B5F6", teal="#22A699", orange="#F28E2B",
+    coral="#E76F51", purple="#7B61FF", green="#59A14F", red="#D1495B",
+    navy="#23395B", grey="#7A869A", light="#E9EEF6"
+  )
 }
+
+kapae_theme <- function(base_size = 12) {
+  pal <- kapae_palette()
+  ggplot2::theme_minimal(base_size = base_size) +
+    ggplot2::theme(
+      axis.title = ggplot2::element_text(face="bold", colour=pal[["navy"]]),
+      axis.text = ggplot2::element_text(colour="#4B5563"),
+      panel.grid.minor = ggplot2::element_blank(),
+      panel.grid.major = ggplot2::element_line(colour="#E8EDF4", linewidth=.45),
+      legend.position = "top",
+      legend.title = ggplot2::element_blank(),
+      strip.text = ggplot2::element_text(face="bold", colour=pal[["navy"]]),
+      plot.margin = ggplot2::margin(10,16,10,10)
+    )
+}
+
+
+coef_plot <- function(df, title = NULL, xlab = "추정치") {
+  pal <- kapae_palette()
+  d <- df
+  rng <- range(c(d$conf.low, d$conf.high), na.rm = TRUE)
+  pad <- max(diff(rng) * .07, .05)
+  d$label_x <- d$estimate + pad
+  d$sig <- ifelse(d$conf.low > 0 | d$conf.high < 0, "*", "")
+  d$label <- sprintf("%.2f%s [%.2f, %.2f]", d$estimate, d$sig, d$conf.low, d$conf.high)
+
+  ggplot2::ggplot(d, ggplot2::aes(y = reorder(model, estimate), x = estimate)) +
+    ggplot2::geom_vline(xintercept = 0, linetype = 2, colour = pal[["grey"]], linewidth = .7) +
+    ggplot2::geom_errorbarh(
+      ggplot2::aes(xmin = conf.low, xmax = conf.high),
+      height = 0, linewidth = 1.2, colour = pal[["sky"]]
+    ) +
+    ggplot2::geom_point(
+      position = ggplot2::position_nudge(y = .16),
+      size = 4, shape = 21, stroke = 1.1,
+      fill = pal[["orange"]], colour = "white"
+    ) +
+    ggplot2::geom_text(
+      ggplot2::aes(x = label_x, label = label),
+      position = ggplot2::position_nudge(y = .24),
+      hjust = 0, vjust = 0, size = 3.7,
+      fontface = "bold", colour = pal[["navy"]]
+    ) +
+    ggplot2::scale_x_continuous(expand = ggplot2::expansion(mult = c(.04, .34))) +
+    ggplot2::labs(x = xlab, y = NULL) +
+    kapae_theme(12)
+}
+
 
 make_main_figures <- function(analysis, spec) {
   d <- analysis$data
   r <- analysis$results
+  pal <- kapae_palette()
   figs <- list()
 
   if (spec$method == "prediction") {
-    figs[["Figure 1. Cross-validated performance by algorithm"]] <-
-      ggplot2::ggplot(r$cv, ggplot2::aes(x = algorithm, y = score)) +
-      ggplot2::geom_boxplot() +
-      ggplot2::geom_jitter(width = .12, alpha = .18) +
-      ggplot2::labs(x = NULL, y = unique(r$cv$metric)) +
-      ggplot2::theme_minimal(base_size = 12)
-
-    figs[["Figure 2. Hyperparameter comparison across all tested settings"]] <-
-      ggplot2::ggplot(r$cv, ggplot2::aes(x = score, y = reorder(setting, score))) +
-      ggplot2::geom_boxplot() +
-      ggplot2::facet_wrap(~algorithm, scales = "free_y") +
-      ggplot2::labs(x = unique(r$cv$metric), y = NULL) +
-      ggplot2::theme_minimal(base_size = 10)
-
+    figs[["그림 1. 알고리즘별 교차검증 예측성능"]] <-
+      ggplot2::ggplot(r$cv, ggplot2::aes(x=algorithm, y=score, fill=algorithm)) +
+      ggplot2::geom_boxplot(alpha=.82, outlier.shape=NA) +
+      ggplot2::geom_jitter(width=.10, alpha=.20, size=1.3) +
+      ggplot2::scale_fill_manual(values=c("Random forest"=pal[["blue"]], "XGBoost"=pal[["orange"]], "Neural network"=pal[["purple"]])) +
+      ggplot2::labs(x=NULL, y=unique(r$cv$metric)) + kapae_theme(12) +
+      ggplot2::theme(legend.position="none")
     if (nrow(r$importance)) {
-      figs[["Figure 3. Illustrative variable importance"]] <-
-        ggplot2::ggplot(r$importance, ggplot2::aes(x = importance, y = reorder(variable, importance))) +
-        ggplot2::geom_col() +
-        ggplot2::labs(x = "Relative importance", y = NULL) +
-        ggplot2::theme_minimal(base_size = 12)
+      figs[["그림 2. 예측변수 중요도"]] <-
+        ggplot2::ggplot(r$importance, ggplot2::aes(x=importance, y=reorder(variable, importance))) +
+        ggplot2::geom_col(fill=pal[["teal"]], width=.72) +
+        ggplot2::labs(x="상대적 중요도", y=NULL) + kapae_theme(12)
     }
   }
 
   if (spec$method == "dml") {
-    figs[["Figure 1. DML estimate versus conventional OLS"]] <- coef_plot(r$coef)
-    figs[["Figure 2. Nuisance-model predictive performance"]] <-
-      ggplot2::ggplot(r$nuisance, ggplot2::aes(x = model, y = score)) + ggplot2::geom_col() +
-      ggplot2::coord_cartesian(ylim = c(0, 1)) + ggplot2::labs(x = NULL, y = "Illustrative score") + ggplot2::theme_minimal(base_size = 12)
+    figs[["그림 1. OLS와 DML 처치효과 추정치 비교"]] <- coef_plot(r$coef)
+    figs[["그림 2. nuisance model 예측성능"]] <-
+      ggplot2::ggplot(r$nuisance, ggplot2::aes(x=model, y=score, fill=model)) +
+      ggplot2::geom_col(width=.65) +
+      ggplot2::scale_fill_manual(values=c("Treatment nuisance"=pal[["blue"]], "Outcome nuisance"=pal[["teal"]])) +
+      ggplot2::coord_cartesian(ylim=c(0,1)) +
+      ggplot2::labs(x=NULL, y="예측성능 지표") + kapae_theme(12) +
+      ggplot2::theme(legend.position="none")
   }
 
   if (spec$method == "did") {
     means <- aggregate(y ~ time + treated, d, mean)
-    means$group <- ifelse(means$treated == 1, "Treated", "Control")
-    figs[["Figure 1. Mandatory pre-estimation visual inspection"]] <-
-      ggplot2::ggplot(means, ggplot2::aes(x = time, y = y, linetype = group, group = group)) +
-      ggplot2::geom_line(linewidth = 1) + ggplot2::geom_point() +
-      ggplot2::geom_vline(xintercept = spec$treatment_start - .5, linetype = 2) +
-      ggplot2::labs(x = "Time", y = "Mean outcome", linetype = NULL) + ggplot2::theme_minimal(base_size = 12)
-    figs[["Figure 2. Event-study coefficients"]] <-
-      ggplot2::ggplot(r$event, ggplot2::aes(x = event_time, y = estimate)) +
-      ggplot2::geom_hline(yintercept = 0, linetype = 2) +
-      ggplot2::geom_errorbar(ggplot2::aes(ymin = conf.low, ymax = conf.high), width = .12) +
-      ggplot2::geom_point(size = 2.6) +
-      ggplot2::labs(x = "Event time", y = "Estimate") + ggplot2::theme_minimal(base_size = 12)
-    figs[["Figure 3. Average DID effect"]] <- coef_plot(r$coef)
+    means$group <- ifelse(means$treated == 1, "처치집단", "비교집단")
+    figs[["그림 1. 처치집단과 비교집단의 시점별 평균 결과"]] <-
+      ggplot2::ggplot(means, ggplot2::aes(x=time, y=y, colour=group, group=group)) +
+      ggplot2::geom_line(linewidth=1.15) + ggplot2::geom_point(size=2.6) +
+      ggplot2::geom_vline(xintercept=spec$treatment_start-.5, linetype=2, colour=pal[["red"]]) +
+      ggplot2::scale_colour_manual(values=c("처치집단"=pal[["orange"]], "비교집단"=pal[["blue"]])) +
+      ggplot2::labs(x=spec$time_label %||% "시점", y=spec$outcome_label %||% "평균 결과") + kapae_theme(12)
+    figs[["그림 2. Event-study 추정치"]] <-
+      ggplot2::ggplot(r$event, ggplot2::aes(x=event_time, y=estimate)) +
+      ggplot2::geom_hline(yintercept=0, linetype=2, colour=pal[["grey"]]) +
+      ggplot2::geom_errorbar(ggplot2::aes(ymin=conf.low, ymax=conf.high), width=0, linewidth=1.05, colour=pal[["sky"]]) +
+      ggplot2::geom_point(position=ggplot2::position_nudge(x=.10), size=3.3, shape=21, fill=pal[["orange"]], colour="white", stroke=1) +
+      ggplot2::labs(x="처치 전후 상대 시점", y="추정치") + kapae_theme(12)
+    figs[["그림 3. 평균 DID 처치효과"]] <- coef_plot(r$coef)
   }
 
   if (spec$method == "iv") {
-    figs[["Figure 1. First-stage relevance"]] <-
-      ggplot2::ggplot(r$first, ggplot2::aes(x = factor(instrument), y = treatment)) +
-      ggplot2::geom_col() + ggplot2::labs(x = "Instrument", y = "Pr(treatment)") + ggplot2::theme_minimal(base_size = 12)
-    figs[["Figure 2. OLS versus IV estimate"]] <- coef_plot(r$coef)
+    figs[["그림 1. 도구변수별 처치확률"]] <-
+      ggplot2::ggplot(r$first, ggplot2::aes(x=factor(instrument), y=treatment, fill=factor(instrument))) +
+      ggplot2::geom_col(width=.62) +
+      ggplot2::scale_fill_manual(values=c("0"=pal[["grey"]], "1"=pal[["blue"]])) +
+      ggplot2::labs(x=spec$instrument_label %||% "도구변수", y="처치확률") +
+      kapae_theme(12) + ggplot2::theme(legend.position="none")
+    figs[["그림 2. OLS와 IV 추정치 비교"]] <- coef_plot(r$coef)
   }
 
   if (spec$method == "matching") {
-    figs[["Figure 1. Propensity-score overlap before adjustment"]] <-
-      ggplot2::ggplot(r$matched, ggplot2::aes(x = ps_hat, linetype = factor(treatment))) +
-      ggplot2::geom_density(linewidth = 1) + ggplot2::labs(x = "Estimated propensity score", y = "Density", linetype = "Treatment") + ggplot2::theme_minimal(base_size = 12)
-    figs[["Figure 2. Unadjusted and propensity-score-adjusted effects"]] <- coef_plot(r$coef)
+    figs[["그림 1. 조정 전 성향점수 분포와 공통지지영역"]] <-
+      ggplot2::ggplot(r$matched, ggplot2::aes(x=ps_hat, colour=factor(treatment), fill=factor(treatment))) +
+      ggplot2::geom_density(alpha=.16, linewidth=1.05) +
+      ggplot2::scale_colour_manual(values=c("0"=pal[["blue"]], "1"=pal[["orange"]])) +
+      ggplot2::scale_fill_manual(values=c("0"=pal[["blue"]], "1"=pal[["orange"]])) +
+      ggplot2::labs(x="추정 성향점수", y="밀도") + kapae_theme(12)
+    figs[["그림 2. 조정 전후 처치효과 추정치"]] <- coef_plot(r$coef)
   }
 
   if (spec$method == "causal_forest") {
-    figs[["Figure 1. Estimated CATE distribution"]] <-
-      ggplot2::ggplot(r$cate, ggplot2::aes(x = cate_hat)) + ggplot2::geom_histogram(bins = 35) +
-      ggplot2::labs(x = "Estimated CATE", y = "Count") + ggplot2::theme_minimal(base_size = 12)
-    figs[["Figure 2. Average CATE by CATE quartile"]] <-
-      ggplot2::ggplot(r$groups, ggplot2::aes(x = group, y = cate_hat)) + ggplot2::geom_col() +
-      ggplot2::labs(x = "CATE quartile", y = "Mean estimated CATE") + ggplot2::theme_minimal(base_size = 12)
-    figs[["Figure 3. Overall causal-forest ATE"]] <- coef_plot(r$coef)
+    figs[["그림 1. 추정 CATE 분포"]] <-
+      ggplot2::ggplot(r$cate, ggplot2::aes(x=cate_hat)) +
+      ggplot2::geom_histogram(bins=35, fill=pal[["purple"]], alpha=.82) +
+      ggplot2::labs(x="추정 CATE", y="관측치 수") + kapae_theme(12)
+    figs[["그림 2. CATE 사분위집단별 평균 처치효과"]] <-
+      ggplot2::ggplot(r$groups, ggplot2::aes(x=group, y=cate_hat, fill=group)) +
+      ggplot2::geom_col(width=.65) +
+      ggplot2::scale_fill_manual(values=c("Q1"=pal[["sky"]], "Q2"=pal[["teal"]], "Q3"=pal[["orange"]], "Q4"=pal[["purple"]])) +
+      ggplot2::labs(x="CATE 사분위집단", y="평균 추정 CATE") + kapae_theme(12) +
+      ggplot2::theme(legend.position="none")
+    figs[["그림 3. 전체 평균 처치효과"]] <- coef_plot(r$coef)
   }
 
   if (spec$method == "rd") {
-    figs[["Figure 1. Mandatory running-variable inspection"]] <-
-      ggplot2::ggplot(d, ggplot2::aes(x = running)) + ggplot2::geom_histogram(bins = 40) +
-      ggplot2::geom_vline(xintercept = spec$cutoff, linetype = 2) + ggplot2::labs(x = "Running variable", y = "Count") + ggplot2::theme_minimal(base_size = 12)
-    figs[["Figure 2. Outcome around the cutoff"]] <-
-      ggplot2::ggplot(d, ggplot2::aes(x = running, y = y)) + ggplot2::geom_point(alpha = .18) +
-      ggplot2::geom_smooth(data = d[d$running < spec$cutoff,], method = "lm", formula = y ~ poly(x, 2), se = FALSE) +
-      ggplot2::geom_smooth(data = d[d$running >= spec$cutoff,], method = "lm", formula = y ~ poly(x, 2), se = FALSE) +
-      ggplot2::geom_vline(xintercept = spec$cutoff, linetype = 2) + ggplot2::theme_minimal(base_size = 12)
-    figs[["Figure 3. Bandwidth sensitivity"]] <-
-      ggplot2::ggplot(r$sensitivity, ggplot2::aes(x = bandwidth, y = estimate)) +
-      ggplot2::geom_errorbar(ggplot2::aes(ymin = conf.low, ymax = conf.high), width = .025) + ggplot2::geom_point(size = 2.5) +
-      ggplot2::labs(x = "Bandwidth", y = "RD estimate") + ggplot2::theme_minimal(base_size = 12)
-    figs[["Figure 4. Main RD estimate"]] <- coef_plot(r$coef)
+    figs[["그림 1. 할당변수 분포와 기준점"]] <-
+      ggplot2::ggplot(d, ggplot2::aes(x=running)) +
+      ggplot2::geom_histogram(bins=40, fill=pal[["blue"]], alpha=.78) +
+      ggplot2::geom_vline(xintercept=spec$cutoff, linetype=2, colour=pal[["red"]], linewidth=.9) +
+      ggplot2::labs(x=spec$running_label %||% "할당변수", y="관측치 수") + kapae_theme(12)
+    figs[["그림 2. 기준점 주변의 결과변수"]] <-
+      ggplot2::ggplot(d, ggplot2::aes(x=running, y=y)) +
+      ggplot2::geom_point(alpha=.16, colour=pal[["grey"]]) +
+      ggplot2::geom_smooth(data=d[d$running < spec$cutoff,], method="lm", formula=y~poly(x,2), se=FALSE, colour=pal[["blue"]], linewidth=1.1) +
+      ggplot2::geom_smooth(data=d[d$running >= spec$cutoff,], method="lm", formula=y~poly(x,2), se=FALSE, colour=pal[["orange"]], linewidth=1.1) +
+      ggplot2::geom_vline(xintercept=spec$cutoff, linetype=2, colour=pal[["red"]]) +
+      ggplot2::labs(x=spec$running_label %||% "할당변수", y=spec$outcome_label %||% "결과변수") + kapae_theme(12)
+    figs[["그림 3. Bandwidth별 효과 추정치"]] <-
+      ggplot2::ggplot(r$sensitivity, ggplot2::aes(x=bandwidth, y=estimate)) +
+      ggplot2::geom_errorbar(ggplot2::aes(ymin=conf.low, ymax=conf.high), width=0, colour=pal[["sky"]], linewidth=1) +
+      ggplot2::geom_point(position=ggplot2::position_nudge(x=.015), size=3.2, shape=21, fill=pal[["orange"]], colour="white", stroke=1) +
+      ggplot2::labs(x="Bandwidth", y=ifelse(identical(spec$rd_design,"kink"), "RKD 추정치", "RD 추정치")) + kapae_theme(12)
+    figs[[ifelse(identical(spec$rd_design,"kink"), "그림 4. 주 RKD 추정치", "그림 4. 주 RD 추정치")]] <- coef_plot(r$coef)
   }
 
   figs[seq_len(min(4, length(figs)))]
 }
 
+
 make_supplement_figures <- function(analysis, spec) {
   r <- analysis$results
+  d <- analysis$data
+  pal <- kapae_palette()
   figs <- list()
 
-  figs[["Figure S1. Missingness profile"]] <-
-    ggplot2::ggplot(analysis$missingness, ggplot2::aes(x = missing_pct, y = reorder(variable, missing_pct))) +
-    ggplot2::geom_col() + ggplot2::labs(x = "Missing (%)", y = NULL) + ggplot2::theme_minimal(base_size = 10)
+  if (spec$method == "dml" && all(c("true_ps","treatment") %in% names(d))) {
+    tmp <- d[complete.cases(d[, c("true_ps","treatment")]), ]
+    tmp$group <- ifelse(tmp$treatment == 1, "처치집단", "비교집단")
+    figs[["그림 S1. 처치집단과 비교집단의 성향점수 중첩"]] <-
+      ggplot2::ggplot(tmp, ggplot2::aes(x=true_ps, colour=group, fill=group)) +
+      ggplot2::geom_density(alpha=.16, linewidth=1.05) +
+      ggplot2::scale_colour_manual(values=c("처치집단"=pal[["orange"]], "비교집단"=pal[["blue"]])) +
+      ggplot2::scale_fill_manual(values=c("처치집단"=pal[["orange"]], "비교집단"=pal[["blue"]])) +
+      ggplot2::labs(x="성향점수", y="밀도") + kapae_theme(11)
+  }
 
-  if (spec$method == "prediction") {
-    figs[["Figure S2. Complete tuning-result distribution"]] <-
-      ggplot2::ggplot(r$cv, ggplot2::aes(x = score, y = algorithm)) + ggplot2::geom_boxplot() + ggplot2::geom_jitter(height = .12, alpha = .15) + ggplot2::theme_minimal(base_size = 11)
-  }
-  if (spec$method == "matching") {
-    bal_long <- tidyr::pivot_longer(r$balance, c(before, after), names_to = "stage", values_to = "smd")
-    figs[["Figure S2. Covariate balance (Love plot)"]] <-
-      ggplot2::ggplot(bal_long, ggplot2::aes(x = abs(smd), y = reorder(variable, abs(smd)), shape = stage)) +
-      ggplot2::geom_vline(xintercept = .10, linetype = 2) + ggplot2::geom_point(size = 2.5) +
-      ggplot2::labs(x = "Absolute standardized mean difference", y = NULL, shape = NULL) + ggplot2::theme_minimal(base_size = 11)
-  }
-  if (spec$method == "iv") {
-    figs[[sprintf("Figure S2. First-stage strength (illustrative F = %.1f)", r$first_stage_f)]] <-
-      ggplot2::ggplot(r$first, ggplot2::aes(x = factor(instrument), y = treatment)) + ggplot2::geom_point(size = 4) + ggplot2::theme_minimal(base_size = 11)
-  }
   if (spec$method == "did") {
     pre <- r$event[r$event$event_time < 0,]
-    figs[["Figure S2. Pre-treatment event-study coefficients only"]] <-
-      ggplot2::ggplot(pre, ggplot2::aes(x = event_time, y = estimate)) + ggplot2::geom_hline(yintercept = 0, linetype = 2) +
-      ggplot2::geom_errorbar(ggplot2::aes(ymin = conf.low, ymax = conf.high), width = .1) + ggplot2::geom_point() + ggplot2::theme_minimal(base_size = 11)
+    figs[["그림 S1. 처치 이전 event-study 계수"]] <-
+      ggplot2::ggplot(pre, ggplot2::aes(x=event_time, y=estimate)) +
+      ggplot2::geom_hline(yintercept=0, linetype=2, colour=pal[["grey"]]) +
+      ggplot2::geom_errorbar(ggplot2::aes(ymin=conf.low, ymax=conf.high), width=0, colour=pal[["sky"]], linewidth=1) +
+      ggplot2::geom_point(position=ggplot2::position_nudge(x=.10), size=3.1, shape=21, fill=pal[["orange"]], colour="white", stroke=1) +
+      ggplot2::labs(x="처치 이전 상대 시점", y="추정치") + kapae_theme(11)
   }
-  if (spec$method == "rd") {
-    local <- analysis$data[abs(analysis$data$running - spec$cutoff) <= spec$bandwidth, ]
-    figs[["Figure S2. Local bandwidth sample"]] <-
-      ggplot2::ggplot(local, ggplot2::aes(x = running, y = y)) + ggplot2::geom_point(alpha = .25) +
-      ggplot2::geom_vline(xintercept = spec$cutoff, linetype = 2) + ggplot2::theme_minimal(base_size = 11)
+
+  if (spec$method == "matching") {
+    bal_long <- tidyr::pivot_longer(r$balance, c(before, after), names_to="stage", values_to="smd")
+    bal_long$stage <- factor(bal_long$stage, levels=c("before","after"), labels=c("조정 전","조정 후"))
+    figs[["그림 S1. 공변량 균형 Love plot"]] <-
+      ggplot2::ggplot(bal_long, ggplot2::aes(x=abs(smd), y=reorder(variable, abs(smd)), colour=stage)) +
+      ggplot2::geom_vline(xintercept=.10, linetype=2, colour=pal[["red"]]) +
+      ggplot2::geom_point(size=2.8) +
+      ggplot2::scale_colour_manual(values=c("조정 전"=pal[["orange"]], "조정 후"=pal[["blue"]])) +
+      ggplot2::labs(x="절대 표준화 평균차이", y=NULL) + kapae_theme(11)
   }
-  if (spec$method == "causal_forest") {
-    figs[["Figure S2. Predicted versus true CATE in simulation"]] <-
-      ggplot2::ggplot(r$cate, ggplot2::aes(x = true_tau, y = cate_hat)) + ggplot2::geom_point(alpha = .18) +
-      ggplot2::geom_smooth(method = "lm", se = FALSE) + ggplot2::labs(x = "True simulated CATE", y = "Estimated CATE") + ggplot2::theme_minimal(base_size = 11)
-  }
-  if (spec$method == "dml") {
-    figs[["Figure S2. Orthogonal-learning diagnostic placeholder"]] <-
-      ggplot2::ggplot(r$nuisance, ggplot2::aes(x = score, y = model)) + ggplot2::geom_point(size = 3) + ggplot2::coord_cartesian(xlim = c(0,1)) + ggplot2::theme_minimal(base_size = 11)
-  }
+
   figs
+}
+
+
+figure_note <- function(caption) {
+  if (grepl("추정치|효과|event-study|Bandwidth|DML|OLS|IV|DID|RD|RKD", caption, ignore.case=TRUE)) {
+    return("**Note.** 원형 마커는 점추정치, spike는 95% 신뢰구간을 의미합니다. * p < 0.05. 마커와 수치 레이블은 신뢰구간과 겹치지 않도록 약간 위·오른쪽에 배치했습니다.")
+  }
+  if (grepl("Love plot", caption, ignore.case=TRUE)) {
+    return("**Note.** 점은 각 공변량의 절대 표준화 평균차이를 의미합니다. 세로 점선 0.10은 흔히 사용하는 균형 진단 기준입니다.")
+  }
+  if (grepl("성향점수|중첩|공통지지", caption, ignore.case=TRUE)) {
+    return("**Note.** 두 분포가 겹치는 영역은 처치집단과 비교집단이 관측 공변량에 근거해 비교 가능한 common support를 시각적으로 보여줍니다.")
+  }
+  if (grepl("기준점|할당변수", caption, ignore.case=TRUE)) {
+    return("**Note.** 점선은 연구설계에서 정의한 기준점(cutoff)을 의미합니다.")
+  }
+  "**Note.** 입력한 연구설계를 바탕으로 생성한 교육용 가상 결과입니다."
 }
 
 render_figure_list <- function(figs) {
   ensure_packages()
+  if (!length(figs)) return(invisible(NULL))
 
-  if (!length(figs)) {
-    return(invisible(NULL))
-  }
-
-  # HTML / RevealJS: return the widgets as one HTML object.
-  # Returning (rather than print() inside a loop) lets knitr register
-  # the htmlwidget dependencies and embed the Plotly figures correctly.
   if (knitr::is_html_output()) {
     blocks <- lapply(names(figs), function(nm) {
       widget <- plotly::ggplotly(figs[[nm]])
-      widget <- plotly::config(widget, displaylogo = FALSE, responsive = TRUE)
-
+      widget <- plotly::config(widget, displaylogo=FALSE, responsive=TRUE)
       htmltools::tagList(
-        htmltools::tags$h3(nm),
-        widget
+        widget,
+        htmltools::tags$p(htmltools::tags$strong(nm)),
+        htmltools::tags$p(htmltools::HTML(figure_note(nm)))
       )
     })
-
     return(htmltools::tagList(blocks))
   }
 
-  # Word / PDF: use the original static ggplot objects.
   for (nm in names(figs)) {
-    cat("\n\n### ", nm, "\n\n", sep = "")
     print(figs[[nm]])
-    cat("\n\n")
+    cat("\\n\\n**", nm, "**\\n\\n", sep="")
+    cat(figure_note(nm), "\\n\\n")
   }
-
   invisible(NULL)
 }
 
-interpretation_text <- function(analysis, spec) {
+
+main_results_text <- function(analysis, spec) {
+  r <- analysis$results
+  f <- function(x) sprintf("%.2f", x)
+  sig_txt <- function(lo, hi) if (lo > 0 || hi < 0) "통계적으로 유의했습니다(p < 0.05)" else "95% 신뢰구간에 0이 포함되었습니다"
+
   switch(
     spec$method,
-    prediction = "예측 연구에서는 단일 최고 점수만 보고하지 말고 resampling 분포를 함께 해석합니다. 알고리즘 간 차이가 fold-to-fold 변동보다 작은지, tuning이 실제로 의미 있는 개선을 주는지, 최종 모델 평가가 tuning 자료와 분리되어 있는지를 서술합니다.\n\n",
-    dml = "이 교육용 예시에서는 OLS가 비선형 교란구조를 충분히 포착하지 못해 DML과 차이가 나도록 구성했습니다. 실제 논문에서는 이 차이를 자동으로 DML의 우월성으로 해석하지 말고 nuisance-model specification, overlap, sample size, cross-fitting stability와 함께 검토합니다.\n\n",
-    did = "DID에서는 처치 이후 계수보다 처치 이전 계수가 0 부근에서 안정적인지가 먼저 중요합니다. pre-trend가 뚜렷하면 단순 DID 결과의 인과적 해석을 약화시키고 다른 비교집단, trend specification 또는 연구설계 자체를 재검토합니다.\n\n",
-    iv = "IV에서는 2SLS 계수가 OLS와 다르다는 사실만으로 IV가 옳다고 결론내리지 않습니다. 도구변수의 relevance와 배제제약의 실질적 타당성, 그리고 LATE의 대상 집단을 함께 논의합니다.\n\n",
-    matching = "성향점수 방법의 핵심 결과는 처치효과 하나가 아니라 adjustment 이후 실제로 balance와 overlap이 개선되었는지입니다. balance가 남아 있으면 outcome estimate를 해석하기 전에 propensity model을 재검토합니다.\n\n",
-    causal_forest = "CATE의 넓은 분포는 곧바로 실질적 이질성을 의미하지 않습니다. calibration, uncertainty, subgroup stability를 확인하고 사전에 의미 있는 effect modifier를 중심으로 해석합니다.\n\n",
-    rd = "RD 효과는 cutoff 주변의 local effect입니다. running variable 조작 가능성, cutoff 주변 표본수, bandwidth와 polynomial order에 대한 민감도를 먼저 확인한 뒤 외적 타당성을 제한적으로 해석합니다.\n\n"
+    prediction = {
+      m <- aggregate(score ~ algorithm, r$cv, mean)
+      best <- m[which.max(m$score), ]
+      sprintf("교육용 가상 분석에서 평균 교차검증 성능이 가장 높았던 알고리즘은 **%s**였고 평균 %s는 **%s**였습니다. 알고리즘 간 평균 성능뿐 아니라 fold와 hyperparameter에 따른 변동도 함께 확인해야 하며, 실제 연구에서는 tuning에 사용하지 않은 test/hold-out 자료의 최종 성능을 우선 보고합니다.\\n\\n",
+              best$algorithm, unique(r$cv$metric)[1], f(best$score))
+    },
+    dml = {
+      ols <- r$coef[r$coef$model=="OLS",][1,]; dm <- r$coef[r$coef$model=="DML",][1,]
+      sprintf("교육용 가상 분석에서 OLS 추정치는 **%s (95%% CI %s, %s)**, DML 추정치는 **%s (95%% CI %s, %s)**였습니다. DML 추정치는 %s. 이 시뮬레이션의 true effect는 %.2f이므로 DML이 OLS보다 true effect에 더 가까웠지만, 실제 연구에서는 nuisance model의 성능과 overlap을 함께 확인해야 합니다.\\n\\n",
+              f(ols$estimate), f(ols$conf.low), f(ols$conf.high), f(dm$estimate), f(dm$conf.low), f(dm$conf.high),
+              sig_txt(dm$conf.low, dm$conf.high), dm$truth)
+    },
+    did = {
+      z <- r$coef[1,]
+      sprintf("평균 DID 처치효과는 **%s (95%% CI %s, %s)**로 추정되었고 %s. 인과적 해석에 앞서 처치집단과 비교집단의 처치 이전 추세와 event-study의 pre-treatment 계수들이 0 부근에서 안정적인지 확인해야 합니다.\\n\\n",
+              f(z$estimate), f(z$conf.low), f(z$conf.high), sig_txt(z$conf.low,z$conf.high))
+    },
+    iv = {
+      ols <- r$coef[1,]; iv <- r$coef[2,]
+      sprintf("OLS 추정치는 **%s (95%% CI %s, %s)**, IV/2SLS 추정치는 **%s (95%% CI %s, %s)**였습니다. First-stage F 통계량은 **%.1f**였습니다. IV 추정치는 %s. 실제 인과해석에는 first-stage relevance뿐 아니라 exclusion restriction과 independence 가정에 대한 근거가 필요합니다.\\n\\n",
+              f(ols$estimate), f(ols$conf.low), f(ols$conf.high), f(iv$estimate), f(iv$conf.low), f(iv$conf.high),
+              r$first_stage_f, sig_txt(iv$conf.low,iv$conf.high))
+    },
+    matching = {
+      raw <- r$coef[1,]; adj <- r$coef[2,]
+      sprintf("조정 전 효과 추정치는 **%s (95%% CI %s, %s)**였고 성향점수 조정 후 추정치는 **%s (95%% CI %s, %s)**였습니다. 조정 후 효과는 %s. 결과 해석 전에 common support와 Love plot에서 공변량 균형이 충분히 개선되었는지 확인해야 합니다.\\n\\n",
+              f(raw$estimate), f(raw$conf.low), f(raw$conf.high), f(adj$estimate), f(adj$conf.low), f(adj$conf.high),
+              sig_txt(adj$conf.low,adj$conf.high))
+    },
+    causal_forest = {
+      z <- r$coef[1,]
+      q1 <- r$groups$cate_hat[r$groups$group=="Q1"][1]
+      q4 <- r$groups$cate_hat[r$groups$group=="Q4"][1]
+      sprintf("전체 평균 처치효과는 **%s (95%% CI %s, %s)**였고 %s. 추정 CATE의 하위 사분위집단 평균은 **%s**, 상위 사분위집단 평균은 **%s**로 나타났습니다. CATE 분포 자체만으로 확정적인 subgroup 효과를 주장하지 않고 사전 지정한 효과수정변수와 안정성을 함께 검토해야 합니다.\\n\\n",
+              f(z$estimate), f(z$conf.low), f(z$conf.high), sig_txt(z$conf.low,z$conf.high), f(q1), f(q4))
+    },
+    rd = {
+      z <- r$coef[1,]
+      design <- ifelse(identical(spec$rd_design,"kink"), "RKD", "RD")
+      sprintf("주 %s 추정치는 **%s (95%% CI %s, %s)**였고 %s. 이 효과는 기준점 주변의 국소적 효과이며, 할당변수 조작 가능성과 bandwidth 변화에 대한 민감도를 함께 확인해야 합니다.\\n\\n",
+              design, f(z$estimate), f(z$conf.low), f(z$conf.high), sig_txt(z$conf.low,z$conf.high))
+    }
   )
 }
 
-supplement_checklist_text <- function(spec) {
-  common <- c(
-    "변수별 missing n/%와 missing-data 처리 규칙",
-    "데이터 cleaning 및 제외 단계별 표본수",
-    "모든 주요 변수 coding과 분석 표본 정의",
-    "software/package version, seed, session information"
-  )
-  extra <- switch(
+interpretation_text <- main_results_text
+
+
+supplement_intro_text <- function(spec) {
+  txt <- switch(
     spec$method,
-    prediction = c("전체 tuning grid와 resampling scheme", "test/nested-CV 성능", "binary outcome이면 calibration/threshold/PR AUC"),
-    dml = c("nuisance-model specification과 성능", "cross-fitting fold sensitivity", "overlap/propensity distribution", "OLS 등 conventional model robustness comparison"),
-    did = c("처치 이전 group trends", "event-study pre-period coefficients", "placebo timing/outcome", "alternative control groups 또는 staggered-adoption estimator"),
-    iv = c("first-stage coefficient와 F statistic", "reduced form", "instrument balance/exogeneity evidence", "weak-IV robust inference"),
-    matching = c("propensity-score overlap", "Love plot/SMD before-after", "weight distribution/effective sample size", "caliper/matching-ratio/estimand sensitivity"),
-    causal_forest = c("honesty/sample-splitting specification", "CATE calibration", "heterogeneity tests", "subgroup stability and sensitivity"),
-    rd = c("running-variable density/manipulation check", "bandwidth sensitivity", "polynomial-order sensitivity", "donut RD/placebo cutoffs")
+    prediction = "예측모형의 핵심 성능 비교는 주요 결과에 제시했습니다. 추가 진단은 실제 연구에서 독립 test set 또는 calibration 자료가 있을 때만 보고하는 것이 적절하므로, 이 교육용 가상자료에서는 불필요한 보조 그림을 추가하지 않았습니다.",
+    dml = "아래 성향점수 중첩 그림은 처치집단과 비교집단이 관측 공변량 공간에서 충분히 비교 가능한지를 확인합니다. 분포의 중첩이 매우 적으면 DML 추정치가 제한된 overlap에 민감할 수 있습니다.",
+    did = "아래 그림은 처치 이전 event-study 계수만 분리해 보여줍니다. 이 계수들이 0에서 체계적으로 벗어나면 parallel trends 가정의 개연성이 약해질 수 있습니다.",
+    iv = "도구변수의 핵심 first-stage 정보와 효과 추정치는 주요 결과에 이미 포함되어 있습니다. exclusion restriction처럼 그림만으로 검증할 수 없는 가정은 추가 가상 결과를 만들지 않고 연구설계 논리로 평가합니다.",
+    matching = "아래 Love plot은 성향점수 조정 전후의 공변량 균형을 비교합니다. 조정 후 절대 표준화 평균차이가 충분히 줄지 않으면 outcome 효과를 해석하기 전에 propensity model을 다시 검토해야 합니다.",
+    causal_forest = "CATE 분포와 사분위집단별 효과는 주요 결과에 포함되어 있습니다. 실제 자료에서는 true CATE를 관찰할 수 없으므로 시뮬레이션에서만 가능한 비교 그림은 부록에 추가하지 않았습니다.",
+    rd = "할당변수 분포, 기준점 주변 결과, bandwidth 민감도가 주요 결과에 모두 포함되어 있습니다. 추가 placebo나 donut 분석은 실제 제도적 맥락과 자료 구조가 정해진 뒤 설계하는 것이 적절하므로 임의의 가상 결과를 추가하지 않았습니다."
   )
-  items <- c(common, extra)
-  paste0("- ", items, collapse = "\n") |> paste0("\n\n")
+  paste0("### 부록 분석 안내\\n\\n", txt, "\\n\\n")
 }
+
+supplement_checklist_text <- supplement_intro_text
 
 read_remote_submission_config <- function() {
   url <- kapae_repo_raw("projects/design_lab/config.json")
