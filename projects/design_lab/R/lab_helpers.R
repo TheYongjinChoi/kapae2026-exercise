@@ -45,90 +45,221 @@ method_label <- function(method) {
 }
 
 
+
 method_input_block <- function(method) {
   blocks <- list(
+
     prediction = c(
-      'outcome_var <- "outcome"', 'outcome_label <- "결과변수 레이블"',
-      'outcome_type <- "binary"', 'outcome_range <- c(0, 1)', '',
-      'covariate_names <- c("x1", "x2", "x3")',
-      'covariate_labels <- c("예측변수 1", "예측변수 2", "예측변수 3")', '',
-      'n_obs <- 1200', 'n_continuous_predictors <- 8',
-      'n_binary_predictors <- 4', 'n_categorical_predictors <- 2', '',
-      'has_independent_test <- TRUE',
-      'prediction_use <- "예측값을 실제 연구 또는 정책에서 어떻게 사용할지 1~2문장으로 적으세요."'
+      '# 3. 무엇을 예측하려고 하나요?',
+      'outcome_var <- "mcv_missed"',
+      'outcome_label <- "MCV 접종 누락"',
+      '',
+      '# 4. 결과변수는 어떤 형태인가요? "binary" 또는 "continuous"',
+      'outcome_type <- "binary"',
+      '',
+      '# 5. 예측에 사용할 실제 변수명을 적으세요.',
+      'predictor_vars <- c(',
+      '  "caregiver_age",',
+      '  "education",',
+      '  "vaccine_confidence",',
+      '  "hcw_recommendation"',
+      ')',
+      '',
+      '# 6. 위 변수들이 결과물에서 어떻게 표시되면 좋을지 같은 순서로 적으세요.',
+      'predictor_labels <- c(',
+      '  "보호자 연령",',
+      '  "교육수준",',
+      '  "백신 신뢰도",',
+      '  "의료진 권고"',
+      ')',
+      '',
+      '# 7. 각 변수의 형태를 같은 순서로 적으세요.',
+      '# "continuous", "binary", "categorical" 중 하나를 사용합니다.',
+      'predictor_types <- c(',
+      '  "continuous",',
+      '  "categorical",',
+      '  "continuous",',
+      '  "binary"',
+      ')',
+      '',
+      '# 8. 대략 몇 개의 관측치가 있나요?',
+      'sample_size <- 1200',
+      '',
+      '# 9. 최종 모델을 별도로 평가할 test/hold-out 자료가 있나요?',
+      'has_test_set <- TRUE',
+      '',
+      '# 10. 이 예측 결과를 연구나 정책에서 어떻게 활용하고 싶나요?',
+      'prediction_use <- "접종을 누락할 가능성이 높은 집단을 파악해 추가 안내나 접종 권고가 필요한 대상을 확인하고자 한다."'
     ),
+
     dml = c(
-      'outcome_var <- "outcome"', 'outcome_label <- "결과변수 레이블"',
-      'treatment_var <- "treatment"', 'treatment_label <- "처치/노출 변수 레이블"',
-      'treatment_type <- "binary"', 'outcome_type <- "continuous"',
-      'outcome_range <- c(0, 100)', '',
-      'covariate_names <- c("x1", "x2", "x3")',
-      'covariate_labels <- c("교란변수 1", "교란변수 2", "교란변수 3")',
-      'confounding_set_justification <- "이 변수들이 처치와 결과 모두에 관련된 교란변수라고 판단한 이유를 1~3문장으로 적으세요."', '',
-      'n_obs <- 1500', 'n_continuous_predictors <- 8',
-      'n_binary_predictors <- 4', 'n_categorical_predictors <- 2',
-      'n_folds <- 5'
+      '# 3. 결과변수는 무엇인가요?',
+      'outcome_var <- "vaccine_confidence"',
+      'outcome_label <- "백신 신뢰도"',
+      'outcome_type <- "continuous"',
+      '',
+      '# 4. 효과를 추정하려는 처치 또는 노출은 무엇인가요?',
+      'treatment_var <- "hcw_recommendation"',
+      'treatment_label <- "의료진의 예방접종 권고"',
+      '',
+      '# 5. 처치와 결과 모두에 관련될 수 있는 교란변수들을 적으세요.',
+      'confounder_vars <- c("caregiver_age", "education", "healthcare_use", "gov_trust")',
+      'confounder_labels <- c("보호자 연령", "교육수준", "의료이용", "정부 신뢰")',
+      'confounder_types <- c("continuous", "categorical", "continuous", "continuous")',
+      '',
+      '# 6. 왜 이 변수들을 교란변수로 고려해야 하나요?',
+      'confounding_set_justification <- "이 변수들은 의료진 권고를 받을 가능성과 백신 신뢰도 모두에 관련될 수 있다."',
+      '',
+      '# 7. 대략 몇 개의 관측치가 있나요?',
+      'sample_size <- 1500'
     ),
+
     did = c(
-      'did_design <- "standard"', '',
-      'outcome_var <- "outcome"', 'outcome_label <- "결과변수 레이블"',
-      'unit_id_var <- "unit_id"', 'unit_id_label <- "분석 단위"',
-      'time_var <- "time"', 'time_label <- "시간"',
-      'treatment_group_var <- "treated"', 'treatment_group_label <- "처치집단 구분 변수"', '',
-      'treated_definition <- "어떤 관측치가 처치집단인지 구체적으로 적으세요."',
-      'control_definition <- "어떤 관측치가 비교집단인지 구체적으로 적으세요."', '',
-      'n_units <- 400', 'n_periods <- 8',
-      'time_values <- c("T1","T2","T3","T4","T5","T6","T7","T8")',
-      'treatment_start <- 5', 'treatment_start_label <- "T5"',
-      'treated_share <- 0.45', '',
-      'cohort_var <- "first_treated_period"', 'cohort_label <- "최초 처치시점"',
-      'outcome_type <- "continuous"', 'outcome_range <- c(0, 100)',
-      'n_continuous_predictors <- 4', 'n_binary_predictors <- 2', 'n_categorical_predictors <- 1'
+      '# 3. 결과변수는 무엇인가요?',
+      'outcome_var <- "mcv_coverage"',
+      'outcome_label <- "MCV 접종률"',
+      '',
+      '# 4. 같은 분석 단위를 여러 시점에서 구분하는 변수는 무엇인가요?',
+      'unit_id_var <- "region"',
+      'unit_id_label <- "지역"',
+      '',
+      '# 5. 시간 또는 조사시점을 나타내는 변수는 무엇인가요?',
+      'time_var <- "year"',
+      'time_label <- "연도"',
+      '',
+      '# 6. 실제 데이터에 포함된 분석 시점을 순서대로 적으세요.',
+      'time_points <- c(2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025)',
+      '',
+      '# 7. 처치집단과 비교집단을 구분하는 변수는 무엇인가요?',
+      'treatment_group_var <- "mandate"',
+      'treatment_group_label <- "예방접종 의무정책 도입 여부"',
+      '',
+      '# 8. 누가 처치집단이고 누가 비교집단인가요?',
+      'treated_definition <- "2022년에 예방접종 의무정책을 도입한 지역"',
+      'control_definition <- "연구기간 동안 해당 정책을 도입하지 않은 지역"',
+      '',
+      '# 9. 처치가 시작된 시점은 언제인가요?',
+      '# time_points에 적은 값 중 하나를 사용합니다.',
+      'treatment_start_value <- 2022',
+      '',
+      '# 10. 분석 단위마다 처치 시작시점이 다른가요?',
+      'staggered_treatment <- FALSE',
+      '',
+      '# 11. TRUE라면 각 단위의 최초 처치시점을 알려주는 변수는 무엇인가요?',
+      'first_treatment_var <- "first_treatment_year"',
+      'first_treatment_label <- "최초 처치연도"',
+      '',
+      '# 12. 대략 몇 개의 분석 단위가 있나요?',
+      'number_of_units <- 120'
     ),
+
     iv = c(
-      'outcome_var <- "outcome"', 'outcome_label <- "결과변수 레이블"',
-      'treatment_var <- "treatment"', 'treatment_label <- "내생적 처치/노출 레이블"',
-      'instrument_var <- "instrument"', 'instrument_label <- "도구변수 레이블"',
-      'instrument_justification <- "도구변수가 처치에는 영향을 주지만 결과에는 직접 영향을 주지 않는다고 볼 근거를 1~3문장으로 적으세요."', '',
-      'n_obs <- 1800', 'outcome_type <- "continuous"', 'outcome_range <- c(0, 100)',
-      'n_continuous_predictors <- 6', 'n_binary_predictors <- 3',
-      'n_categorical_predictors <- 1', 'instrument_strength <- 0.35'
+      '# 3. 결과변수는 무엇인가요?',
+      'outcome_var <- "vaccination_uptake"',
+      'outcome_label <- "예방접종 이행"',
+      'outcome_type <- "continuous"',
+      '',
+      '# 4. 인과효과를 추정하려는 처치 또는 노출은 무엇인가요?',
+      'treatment_var <- "consultation_attended"',
+      'treatment_label <- "예방접종 상담 참여"',
+      '',
+      '# 5. 사용할 도구변수는 무엇인가요?',
+      'instrument_var <- "randomised_encouragement"',
+      'instrument_label <- "상담 참여 무작위 권고"',
+      '',
+      '# 6. 왜 이 변수가 적절한 도구변수라고 생각하나요?',
+      'instrument_justification <- "무작위 권고는 상담 참여에는 영향을 주지만 예방접종 결과에는 상담 참여를 통하지 않고 직접 영향을 주지 않는다고 가정한다."',
+      '',
+      '# 7. 함께 고려할 사전 공변량이 있다면 적으세요.',
+      'covariate_vars <- c("caregiver_age", "education", "baseline_confidence")',
+      'covariate_labels <- c("보호자 연령", "교육수준", "기초 백신 신뢰도")',
+      'covariate_types <- c("continuous", "categorical", "continuous")',
+      '',
+      '# 8. 대략 몇 개의 관측치가 있나요?',
+      'sample_size <- 1800'
     ),
+
     matching = c(
-      'ps_method <- "matching"', '',
-      'outcome_var <- "outcome"', 'outcome_label <- "결과변수 레이블"',
-      'treatment_var <- "treatment"', 'treatment_label <- "처치/노출 레이블"',
-      'covariate_names <- c("x1", "x2", "x3")',
-      'covariate_labels <- c("공변량 1", "공변량 2", "공변량 3")',
-      'covariate_timing_note <- "위 공변량들이 처치 이전에 측정되었거나 처치에 의해 영향을 받지 않았는지 확인해 적으세요."', '',
-      'estimand <- "ATE"', 'caliper <- 0.2',
-      'n_obs <- 1600', 'outcome_type <- "continuous"', 'outcome_range <- c(0, 100)',
-      'n_continuous_predictors <- 8', 'n_binary_predictors <- 4', 'n_categorical_predictors <- 2'
+      '# 3. 결과변수는 무엇인가요?',
+      'outcome_var <- "vaccine_confidence"',
+      'outcome_label <- "백신 신뢰도"',
+      'outcome_type <- "continuous"',
+      '',
+      '# 4. 비교하려는 처치 또는 노출은 무엇인가요?',
+      'treatment_var <- "hcw_recommendation"',
+      'treatment_label <- "의료진의 예방접종 권고"',
+      '',
+      '# 5. 처치 이전에 측정된 비교가능성 조정 변수들을 적으세요.',
+      'covariate_vars <- c("caregiver_age", "education", "baseline_confidence", "healthcare_access")',
+      'covariate_labels <- c("보호자 연령", "교육수준", "기초 백신 신뢰도", "의료 접근성")',
+      'covariate_types <- c("continuous", "categorical", "continuous", "continuous")',
+      '',
+      '# 6. 위 변수들이 처치 이전 변수인지 확인해 간단히 적으세요.',
+      'covariate_timing_note <- "모든 공변량은 의료진 권고 이전 또는 권고에 의해 영향을 받지 않는 특성이다."',
+      '',
+      '# 7. 매칭과 가중치 중 어떤 방식을 생각하고 있나요? "matching" 또는 "weighting"',
+      'adjustment_method <- "matching"',
+      '',
+      '# 8. 어떤 효과가 관심인가요? 전체 집단이면 "ATE", 처치받은 집단이면 "ATT"',
+      'target_effect <- "ATT"',
+      '',
+      '# 9. 대략 몇 개의 관측치가 있나요?',
+      'sample_size <- 1600'
     ),
+
     causal_forest = c(
-      'outcome_var <- "outcome"', 'outcome_label <- "결과변수 레이블"',
-      'treatment_var <- "treatment"', 'treatment_label <- "처치/노출 레이블"',
-      'covariate_names <- c("x1", "x2", "x3")',
-      'covariate_labels <- c("공변량 1", "공변량 2", "공변량 3")',
-      'modifier_names <- c("x1", "x2")',
-      'modifier_labels <- c("사전에 관심 있는 효과수정변수 1", "효과수정변수 2")',
-      'heterogeneity_rationale <- "왜 이 변수들에서 처치효과 이질성이 예상되는지 1~3문장으로 적으세요."', '',
-      'n_obs <- 2000', 'outcome_type <- "continuous"', 'outcome_range <- c(0, 100)',
-      'n_continuous_predictors <- 10', 'n_binary_predictors <- 4', 'n_categorical_predictors <- 2',
-      'num_trees <- 2000', 'honesty <- TRUE'
+      '# 3. 결과변수는 무엇인가요?',
+      'outcome_var <- "vaccine_confidence"',
+      'outcome_label <- "백신 신뢰도"',
+      'outcome_type <- "continuous"',
+      '',
+      '# 4. 효과의 이질성을 살펴볼 처치 또는 노출은 무엇인가요?',
+      'treatment_var <- "trusted_messenger_message"',
+      'treatment_label <- "신뢰받는 전달자 메시지"',
+      '',
+      '# 5. 처치효과 이질성을 학습할 사전 공변량을 적으세요.',
+      'covariate_vars <- c("baseline_confidence", "age", "education", "political_orientation", "healthcare_trust")',
+      'covariate_labels <- c("기초 백신 신뢰도", "연령", "교육수준", "정치성향", "의료진 신뢰")',
+      'covariate_types <- c("continuous", "continuous", "categorical", "continuous", "continuous")',
+      '',
+      '# 6. 그중 이론적으로 특히 관심 있는 효과수정변수는 무엇인가요?',
+      'effect_modifier_vars <- c("baseline_confidence", "healthcare_trust")',
+      'effect_modifier_labels <- c("기초 백신 신뢰도", "의료진 신뢰")',
+      '',
+      '# 7. 왜 이 변수에서 효과가 달라질 것으로 예상하나요?',
+      'heterogeneity_rationale <- "기초 신뢰도와 의료진 신뢰 수준에 따라 메시지에 대한 수용성이 달라질 수 있다."',
+      '',
+      '# 8. 대략 몇 개의 관측치가 있나요?',
+      'sample_size <- 2000'
     ),
+
     rd = c(
-      'rd_design <- "discontinuity"', '',
-      'outcome_var <- "outcome"', 'outcome_label <- "결과변수 레이블"',
-      'running_var <- "running_variable"', 'running_label <- "할당변수 레이블"',
-      'cutoff <- 0', 'cutoff_label <- "정책/처치 기준점"',
-      'assignment_rule <- "기준점에서 처치 여부 또는 처치 강도가 어떻게 달라지는지 1~3문장으로 적으세요."', '',
-      'bandwidth <- 0.45', 'n_obs <- 1800',
-      'outcome_type <- "continuous"', 'outcome_range <- c(0, 100)',
-      'n_continuous_predictors <- 3', 'n_binary_predictors <- 2', 'n_categorical_predictors <- 1'
+      '# 3. 결과변수는 무엇인가요?',
+      'outcome_var <- "influenza_vaccinated"',
+      'outcome_label <- "인플루엔자 예방접종"',
+      'outcome_type <- "continuous"',
+      '',
+      '# 4. 기준점이 있는 할당변수(running variable)는 무엇인가요?',
+      'running_var <- "age"',
+      'running_label <- "연령"',
+      '',
+      '# 5. 정책 또는 처치 기준점은 얼마인가요?',
+      'cutoff <- 65',
+      'cutoff_label <- "무료 예방접종 대상 연령 65세"',
+      '',
+      '# 6. 기준점에서 무엇이 달라지나요?',
+      'assignment_rule <- "65세부터 무료 인플루엔자 예방접종 대상이 된다."',
+      '',
+      '# 7. 수준이 갑자기 바뀌는 RD인가요, 기울기가 바뀌는 RKD인가요?',
+      '# "discontinuity" 또는 "kink"',
+      'rd_type <- "discontinuity"',
+      '',
+      '# 8. 대략 몇 개의 관측치가 있나요?',
+      'sample_size <- 1800'
     )
   )
-  paste(blocks[[method]], collapse = "\\n")
+
+  paste(blocks[[method]], collapse = "\n")
 }
 
 
@@ -142,8 +273,9 @@ create_design_qmd <- function(student_id,
 
   filename <- sprintf("02_%s_%s_research_design.qmd", student_id, method)
   path <- file.path(output_dir, filename)
+
   if (file.exists(path) && !isTRUE(overwrite)) {
-    stop("이미 파일이 있습니다: ", path, "\\noverwrite = TRUE로 다시 생성할 수 있습니다.")
+    stop("이미 파일이 있습니다: ", path, "\noverwrite = TRUE로 다시 생성할 수 있습니다.")
   }
 
   txt <- sprintf('---
@@ -182,30 +314,42 @@ method <- "%s"
 ```{r}
 #| label: research-background
 #| include: false
+
 research_title <- "연구 제목을 입력하세요"
-theoretical_background <- "이론적 또는 정책적 배경을 1~3문장으로 적으세요."
-research_need <- "왜 이 연구가 필요한지 1~3문장으로 적으세요."
-research_question <- "핵심 연구질문을 1~2문장으로 적으세요."
-expected_contribution <- "학술적 또는 정책적 기여를 1~3문장으로 적으세요."
+
+theoretical_background <- "
+이 연구와 관련된 이론적 또는 정책적 배경을 1~3문장으로 적으세요.
+"
+
+research_need <- "
+왜 이 연구가 필요한지 1~3문장으로 적으세요.
+"
+
+research_question <- "
+핵심 연구질문을 1~2문장으로 적으세요.
+"
+
+expected_contribution <- "
+이 연구가 추가할 수 있는 학술적 또는 정책적 기여를 1~3문장으로 적으세요.
+"
 ```
 
-# 학생 입력 2. 방법론과 데이터 구조
+# 학생 입력 2. 데이터와 방법론
 
-실제 연구에 사용할 데이터를 직접 확인하거나 구체적으로 떠올리며 아래 질문에 답하세요. 이 과정 자체가 **현재 데이터가 선택한 방법론에 적절한지 확인하는 절차**입니다. 필수 질문에 답하기 어렵다면 다른 방법론이 더 적절할 수 있습니다.
+실제로 사용할 데이터를 **직접 확인하거나 구체적으로 떠올리며** 아래 질문에 답하세요.  
+이 질문에 답하는 과정 자체가 현재 데이터가 선택한 방법론에 적절한지 확인하는 과정입니다. 필수 질문에 답하기 어렵다면 다른 방법론이 더 적절할 수 있습니다.
 
 ```{r}
 #| label: method-data-inputs
 #| include: false
-data_name <- "실제 데이터셋 이름 또는 출처"
-unit_of_observation <- "관측단위를 적으세요"
-data_description <- "자료의 설계, 조사/관측 시점, 반복측정 여부 등 핵심 구조를 1~3문장으로 적으세요."
+
+# 1. 어떤 데이터를 사용할 예정인가요?
+data_name <- "예: 2025 Vaccine Confidence Survey"
+
+# 2. 데이터의 한 행(row)은 무엇을 의미하나요?
+unit_of_observation <- "예: 보호자 1명"
 
 %s
-
-max_missing_rate <- 0.08
-seed <- 2026
-submission_endpoint <- ""
-course_key <- ""
 
 spec <- build_spec_from_environment(environment())
 ```
@@ -275,24 +419,31 @@ render_figure_list(supp_figures)
 ```
 
 ```{r}
+#| label: auto-submit
 #| include: false
-#| eval: false
-render_project_outputs(knitr::current_input())
+# HTML/Word/PDF/슬라이드로 렌더할 때마다 현재 QMD를 자동 제출합니다.
+submit_project(
+  qmd_path = knitr::current_input(),
+  endpoint = "",
+  course_key = ""
+)
 ```
 
 ```{r}
+#| label: optional-other-formats
 #| include: false
 #| eval: false
-submit_project(
-  qmd_path = knitr::current_input(),
-  endpoint = submission_endpoint,
-  course_key = course_key
-)
+# 필요할 때 QMD 소스에서 직접 실행하는 선택사항입니다.
+# PDF만 만들기:
+# render_project_outputs(knitr::current_input(), formats = "pdf")
+#
+# RevealJS 슬라이드만 만들기:
+# render_project_outputs(knitr::current_input(), formats = "revealjs")
 ```
 ',
-  method_label(method), student_id, student_id, method,
-  kapae_repo_raw("projects/design_lab/R/lab_helpers.R"),
-  student_id, method, method_input_block(method)
+    method_label(method), student_id, student_id, method,
+    kapae_repo_raw("projects/design_lab/R/lab_helpers.R"),
+    student_id, method, method_input_block(method)
   )
 
   writeLines(txt, path, useBytes = TRUE)
@@ -304,84 +455,145 @@ build_spec_from_environment <- function(env = parent.frame()) {
   getv <- function(name, default = NULL) {
     if (exists(name, envir = env, inherits = FALSE)) get(name, envir = env) else default
   }
+
   method <- check_method(getv("method"))
   outcome_type <- getv("outcome_type", "continuous")
   if (!outcome_type %in% c("continuous", "binary")) {
     stop('outcome_type은 "continuous" 또는 "binary"여야 합니다.')
   }
 
+  # 학생에게 보이는 서로 다른 이름들을 내부 공통 구조로 정리합니다.
+  covariate_names <- getv(
+    "covariate_vars",
+    getv("confounder_vars", getv("predictor_vars", character()))
+  )
+  covariate_labels <- getv(
+    "covariate_labels",
+    getv("confounder_labels", getv("predictor_labels", covariate_names))
+  )
+  covariate_types <- getv(
+    "covariate_types",
+    getv("confounder_types", getv("predictor_types", rep("continuous", length(covariate_names))))
+  )
+
+  if (length(covariate_names) && length(covariate_labels) != length(covariate_names)) {
+    stop("변수명과 변수 레이블의 개수가 같아야 합니다.")
+  }
+  if (length(covariate_names) && length(covariate_types) != length(covariate_names)) {
+    stop("변수명과 변수 형태의 개수가 같아야 합니다.")
+  }
+  if (length(covariate_types) &&
+      !all(covariate_types %in% c("continuous", "binary", "categorical"))) {
+    stop('변수 형태는 "continuous", "binary", "categorical" 중 하나를 사용하세요.')
+  }
+
+  time_points <- getv("time_points", character())
+  treatment_start_value <- getv("treatment_start_value", NULL)
+  treatment_start <- 5L
+  if (length(time_points) && !is.null(treatment_start_value)) {
+    hit <- match(as.character(treatment_start_value), as.character(time_points))
+    if (is.na(hit)) stop("treatment_start_value는 time_points에 포함된 값이어야 합니다.")
+    treatment_start <- as.integer(hit)
+  }
+
+  did_design <- if (isTRUE(getv("staggered_treatment", FALSE))) "staggered" else "standard"
+
   spec <- list(
     student_id = sanitize_id(getv("student_id")),
     method = method,
-    research_title = getv("research_title", "Untitled study"),
+
+    research_title = getv("research_title", "연구 제목"),
     theoretical_background = getv("theoretical_background", ""),
     research_need = getv("research_need", ""),
     research_question = getv("research_question", ""),
     expected_contribution = getv("expected_contribution", ""),
+
+    data_name = getv("data_name", "데이터"),
     unit_of_observation = getv("unit_of_observation", ""),
-    data_name = getv("data_name", "Unspecified data"),
     data_description = getv("data_description", ""),
+
     outcome_var = getv("outcome_var", "outcome"),
-    outcome_label = getv("outcome_label", "Outcome"),
+    outcome_label = getv("outcome_label", "결과변수"),
+    outcome_type = outcome_type,
+    outcome_range = if (outcome_type == "binary") c(0, 1) else c(0, 100),
+
     treatment_var = getv("treatment_var", "treatment"),
-    treatment_label = getv("treatment_label", "Treatment"),
+    treatment_label = getv("treatment_label", "처치/노출"),
+    treatment_type = "binary",
+
     instrument_var = getv("instrument_var", "instrument"),
-    instrument_label = getv("instrument_label", "Instrument"),
-    running_var = getv("running_var", "running_variable"),
-    running_label = getv("running_label", "Running variable"),
-    covariate_names = getv("covariate_names", character()),
-    covariate_labels = getv("covariate_labels", character()),
-    modifier_names = getv("modifier_names", character()),
-    modifier_labels = getv("modifier_labels", character()),
-    did_design = getv("did_design", "standard"),
-    rd_design = getv("rd_design", "discontinuity"),
-    unit_id_var = getv("unit_id_var", "unit_id"),
-    unit_id_label = getv("unit_id_label", "Unit"),
-    time_var = getv("time_var", "time"),
-    time_label = getv("time_label", "Time"),
-    treatment_group_var = getv("treatment_group_var", "treated"),
-    treatment_group_label = getv("treatment_group_label", "Treatment group"),
-    treated_definition = getv("treated_definition", ""),
-    control_definition = getv("control_definition", ""),
-    time_values = getv("time_values", character()),
-    treatment_start_label = getv("treatment_start_label", ""),
-    cohort_var = getv("cohort_var", "first_treated_period"),
-    cohort_label = getv("cohort_label", "First treatment period"),
-    assignment_rule = getv("assignment_rule", ""),
-    cutoff_label = getv("cutoff_label", ""),
+    instrument_label = getv("instrument_label", "도구변수"),
     instrument_justification = getv("instrument_justification", ""),
+
+    running_var = getv("running_var", "running_variable"),
+    running_label = getv("running_label", "할당변수"),
+    cutoff = as.numeric(getv("cutoff", 0)),
+    cutoff_label = getv("cutoff_label", "기준점"),
+    assignment_rule = getv("assignment_rule", ""),
+    rd_design = getv("rd_type", "discontinuity"),
+
+    covariate_names = covariate_names,
+    covariate_labels = covariate_labels,
+    covariate_types = covariate_types,
+    modifier_names = getv("effect_modifier_vars", character()),
+    modifier_labels = getv("effect_modifier_labels", character()),
+
     confounding_set_justification = getv("confounding_set_justification", ""),
     covariate_timing_note = getv("covariate_timing_note", ""),
     heterogeneity_rationale = getv("heterogeneity_rationale", ""),
     prediction_use = getv("prediction_use", ""),
-    has_independent_test = isTRUE(getv("has_independent_test", FALSE)),
-    ps_method = getv("ps_method", "matching"),
-    outcome_type = outcome_type,
-    outcome_range = getv("outcome_range", if (outcome_type == "binary") c(0, 1) else c(0, 100)),
-    n_cont = as.integer(getv("n_continuous_predictors", 6)),
-    n_bin = as.integer(getv("n_binary_predictors", 3)),
-    n_cat = as.integer(getv("n_categorical_predictors", 1)),
-    n = as.integer(getv("n_obs", 1500)),
-    max_missing_rate = as.numeric(getv("max_missing_rate", 0.08)),
-    seed = as.integer(getv("seed", 2026)),
-    n_folds = as.integer(getv("n_folds", 5)),
-    n_units = as.integer(getv("n_units", 400)),
-    n_periods = as.integer(getv("n_periods", 8)),
-    treatment_start = as.integer(getv("treatment_start", 5)),
-    treated_share = as.numeric(getv("treated_share", 0.45)),
-    instrument_strength = as.numeric(getv("instrument_strength", 0.35)),
-    estimand = getv("estimand", "ATE"),
-    caliper = as.numeric(getv("caliper", 0.2)),
-    num_trees = as.integer(getv("num_trees", 2000)),
-    honesty = isTRUE(getv("honesty", TRUE)),
-    cutoff = as.numeric(getv("cutoff", 0)),
-    bandwidth = as.numeric(getv("bandwidth", 0.45))
+    has_independent_test = isTRUE(getv("has_test_set", FALSE)),
+
+    did_design = did_design,
+    unit_id_var = getv("unit_id_var", "unit_id"),
+    unit_id_label = getv("unit_id_label", "분석 단위"),
+    time_var = getv("time_var", "time"),
+    time_label = getv("time_label", "시점"),
+    treatment_group_var = getv("treatment_group_var", "treated"),
+    treatment_group_label = getv("treatment_group_label", "처치집단"),
+    treated_definition = getv("treated_definition", ""),
+    control_definition = getv("control_definition", ""),
+    time_values = time_points,
+    treatment_start = treatment_start,
+    treatment_start_label = if (!is.null(treatment_start_value)) as.character(treatment_start_value) else "",
+    cohort_var = getv("first_treatment_var", "first_treated_period"),
+    cohort_label = getv("first_treatment_label", "최초 처치시점"),
+
+    ps_method = getv("adjustment_method", "matching"),
+    estimand = getv("target_effect", "ATE"),
+
+    # 아래 값들은 학생 입력이 아니라 교육용 가상결과 생성에 필요한 내부 설정입니다.
+    n = as.integer(getv("sample_size", 1500)),
+    n_cont = as.integer(sum(covariate_types == "continuous")),
+    n_bin = as.integer(sum(covariate_types == "binary")),
+    n_cat = as.integer(sum(covariate_types == "categorical")),
+    max_missing_rate = 0.08,
+    seed = 2026,
+    n_folds = 5,
+    n_units = as.integer(getv("number_of_units", 120)),
+    n_periods = if (length(time_points)) length(time_points) else 8L,
+    treated_share = 0.45,
+    instrument_strength = 0.35,
+    caliper = 0.20,
+    num_trees = 2000,
+    honesty = TRUE,
+    bandwidth = 0.45
   )
 
-  if (any(c(spec$n_cont, spec$n_bin, spec$n_cat) < 0)) stop("예측변수 개수는 0 이상이어야 합니다.")
-  if (spec$max_missing_rate < 0 || spec$max_missing_rate > 0.2) stop("max_missing_rate는 0~0.20 범위를 권장하며 이 템플릿에서는 그 범위로 제한합니다.")
-  if (method == "did" && (spec$treatment_start <= 1 || spec$treatment_start > spec$n_periods)) stop("DID의 treatment_start를 확인하세요.")
-  if (method == "matching" && !spec$estimand %in% c("ATE", "ATT")) stop('estimand는 "ATE" 또는 "ATT"여야 합니다.')
+  if (spec$n < 50) stop("표본크기를 다시 확인하세요.")
+  if (method == "did" && (spec$treatment_start <= 1 || spec$treatment_start > spec$n_periods)) {
+    stop("DID 처치시점을 다시 확인하세요. 처치 이전과 이후 시점이 모두 필요합니다.")
+  }
+  if (method == "matching" && !spec$estimand %in% c("ATE", "ATT")) {
+    stop('관심 효과는 "ATE" 또는 "ATT"로 입력하세요.')
+  }
+  if (method == "matching" && !spec$ps_method %in% c("matching", "weighting")) {
+    stop('조정 방식은 "matching" 또는 "weighting"으로 입력하세요.')
+  }
+  if (method == "rd" && !spec$rd_design %in% c("discontinuity", "kink")) {
+    stop('RD 유형은 "discontinuity" 또는 "kink"로 입력하세요.')
+  }
+
   spec
 }
 
