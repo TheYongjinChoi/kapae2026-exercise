@@ -1,0 +1,64 @@
+---
+title: "KAPAE 2026 Student Research Design Gallery"
+format:
+  html:
+    toc: true
+    embed-resources: true
+execute:
+  warning: false
+  message: false
+---
+
+<style>
+.project-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:16px; margin-top:1rem; }
+.project-card { border:1px solid #d0d7de; border-radius:10px; padding:16px; }
+.project-card h3 { margin:.35rem 0 .5rem 0; font-size:1.05rem; }
+.project-method { font-size:.78rem; font-weight:700; text-transform:uppercase; letter-spacing:.04em; }
+.updated { font-size:.8rem; opacity:.7; }
+</style>
+
+```{r}
+#| label: setup
+#| include: false
+source("R/collect_projects.R")
+repo_root <- find_repo_root()
+
+# 수업 전 새 제출물을 반영하려면 TRUE.
+# 로컬에 미커밋 변경이 있으면 안전을 위해 자동 pull을 건너뜁니다.
+do_git_pull <- TRUE
+
+# 학생 QMD가 변경된 경우에만 HTML을 다시 렌더링합니다.
+do_render_submissions <- TRUE
+force_rerender <- FALSE
+
+if (do_git_pull) safe_git_pull(repo_root)
+projects <- collect_submissions(repo_root)
+if (do_render_submissions) projects <- render_all_submissions(projects, repo_root, force = force_rerender)
+```
+
+# Submission overview
+
+```{r}
+knitr::kable(submission_summary(projects), col.names = c("Design", "Projects"))
+```
+
+총 제출 프로젝트: **`r nrow(projects)`**
+
+# Student projects
+
+학생별 페이지는 제출된 QMD를 HTML로 렌더링한 결과입니다. 수업에서는 아래 목록에서 학생 페이지를 열어 연구질문 → 식별/예측 전략 → 필수 진단 → 메인 결과 → supplement 순서로 함께 검토할 수 있습니다.
+
+```{r}
+#| results: asis
+cat('<div class="project-grid">')
+cat(student_cards_html(projects))
+cat('</div>')
+```
+
+# Discussion prompts
+
+1. 연구질문과 estimand 또는 prediction target이 명확한가?
+2. 데이터 구조가 선택한 방법의 식별 가정과 맞는가?
+3. 효과/성능 추정치보다 먼저 확인해야 할 진단을 제대로 배치했는가?
+4. 메인 figure/table 수를 제한하면서 핵심 메시지가 보이는가?
+5. supplement가 재현성, 결측, cleaning, robustness를 충분히 문서화하는가?

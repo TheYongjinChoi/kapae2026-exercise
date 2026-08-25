@@ -1,0 +1,126 @@
+---
+title: "Example: Flexible adjustment for a treatment effect"
+author: "EXAMPLE_01"
+student-id: "EXAMPLE_01"
+design-method: "dml"
+format:
+  html:
+    toc: true
+    embed-resources: true
+  docx:
+    toc: true
+  pdf:
+    toc: true
+  revealjs:
+    slide-number: true
+    scrollable: true
+execute:
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/lab_helpers.R")
+
+student_id <- "EXAMPLE_01"
+method <- "dml"
+research_title <- "Estimating the effect of programme participation on a continuous health outcome"
+data_name <- "Illustrative national health survey"
+data_description <- "Individual-level cross-sectional data with a binary programme indicator, continuous and categorical confounders, and a continuous health outcome. Nonlinear confounding is plausible."
+
+outcome_type <- "continuous"
+outcome_range <- c(0, 100)
+n_continuous_predictors <- 8
+n_binary_predictors <- 4
+n_categorical_predictors <- 2
+n_obs <- 1800
+n_folds <- 5
+max_missing_rate <- 0.08
+seed <- 2026
+submission_endpoint <- ""
+course_key <- ""
+
+spec <- build_spec_from_environment(environment())
+analysis <- simulate_project(spec)
+```
+
+# 1. Research question and design
+
+```{r}
+#| results: asis
+cat(project_overview_text(spec))
+```
+
+# 2. Data and expected structure
+
+```{r}
+#| results: asis
+cat(data_structure_text(spec))
+```
+
+# 3. Methods
+
+```{r}
+#| results: asis
+cat(methods_text(spec))
+```
+
+# 4. Main results
+
+이 예시는 비선형 교란이 존재하는 상황을 의도적으로 만들어 **conventional OLS와 DML의 차이가 분명하게 보이도록** 구성합니다. 실제 연구에서는 이 차이 자체가 DML의 타당성을 보장하지 않으며, overlap, nuisance-model quality, cross-fitting stability를 함께 확인해야 합니다.
+
+```{r}
+#| results: asis
+render_figure_list(make_main_figures(analysis, spec))
+```
+
+# 5. Interpretation
+
+```{r}
+#| results: asis
+cat(interpretation_text(analysis, spec))
+```
+
+# Supplementary material
+
+## A1. Missing records by variable
+
+```{r}
+knitr::kable(analysis$missingness, digits = 2)
+```
+
+## A2. Data-cleaning flow
+
+```{r}
+knitr::kable(analysis$cleaning_flow)
+```
+
+## A3. DML diagnostics
+
+```{r}
+#| results: asis
+render_figure_list(make_supplement_figures(analysis, spec))
+```
+
+## A4. Required robustness checks
+
+```{r}
+#| results: asis
+cat(supplement_checklist_text(spec))
+```
+
+## A5. Reproducibility
+
+```{r}
+sessionInfo()
+```
+
+# Render and submission
+
+```{r}
+#| eval: false
+render_project_outputs(knitr::current_input())
+submit_project(knitr::current_input(), endpoint = submission_endpoint, course_key = course_key)
+```

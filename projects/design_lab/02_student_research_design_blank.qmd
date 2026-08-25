@@ -1,0 +1,176 @@
+---
+title: "KAPAE Research Design Lab — Step 2 Blank Template"
+student-id: "YOUR_ID"
+design-method: "prediction"
+format:
+  html:
+    toc: true
+    embed-resources: true
+  docx:
+    toc: true
+  pdf:
+    toc: true
+  revealjs:
+    slide-number: true
+    scrollable: true
+execute:
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/lab_helpers.R")
+```
+
+# 학생 입력 영역
+
+정상적인 수업 흐름에서는 Step 1 파일이 아래 입력칸 중 선택한 설계에 필요한 항목만 자동 생성합니다. 이 파일은 생성이 잘 되지 않을 때 사용할 수 있는 **공통 blank fallback**입니다.
+
+```{r}
+# 본인 수업용 식별 ID. 영문자/숫자/_/-만 사용, 3~30자.
+student_id <- "YOUR_ID"
+
+# 아래 중 하나:
+# "prediction", "dml", "did", "iv", "matching", "causal_forest", "rd"
+method <- "prediction"
+
+# 연구제목과 데이터 설명
+research_title <- "여기에 연구 제목을 입력하세요"
+data_name <- "여기에 데이터셋 이름/출처를 입력하세요"
+data_description <- "관측단위, 횡단면/패널 여부, 시간/지역 식별자 등 알고 있는 데이터 특성을 1~3문장으로 입력하세요"
+
+# 결과변수 유형: "continuous" 또는 "binary"
+outcome_type <- "continuous"
+# continuous 예: c(0, 100), c(-5, 20). binary이면 c(0, 1).
+outcome_range <- c(0, 100)
+
+# 예측변수/공변량의 대략적인 수. 모두 0 이상의 정수.
+n_continuous_predictors <- 8
+n_binary_predictors <- 4
+n_categorical_predictors <- 2
+
+# 일반적인 횡단면 설계 표본크기. DID에서는 아래 n_units/n_periods가 우선 사용됨.
+n_obs <- 1500
+
+# DML: 2~10 권장
+n_folds <- 5
+
+# DID 전용
+n_units <- 400
+n_periods <- 8
+treatment_start <- 5
+treated_share <- 0.45
+
+# IV 전용: 교육용 first-stage strength 예시 0.15~0.60
+instrument_strength <- 0.35
+
+# Propensity score 전용
+estimand <- "ATE"       # "ATE" 또는 "ATT"
+caliper <- 0.20         # 예: 0.1~0.3
+
+# Causal forest 전용
+num_trees <- 2000
+honesty <- TRUE
+
+# RD 전용
+cutoff <- 0
+bandwidth <- 0.45       # 예: 0.2~0.8
+
+# 모든 설계 공통: 가짜 데이터 변수별 최대 결측률. 0~0.20.
+max_missing_rate <- 0.08
+seed <- 2026
+
+# 교수자가 제출 API를 활성화하면 비워두어도 원격 config를 확인함.
+submission_endpoint <- ""
+course_key <- ""
+
+spec <- build_spec_from_environment(environment())
+analysis <- simulate_project(spec)
+```
+
+# 1. Research question and design
+
+```{r}
+#| results: asis
+cat(project_overview_text(spec))
+```
+
+# 2. Data and expected structure
+
+```{r}
+#| results: asis
+cat(data_structure_text(spec))
+```
+
+# 3. Methods
+
+```{r}
+#| results: asis
+cat(methods_text(spec))
+```
+
+# 4. Main results
+
+메인 결과는 표와 그림을 합쳐 최대 4개로 제한합니다. HTML과 RevealJS에서는 Plotly interactive figure가 나오고, Word/PDF에서는 동일 시각화의 static 버전이 나옵니다.
+
+```{r}
+#| results: asis
+render_figure_list(make_main_figures(analysis, spec))
+```
+
+# 5. Interpretation template
+
+```{r}
+#| results: asis
+cat(interpretation_text(analysis, spec))
+```
+
+# Supplementary material
+
+## A1. Missing records by variable
+
+```{r}
+knitr::kable(analysis$missingness, digits = 2)
+```
+
+## A2. Data-cleaning flow
+
+```{r}
+knitr::kable(analysis$cleaning_flow)
+```
+
+## A3. Design-specific diagnostics
+
+```{r}
+#| results: asis
+render_figure_list(make_supplement_figures(analysis, spec))
+```
+
+## A4. Required robustness and sensitivity checks
+
+```{r}
+#| results: asis
+cat(supplement_checklist_text(spec))
+```
+
+## A5. Reproducibility
+
+```{r}
+sessionInfo()
+```
+
+# 6. Render all requested outputs
+
+```{r}
+#| eval: false
+render_project_outputs(knitr::current_input())
+```
+
+# 7. Submit
+
+```{r}
+#| eval: false
+submit_project(knitr::current_input(), endpoint = submission_endpoint, course_key = course_key)
+```

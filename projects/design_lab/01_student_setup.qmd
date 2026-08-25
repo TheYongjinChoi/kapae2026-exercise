@@ -1,0 +1,49 @@
+---
+title: "KAPAE Research Design Lab — Step 1"
+format:
+  html:
+    toc: true
+    embed-resources: true
+execute:
+  warning: false
+  message: false
+---
+
+# 목적
+
+이 파일에서는 **학생 ID와 연구설계 유형만 입력**해 개인별 Step 2 QMD 작업파일을 자동 생성합니다. Step 2 파일에는 연구제목, 데이터 특성, 결과변수 유형, 예측변수 구조 등 해당 설계에 필요한 입력칸이 자동으로 만들어집니다.
+
+# 1. 입력
+
+```{r}
+# ============================================================
+# 아래 두 값만 수정하세요.
+# ============================================================
+
+# 본인 식별 ID
+# - 영문자/숫자/_/-만 사용
+# - 3~30자
+# - 이름, 이메일, 학번처럼 직접 식별 가능한 정보는 피하고 수업용 ID를 사용하세요.
+# 예: "KAPAE_021"
+student_id <- "여기에_ID_입력"
+
+# 연구설계 유형: 아래 7개 중 정확히 하나를 입력합니다.
+# "prediction"     : 머신러닝 예측 비교 (RF, XGBoost, neural network)
+# "dml"            : Double/debiased machine learning + OLS robustness comparison
+# "did"            : Difference-in-differences + 사전 trend visual inspection
+# "iv"             : Instrumental variables + first-stage diagnostics
+# "matching"       : Propensity-score matching/weighting + overlap/balance diagnostics
+# "causal_forest"  : Causal forest / heterogeneous treatment effects
+# "rd"             : Regression discontinuity + cutoff 사전 visual inspection
+method <- "prediction"
+```
+
+# 2. Step 2 작업파일 자동 생성
+
+아래 한 셀을 실행하면 GitHub에 있는 최신 생성 함수를 한 줄로 불러와 현재 폴더에 개인별 QMD를 만듭니다.
+
+```{r}
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/lab_helpers.R"); create_design_qmd(student_id, method, output_dir = getwd())
+```
+
+생성 파일명 예시는 `02_KAPAE_021_prediction_research_design.qmd`입니다. 생성된 파일을 열어 Step 2를 진행합니다.

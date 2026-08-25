@@ -1,0 +1,26 @@
+---
+title: "KAPAE Research Design Lab — Step 1 Example"
+format:
+  html:
+    toc: true
+    embed-resources: true
+execute:
+  warning: false
+  message: false
+---
+
+# Example
+
+아래 예시는 학생 ID `EXAMPLE_01`이 DML 설계를 선택하는 경우입니다.
+
+```{r}
+student_id <- "EXAMPLE_01"
+method <- "dml"
+```
+
+```{r}
+#| eval: false
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/lab_helpers.R"); create_design_qmd(student_id, method, output_dir = getwd())
+```
+
+생성되는 `02_EXAMPLE_01_dml_research_design.qmd`에서는 실제 연구제목, 데이터 설명, outcome type/range, 예측변수 수, 표본크기, cross-fitting folds를 입력하게 됩니다.
