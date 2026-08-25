@@ -1,0 +1,4 @@
+project:
+  type: default
+  post-render:
+    - design_lab/R/post_render_submit.R

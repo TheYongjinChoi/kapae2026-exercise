@@ -1,0 +1,169 @@
+---
+title: "KAPAE 2026 Research Design Gallery"
+format:
+  html:
+    toc: false
+    embed-resources: true
+    theme: cosmo
+    css: gallery.css
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+if (!requireNamespace("jsonlite", quietly = TRUE)) {
+  stop("jsonlite 패키지가 필요합니다.")
+}
+
+meta_dir <- "meta"
+files <- if (dir.exists(meta_dir)) {
+  list.files(meta_dir, pattern = "\\.json$", full.names = TRUE)
+} else {
+  character()
+}
+
+method_labels <- c(
+  prediction = "머신러닝 예측",
+  dml = "DML",
+  did = "DID",
+  iv = "IV",
+  matching = "매칭/가중치",
+  causal_forest = "인과 포리스트",
+  rd = "RD/RKD"
+)
+
+if (length(files)) {
+  projects <- do.call(
+    rbind,
+    lapply(files, function(f) {
+      x <- jsonlite::fromJSON(f)
+      data.frame(
+        student_id = x$student_id,
+        method = x$method,
+        research_title = x$research_title,
+        html_path = x$html_path,
+        submitted_at = x$submitted_at,
+        stringsAsFactors = FALSE
+      )
+    })
+  )
+
+  projects$method_label <- unname(method_labels[projects$method])
+  projects$method_label[is.na(projects$method_label)] <- projects$method[is.na(projects$method_label)]
+  projects <- projects[order(projects$method, projects$student_id), , drop = FALSE]
+} else {
+  projects <- data.frame(
+    student_id = character(),
+    method = character(),
+    research_title = character(),
+    html_path = character(),
+    submitted_at = character(),
+    method_label = character()
+  )
+}
+
+escape_html <- function(x) {
+  x <- gsub("&", "&amp;", x, fixed = TRUE)
+  x <- gsub("<", "&lt;", x, fixed = TRUE)
+  x <- gsub(">", "&gt;", x, fixed = TRUE)
+  x <- gsub('"', "&quot;", x, fixed = TRUE)
+  x
+}
+```
+
+<div class="gallery-hero">
+  <div class="eyebrow">KAPAE 2026 · Research Design Lab</div>
+  <h1>Student Research Design Gallery</h1>
+  <p>수강생들이 설계한 연구 프로젝트를 방법론별로 살펴볼 수 있습니다.</p>
+  <div class="hero-stats">
+    <div><strong>`r nrow(projects)`</strong><span>Projects</span></div>
+    <div><strong>`r length(unique(projects$student_id))`</strong><span>Students</span></div>
+    <div><strong>`r length(unique(projects$method))`</strong><span>Methods</span></div>
+  </div>
+</div>
+
+```{r}
+#| results: asis
+
+if (nrow(projects)) {
+  counts <- table(projects$method)
+
+  cat('<div class="gallery-toolbar">')
+  cat('<button class="filter-btn active" data-filter="all">전체 <span>', nrow(projects), '</span></button>', sep = "")
+
+  for (m in names(method_labels)) {
+    n <- unname(counts[m])
+    if (is.na(n)) n <- 0
+    if (n > 0) {
+      cat(
+        sprintf(
+          '<button class="filter-btn" data-filter="%s">%s <span>%d</span></button>',
+          escape_html(m),
+          escape_html(method_labels[[m]]),
+          n
+        )
+      )
+    }
+  }
+  cat('</div>')
+
+  cat('<div class="project-grid">')
+
+  for (i in seq_len(nrow(projects))) {
+    p <- projects[i, ]
+    title <- ifelse(
+      is.na(p$research_title) || !nzchar(p$research_title),
+      "연구 제목 미입력",
+      p$research_title
+    )
+
+    cat(sprintf(
+      paste0(
+        '<article class="project-card" data-method="%s">',
+        '<div class="card-top">',
+        '<span class="method-badge">%s</span>',
+        '<span class="student-id">%s</span>',
+        '</div>',
+        '<h2>%s</h2>',
+        '<div class="card-footer">',
+        '<a class="project-link" href="%s">연구설계 보기 <span aria-hidden="true">→</span></a>',
+        '</div>',
+        '</article>'
+      ),
+      escape_html(p$method),
+      escape_html(p$method_label),
+      escape_html(p$student_id),
+      escape_html(title),
+      escape_html(p$html_path)
+    ))
+  }
+
+  cat('</div>')
+} else {
+  cat(
+    '<div class="empty-state"><strong>아직 제출된 프로젝트가 없습니다.</strong>',
+    '<p>학생 HTML이 제출되면 이곳에 카드가 나타납니다.</p></div>'
+  )
+}
+```
+
+<script>
+document.querySelectorAll('.filter-btn').forEach((button) => {
+  button.addEventListener('click', () => {
+    document.querySelectorAll('.filter-btn').forEach((x) => x.classList.remove('active'));
+    button.classList.add('active');
+
+    const filter = button.dataset.filter;
+
+    document.querySelectorAll('.project-card').forEach((card) => {
+      const visible = filter === 'all' || card.dataset.method === filter;
+      card.style.display = visible ? '' : 'none';
+    });
+  });
+});
+</script>
