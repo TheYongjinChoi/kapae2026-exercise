@@ -1284,50 +1284,114 @@ read_remote_submission_config <- function() {
   out %||% list(submission_endpoint = "", course_key = "")
 }
 
+
 submit_project <- function(qmd_path,
                            endpoint = "",
                            course_key = "") {
   ensure_packages(c("httr2", "jsonlite"))
-  if (!file.exists(qmd_path)) stop("QMD 파일을 찾을 수 없습니다: ", qmd_path)
-  content <- paste(readLines(qmd_path, warn = FALSE, encoding = "UTF-8"), collapse = "\n")
+
+  if (is.null(qmd_path) || !nzchar(qmd_path)) {
+    stop("현재 QMD 파일 경로를 확인할 수 없습니다.")
+  }
+
+  qmd_path <- normalizePath(qmd_path, winslash = "/", mustWork = FALSE)
+
+  if (!file.exists(qmd_path)) {
+    stop("QMD 파일을 찾을 수 없습니다: ", qmd_path)
+  }
+
+  lines <- readLines(qmd_path, warn = FALSE, encoding = "UTF-8")
+  content <- paste(lines, collapse = "\n")
+
+  # ------------------------------------------------------------
+  # 학생 ID와 방법론은 파일명에 의존하지 않고 YAML front matter에서 읽습니다.
+  # 따라서 파일명을 약간 바꾸거나 경로에 공백이 있어도 제출할 수 있습니다.
+  # ------------------------------------------------------------
+  get_yaml_value <- function(key) {
+    pat <- paste0("^", gsub("([\\-])", "\\\\\\1", key), "\\s*:\\s*[\"']?([^\"']+?)[\"']?\\s*$")
+    hit <- grep(pat, lines, value = TRUE)
+    if (!length(hit)) return("")
+    sub(pat, "\\1", hit[1])
+  }
+
+  student_id <- trimws(get_yaml_value("student-id"))
+  method <- trimws(tolower(get_yaml_value("design-method")))
+
+  # 오래된/수정된 QMD를 위해 파일명도 fallback으로 허용합니다.
+  if (!nzchar(student_id) || !nzchar(method)) {
+    bn <- basename(qmd_path)
+    m <- regexec(
+      "^02_(.+)_(prediction|dml|did|iv|matching|causal_forest|rd)_research_design\\.qmd$",
+      bn
+    )
+    hit <- regmatches(bn, m)[[1]]
+    if (length(hit) == 3) {
+      student_id <- hit[2]
+      method <- hit[3]
+    }
+  }
+
+  if (!grepl("^[A-Za-z0-9_-]{3,30}$", student_id)) {
+    stop("student-id를 확인하세요. 영문자, 숫자, _ 또는 -만 사용해 3~30자로 입력해야 합니다.")
+  }
+
+  if (!method %in% c("prediction", "dml", "did", "iv", "matching", "causal_forest", "rd")) {
+    stop("design-method를 확인하세요.")
+  }
+
   cfg <- read_remote_submission_config()
   endpoint <- endpoint %||% cfg$submission_endpoint
   course_key <- course_key %||% cfg$course_key
 
-  # Parse lightweight metadata from the generated filename/front matter.
-  bn <- basename(qmd_path)
-  m <- regexec("^02_([A-Za-z0-9_-]+)_(prediction|dml|did|iv|matching|causal_forest|rd)_research_design\\.qmd$", bn)
-  hit <- regmatches(bn, m)[[1]]
-  if (length(hit) != 3) stop("생성된 02_*_research_design.qmd 파일을 제출하세요.")
-  student_id <- hit[2]
-  method <- hit[3]
-
   if (is.null(endpoint) || !nzchar(endpoint)) {
-    payload_path <- sub("\\.qmd$", "_submission.json", qmd_path)
-    jsonlite::write_json(
-      list(student_id = student_id, method = method, content = content, submitted_at = format(Sys.time(), tz = "UTC")),
-      payload_path,
-      auto_unbox = TRUE,
-      pretty = TRUE
+    stop(
+      "submission_endpoint를 찾지 못했습니다. ",
+      "projects/design_lab/config.json의 Worker 주소를 확인하세요."
     )
-    message("제출 API가 아직 활성화되지 않아 로컬 제출 파일을 만들었습니다: ", payload_path)
-    return(invisible(payload_path))
   }
 
   req <- httr2::request(endpoint) |>
     httr2::req_method("POST") |>
     httr2::req_headers(`Content-Type` = "application/json") |>
-    httr2::req_body_json(list(
-      student_id = student_id,
-      method = method,
-      course_key = course_key,
-      content = content,
-      submitted_at = format(Sys.time(), tz = "UTC")
-    ), auto_unbox = TRUE)
-  resp <- httr2::req_perform(req)
-  if (httr2::resp_status(resp) >= 300) stop("제출 실패: HTTP ", httr2::resp_status(resp))
-  message("제출 완료: projects/submissions/", student_id, "_", method, ".qmd")
-  invisible(httr2::resp_body_json(resp))
+    httr2::req_body_json(
+      list(
+        student_id = student_id,
+        method = method,
+        course_key = course_key,
+        content = content,
+        submitted_at = format(Sys.time(), tz = "UTC")
+      ),
+      auto_unbox = TRUE
+    )
+
+  resp <- tryCatch(
+    httr2::req_perform(req),
+    error = function(e) {
+      stop("제출 서버에 연결하지 못했습니다: ", conditionMessage(e))
+    }
+  )
+
+  status <- httr2::resp_status(resp)
+
+  if (status >= 300) {
+    detail <- tryCatch(
+      httr2::resp_body_string(resp),
+      error = function(e) ""
+    )
+    stop(
+      "제출 실패: HTTP ", status,
+      if (nzchar(detail)) paste0("\n", detail) else ""
+    )
+  }
+
+  ans <- httr2::resp_body_json(resp)
+
+  message(
+    "제출 완료: projects/submissions/",
+    student_id, "_", method, ".qmd"
+  )
+
+  invisible(ans)
 }
 
 render_project_outputs <- function(qmd_path, formats = c("html", "docx", "pdf", "revealjs")) {
