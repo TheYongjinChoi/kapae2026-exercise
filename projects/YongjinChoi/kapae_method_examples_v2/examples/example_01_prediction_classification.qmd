@@ -1,0 +1,143 @@
+---
+title: "예시 1. 머신러닝 분류: 아동 MMR 접종 누락 예측"
+author: "ExPredClass"
+student-id: "ExPredClass"
+design-method: "prediction"
+format:
+  html:
+    toc: true
+    embed-resources: true
+execute:
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/lab_helpers.R")
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/report_helpers.R")
+
+student_id <- "ExPredClass"
+method <- "prediction"
+```
+
+```{r}
+#| label: research-design-inputs
+#| include: false
+
+research_title <- "보호자 특성을 이용한 아동 MMR 예방접종 누락 예측"
+
+theoretical_background <- "아동 예방접종 누락은 보호자의 백신 태도, 의료접근성, 사회경제적 여건, 의료진 권고 등 여러 요인이 함께 작용해 발생할 수 있다. 이러한 요인들 사이에는 비선형 관계와 상호작용이 존재할 가능성이 있다."
+
+research_need <- "접종 누락 가능성이 높은 보호자를 조기에 식별할 수 있다면 추가 안내나 예약 지원을 집중할 수 있다. 위험요인 하나의 효과를 설명하는 것보다 개별 관측치의 실제 예측성능을 평가하는 것이 목적이다."
+
+research_question <- "보호자의 사회인구학적 특성, 백신 신뢰도, 의료접근성과 의료진 권고를 이용해 아동의 MMR 예방접종 누락 여부를 얼마나 정확하게 예측할 수 있는가?"
+
+expected_contribution <- "여러 머신러닝 알고리즘의 예측성능과 calibration을 비교하여 실제 선별도구로 발전시킬 가능성을 검토한다."
+
+data_name <- "전국 아동 예방접종 보호자 조사"
+unit_of_observation <- "만 2~5세 아동의 보호자 1명"
+
+outcome_var <- "mmr_missed"
+outcome_label <- "MMR 예방접종 누락"
+outcome_type <- "binary"
+
+predictor_vars <- c(
+  "caregiver_age",
+  "education",
+  "household_income",
+  "vaccine_confidence",
+  "healthcare_access",
+  "hcw_recommendation"
+)
+
+predictor_labels <- c(
+  "보호자 연령",
+  "교육수준",
+  "가구소득",
+  "백신 신뢰도",
+  "의료 접근성",
+  "의료진 권고"
+)
+
+predictor_types <- c(
+  "continuous",
+  "categorical",
+  "continuous",
+  "continuous",
+  "continuous",
+  "binary"
+)
+
+sample_size <- 2500
+has_test_set <- TRUE
+prediction_use <- "접종 누락 위험이 높은 보호자에게 추가 안내와 예약 지원을 우선 제공하는 선별도구로 활용하고자 한다."
+
+spec <- build_spec_from_environment(environment())
+```
+
+# 1. 연구 배경과 연구질문
+
+```{r}
+#| results: asis
+cat(project_overview_text(spec))
+```
+
+# 2. 데이터와 방법론
+
+```{r}
+#| results: asis
+cat(data_structure_text(spec))
+cat(data_compatibility_text(spec))
+```
+
+# 3. 분석 방법
+
+```{r}
+#| results: asis
+cat(methods_text(spec))
+```
+
+```{r}
+#| label: simulate
+#| include: false
+analysis <- simulate_project(spec)
+```
+
+# 4. 주요 분석 결과
+
+```{r}
+#| results: asis
+cat(main_results_text(analysis, spec))
+```
+
+```{r}
+#| label: main-results
+main_figures <- make_main_figures(analysis, spec)
+render_figure_list(main_figures)
+```
+
+# 5. 부록 결과
+
+## 부록 1. 변수별 결측치
+
+```{r}
+knitr::kable(
+  analysis$missingness,
+  digits = 2,
+  caption = "표 S1. 변수별 결측치 현황",
+  col.names = c("변수명", "결측치 수", "결측치 비율(%)")
+)
+```
+
+```{r}
+#| results: asis
+cat(supplement_intro_text(spec))
+```
+
+```{r}
+supp_figures <- make_supplement_figures(analysis, spec)
+render_figure_list(supp_figures)
+```

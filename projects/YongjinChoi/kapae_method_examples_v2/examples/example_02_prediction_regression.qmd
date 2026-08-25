@@ -1,0 +1,143 @@
+---
+title: "예시 2. 머신러닝 회귀: 지역별 독감 예방접종률 예측"
+author: "ExPredReg"
+student-id: "ExPredReg"
+design-method: "prediction"
+format:
+  html:
+    toc: true
+    embed-resources: true
+execute:
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/lab_helpers.R")
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/report_helpers.R")
+
+student_id <- "ExPredReg"
+method <- "prediction"
+```
+
+```{r}
+#| label: research-design-inputs
+#| include: false
+
+research_title <- "지역 특성을 이용한 다음 해 인플루엔자 예방접종률 예측"
+
+theoretical_background <- "지역별 예방접종률은 인구구조, 의료기관 접근성, 사회경제적 취약성, 이전 접종률과 공공보건 인프라의 영향을 함께 받을 수 있다. 이 변수들의 관계가 선형적이지 않을 수 있어 유연한 예측모형이 유용할 수 있다."
+
+research_need <- "다음 접종시즌의 접종률이 낮을 것으로 예상되는 지역을 미리 파악하면 인력과 커뮤니케이션 자원을 선제적으로 배분할 수 있다."
+
+research_question <- "현재의 지역 인구·의료·사회경제적 특성을 이용해 다음 해 지역별 인플루엔자 예방접종률을 얼마나 정확하게 예측할 수 있는가?"
+
+expected_contribution <- "연속형 결과를 대상으로 머신러닝 회귀모형의 예측성능과 오차 패턴을 비교하는 실제적인 정책예측 설계를 제시한다."
+
+data_name <- "시군구 예방접종 및 지역건강지표 패널"
+unit_of_observation <- "시군구-연도"
+
+outcome_var <- "next_year_flu_coverage"
+outcome_label <- "다음 해 인플루엔자 예방접종률"
+outcome_type <- "continuous"
+
+predictor_vars <- c(
+  "current_coverage",
+  "older_population_share",
+  "clinic_density",
+  "deprivation_index",
+  "public_health_spending",
+  "urban_area"
+)
+
+predictor_labels <- c(
+  "현재 접종률",
+  "고령인구 비율",
+  "의료기관 밀도",
+  "지역 박탈지수",
+  "공공보건 지출",
+  "도시지역 여부"
+)
+
+predictor_types <- c(
+  "continuous",
+  "continuous",
+  "continuous",
+  "continuous",
+  "continuous",
+  "binary"
+)
+
+sample_size <- 1800
+has_test_set <- TRUE
+prediction_use <- "다음 접종시즌에 추가 자원이 필요할 가능성이 높은 지역을 사전에 식별하는 데 활용한다."
+
+spec <- build_spec_from_environment(environment())
+```
+
+# 1. 연구 배경과 연구질문
+
+```{r}
+#| results: asis
+cat(project_overview_text(spec))
+```
+
+# 2. 데이터와 방법론
+
+```{r}
+#| results: asis
+cat(data_structure_text(spec))
+cat(data_compatibility_text(spec))
+```
+
+# 3. 분석 방법
+
+```{r}
+#| results: asis
+cat(methods_text(spec))
+```
+
+```{r}
+#| label: simulate
+#| include: false
+analysis <- simulate_project(spec)
+```
+
+# 4. 주요 분석 결과
+
+```{r}
+#| results: asis
+cat(main_results_text(analysis, spec))
+```
+
+```{r}
+#| label: main-results
+main_figures <- make_main_figures(analysis, spec)
+render_figure_list(main_figures)
+```
+
+# 5. 부록 결과
+
+## 부록 1. 변수별 결측치
+
+```{r}
+knitr::kable(
+  analysis$missingness,
+  digits = 2,
+  caption = "표 S1. 변수별 결측치 현황",
+  col.names = c("변수명", "결측치 수", "결측치 비율(%)")
+)
+```
+
+```{r}
+#| results: asis
+cat(supplement_intro_text(spec))
+```
+
+```{r}
+supp_figures <- make_supplement_figures(analysis, spec)
+render_figure_list(supp_figures)
+```

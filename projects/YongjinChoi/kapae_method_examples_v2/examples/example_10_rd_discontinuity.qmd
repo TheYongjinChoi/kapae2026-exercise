@@ -1,0 +1,124 @@
+---
+title: "예시 10. RD: 65세 무료 인플루엔자 예방접종 자격"
+author: "ExRD"
+student-id: "ExRD"
+design-method: "rd"
+format:
+  html:
+    toc: true
+    embed-resources: true
+execute:
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/lab_helpers.R")
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/report_helpers.R")
+
+student_id <- "ExRD"
+method <- "rd"
+```
+
+```{r}
+#| label: research-design-inputs
+#| include: false
+
+research_title <- "65세 무료 인플루엔자 예방접종 자격이 접종률에 미치는 영향"
+
+theoretical_background <- "일정 연령 이상에게 무료 예방접종 자격을 부여하는 정책에서는 자격기준 바로 아래와 위의 사람들이 여러 특성에서 유사하지만 정책 노출은 불연속적으로 달라질 수 있다."
+
+research_need <- "무료접종 대상자와 비대상자를 전체 연령대에서 단순 비교하면 연령 자체와 관련된 건강위험과 의료이용 차이가 섞일 수 있으므로 기준점 주변의 국소적 비교가 필요하다."
+
+research_question <- "65세 무료 인플루엔자 예방접종 자격 기준은 기준점 주변 인구의 인플루엔자 예방접종률을 증가시키는가?"
+
+expected_contribution <- "cutoff 주변 국소회귀, bandwidth 민감도, 표본밀도, 사전 공변량 placebo와 donut 분석이 논문 결과에서 어떻게 연결되는지 보여준다."
+
+data_name <- "국가 예방접종 등록자료와 주민 연령자료 연계자료"
+unit_of_observation <- "연령 세분집단별 예방접종률 관측치"
+
+outcome_var <- "influenza_coverage"
+outcome_label <- "인플루엔자 예방접종률"
+outcome_type <- "continuous"
+
+running_var <- "age"
+running_label <- "연령"
+
+cutoff <- 65
+cutoff_label <- "무료접종 자격 기준(65세)"
+
+assignment_rule <- "만 65세가 되는 시점부터 국가 무료 인플루엔자 예방접종 대상이 되며 65세 미만은 동일한 무료접종 자격을 갖지 않는다."
+
+rd_type <- "discontinuity"
+
+sample_size <- 5000
+
+spec <- build_spec_from_environment(environment())
+```
+
+# 1. 연구 배경과 연구질문
+
+```{r}
+#| results: asis
+cat(project_overview_text(spec))
+```
+
+# 2. 데이터와 방법론
+
+```{r}
+#| results: asis
+cat(data_structure_text(spec))
+cat(data_compatibility_text(spec))
+```
+
+# 3. 분석 방법
+
+```{r}
+#| results: asis
+cat(methods_text(spec))
+```
+
+```{r}
+#| label: simulate
+#| include: false
+analysis <- simulate_project(spec)
+```
+
+# 4. 주요 분석 결과
+
+```{r}
+#| results: asis
+cat(main_results_text(analysis, spec))
+```
+
+```{r}
+#| label: main-results
+main_figures <- make_main_figures(analysis, spec)
+render_figure_list(main_figures)
+```
+
+# 5. 부록 결과
+
+## 부록 1. 변수별 결측치
+
+```{r}
+knitr::kable(
+  analysis$missingness,
+  digits = 2,
+  caption = "표 S1. 변수별 결측치 현황",
+  col.names = c("변수명", "결측치 수", "결측치 비율(%)")
+)
+```
+
+```{r}
+#| results: asis
+cat(supplement_intro_text(spec))
+```
+
+```{r}
+supp_figures <- make_supplement_figures(analysis, spec)
+render_figure_list(supp_figures)
+```

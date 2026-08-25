@@ -1,0 +1,132 @@
+---
+title: "예시 5. Staggered DID: 지역별 예방접종 예약지원 서비스 순차 도입"
+author: "ExDIDStag"
+student-id: "ExDIDStag"
+design-method: "did"
+format:
+  html:
+    toc: true
+    embed-resources: true
+execute:
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/lab_helpers.R")
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/report_helpers.R")
+
+student_id <- "ExDIDStag"
+method <- "did"
+```
+
+```{r}
+#| label: research-design-inputs
+#| include: false
+
+research_title <- "지방정부의 예방접종 예약지원 서비스 순차 도입이 아동 접종률에 미친 영향"
+
+theoretical_background <- "예방접종 예약과 일정관리는 보호자의 행정적 부담을 높일 수 있다. 지방정부가 문자 리마인더와 자동 예약지원 서비스를 서로 다른 연도에 순차적으로 도입하면서 도입시점의 차이를 이용한 정책평가가 가능해졌다."
+
+research_need <- "모든 지역이 같은 시점에 정책을 도입하지 않았으므로 단일 post 지표를 사용하는 전통적 DID보다 각 지역의 최초 도입시점을 고려한 staggered DID가 필요하다."
+
+research_question <- "지역별 도입시점의 차이를 고려했을 때 예방접종 예약지원 서비스는 아동 필수예방접종률을 증가시켰는가?"
+
+expected_contribution <- "cohort별 최초 처치시점과 not-yet-treated 비교집단을 활용한 staggered DID의 event-time 결과가 어떻게 구성되는지 보여준다."
+
+data_name <- "지방정부 아동 예방접종 서비스 연도별 패널"
+unit_of_observation <- "지방정부-연도"
+
+outcome_var <- "routine_vaccine_coverage"
+outcome_label <- "아동 필수예방접종률"
+
+unit_id_var <- "local_authority"
+unit_id_label <- "지방정부"
+
+time_var <- "year"
+time_label <- "연도"
+time_points <- c(2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026)
+
+treatment_group_var <- "booking_support"
+treatment_group_label <- "예방접종 예약지원 서비스 도입 여부"
+
+treated_definition <- "연구기간 중 예약지원 서비스를 도입한 지방정부"
+control_definition <- "해당 시점까지 아직 도입하지 않았거나 연구기간 전체에서 미도입한 지방정부"
+
+treatment_start_value <- 2021
+staggered_treatment <- TRUE
+
+first_treatment_var <- "first_booking_support_year"
+first_treatment_label <- "최초 예약지원 서비스 도입연도"
+
+number_of_units <- 180
+
+spec <- build_spec_from_environment(environment())
+```
+
+# 1. 연구 배경과 연구질문
+
+```{r}
+#| results: asis
+cat(project_overview_text(spec))
+```
+
+# 2. 데이터와 방법론
+
+```{r}
+#| results: asis
+cat(data_structure_text(spec))
+cat(data_compatibility_text(spec))
+```
+
+# 3. 분석 방법
+
+```{r}
+#| results: asis
+cat(methods_text(spec))
+```
+
+```{r}
+#| label: simulate
+#| include: false
+analysis <- simulate_project(spec)
+```
+
+# 4. 주요 분석 결과
+
+```{r}
+#| results: asis
+cat(main_results_text(analysis, spec))
+```
+
+```{r}
+#| label: main-results
+main_figures <- make_main_figures(analysis, spec)
+render_figure_list(main_figures)
+```
+
+# 5. 부록 결과
+
+## 부록 1. 변수별 결측치
+
+```{r}
+knitr::kable(
+  analysis$missingness,
+  digits = 2,
+  caption = "표 S1. 변수별 결측치 현황",
+  col.names = c("변수명", "결측치 수", "결측치 비율(%)")
+)
+```
+
+```{r}
+#| results: asis
+cat(supplement_intro_text(spec))
+```
+
+```{r}
+supp_figures <- make_supplement_figures(analysis, spec)
+render_figure_list(supp_figures)
+```

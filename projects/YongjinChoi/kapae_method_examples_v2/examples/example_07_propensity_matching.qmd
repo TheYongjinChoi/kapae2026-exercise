@@ -1,0 +1,149 @@
+---
+title: "예시 7. 성향점수 매칭: 의료진 권고와 백신 신뢰도"
+author: "ExPSMatch"
+student-id: "ExPSMatch"
+design-method: "matching"
+format:
+  html:
+    toc: true
+    embed-resources: true
+execute:
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/lab_helpers.R")
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/report_helpers.R")
+
+student_id <- "ExPSMatch"
+method <- "matching"
+```
+
+```{r}
+#| label: research-design-inputs
+#| include: false
+
+research_title <- "의료진의 적극적 예방접종 권고가 보호자의 백신 신뢰도에 미치는 영향"
+
+theoretical_background <- "의료진의 적극적 권고를 받은 보호자는 그렇지 않은 보호자와 의료이용, 기존 백신 태도, 사회경제적 특성에서 다를 수 있다. 따라서 단순 평균차이는 이러한 사전 차이를 함께 반영할 수 있다."
+
+research_need <- "처치 이전 공변량이 유사한 보호자를 구성하고 조정 전후 balance가 실제로 개선되는지를 확인한 뒤 결과 차이를 추정할 필요가 있다."
+
+research_question <- "관찰된 처치 이전 특성을 성향점수 매칭으로 균형화했을 때 의료진의 적극적 예방접종 권고는 보호자의 백신 신뢰도를 높이는가?"
+
+expected_contribution <- "common support, 매칭 전후 효과, Love plot을 하나의 분석 흐름으로 보여준다."
+
+data_name <- "전국 보호자 예방접종 경험 조사"
+unit_of_observation <- "만 5세 이하 자녀를 둔 보호자 1명"
+
+outcome_var <- "vaccine_confidence"
+outcome_label <- "백신 신뢰도"
+outcome_type <- "continuous"
+
+treatment_var <- "strong_hcw_recommendation"
+treatment_label <- "의료진의 적극적 예방접종 권고"
+
+covariate_vars <- c(
+  "caregiver_age",
+  "education",
+  "household_income",
+  "baseline_confidence",
+  "healthcare_access",
+  "child_chronic_condition"
+)
+
+covariate_labels <- c(
+  "보호자 연령",
+  "교육수준",
+  "가구소득",
+  "기초 백신 신뢰도",
+  "의료 접근성",
+  "자녀 만성질환 여부"
+)
+
+covariate_types <- c(
+  "continuous",
+  "categorical",
+  "continuous",
+  "continuous",
+  "continuous",
+  "binary"
+)
+
+covariate_timing_note <- "모든 공변량은 의료진 권고 이전에 측정되었거나 권고에 의해 영향을 받지 않는 기초 특성으로 정의한다."
+
+adjustment_method <- "matching"
+target_effect <- "ATT"
+
+sample_size <- 2800
+
+spec <- build_spec_from_environment(environment())
+```
+
+# 1. 연구 배경과 연구질문
+
+```{r}
+#| results: asis
+cat(project_overview_text(spec))
+```
+
+# 2. 데이터와 방법론
+
+```{r}
+#| results: asis
+cat(data_structure_text(spec))
+cat(data_compatibility_text(spec))
+```
+
+# 3. 분석 방법
+
+```{r}
+#| results: asis
+cat(methods_text(spec))
+```
+
+```{r}
+#| label: simulate
+#| include: false
+analysis <- simulate_project(spec)
+```
+
+# 4. 주요 분석 결과
+
+```{r}
+#| results: asis
+cat(main_results_text(analysis, spec))
+```
+
+```{r}
+#| label: main-results
+main_figures <- make_main_figures(analysis, spec)
+render_figure_list(main_figures)
+```
+
+# 5. 부록 결과
+
+## 부록 1. 변수별 결측치
+
+```{r}
+knitr::kable(
+  analysis$missingness,
+  digits = 2,
+  caption = "표 S1. 변수별 결측치 현황",
+  col.names = c("변수명", "결측치 수", "결측치 비율(%)")
+)
+```
+
+```{r}
+#| results: asis
+cat(supplement_intro_text(spec))
+```
+
+```{r}
+supp_figures <- make_supplement_figures(analysis, spec)
+render_figure_list(supp_figures)
+```

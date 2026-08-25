@@ -1,0 +1,5 @@
+# KAPAE 2026 standalone research-design lab
+project:
+  type: default
+  post-render:
+    - .kapae/post_render_submit.R

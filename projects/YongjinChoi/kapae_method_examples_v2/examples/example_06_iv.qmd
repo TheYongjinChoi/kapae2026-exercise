@@ -1,0 +1,143 @@
+---
+title: "예시 6. IV: 예방접종 상담 참여와 임신부 독감백신 접종"
+author: "ExIV"
+student-id: "ExIV"
+design-method: "iv"
+format:
+  html:
+    toc: true
+    embed-resources: true
+execute:
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/lab_helpers.R")
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/report_helpers.R")
+
+student_id <- "ExIV"
+method <- "iv"
+```
+
+```{r}
+#| label: research-design-inputs
+#| include: false
+
+research_title <- "예방접종 상담 참여가 임신부 독감백신 접종에 미치는 영향: 무작위 상담 초대장을 도구변수로 활용"
+
+theoretical_background <- "예방접종 상담에 자발적으로 참여하는 임신부는 원래부터 건강관리에 적극적이거나 백신에 우호적일 수 있어 상담 참여와 실제 접종 간 단순 비교에는 선택편향이 발생할 수 있다."
+
+research_need <- "상담 참여 자체를 강제할 수 없는 상황에서 상담 참여를 증가시키는 외생적 encouragement를 이용하면 실제 상담 참여의 효과를 추정할 수 있다."
+
+research_question <- "무작위로 배정된 예방접종 상담 초대장을 도구변수로 사용할 때 실제 상담 참여는 임신부의 독감백신 접종 가능성을 증가시키는가?"
+
+expected_contribution <- "first stage, reduced form, OLS와 2SLS를 같은 결과물에 배치하여 IV 분석의 논리적 흐름을 보여준다."
+
+data_name <- "산전진료 예방접종 상담 encouragement 시험"
+unit_of_observation <- "임신부 1명"
+
+outcome_var <- "flu_vaccinated"
+outcome_label <- "임신부 독감백신 접종"
+outcome_type <- "continuous"
+
+treatment_var <- "consultation_attended"
+treatment_label <- "예방접종 상담 참여"
+
+instrument_var <- "random_consultation_invite"
+instrument_label <- "무작위 상담 초대장 배정"
+
+instrument_justification <- "상담 초대장은 무작위로 배정되어 기초 특성과 독립적이며 상담 참여를 증가시키는 것으로 기대된다. 또한 초대장 자체가 접종에 직접 영향을 주지 않고 상담 참여를 통해서만 영향을 준다는 exclusion restriction을 가정한다."
+
+covariate_vars <- c(
+  "maternal_age",
+  "education",
+  "parity",
+  "baseline_vaccine_confidence"
+)
+
+covariate_labels <- c(
+  "임신부 연령",
+  "교육수준",
+  "출산경험",
+  "기초 백신 신뢰도"
+)
+
+covariate_types <- c(
+  "continuous",
+  "categorical",
+  "continuous",
+  "continuous"
+)
+
+sample_size <- 2200
+
+spec <- build_spec_from_environment(environment())
+```
+
+# 1. 연구 배경과 연구질문
+
+```{r}
+#| results: asis
+cat(project_overview_text(spec))
+```
+
+# 2. 데이터와 방법론
+
+```{r}
+#| results: asis
+cat(data_structure_text(spec))
+cat(data_compatibility_text(spec))
+```
+
+# 3. 분석 방법
+
+```{r}
+#| results: asis
+cat(methods_text(spec))
+```
+
+```{r}
+#| label: simulate
+#| include: false
+analysis <- simulate_project(spec)
+```
+
+# 4. 주요 분석 결과
+
+```{r}
+#| results: asis
+cat(main_results_text(analysis, spec))
+```
+
+```{r}
+#| label: main-results
+main_figures <- make_main_figures(analysis, spec)
+render_figure_list(main_figures)
+```
+
+# 5. 부록 결과
+
+## 부록 1. 변수별 결측치
+
+```{r}
+knitr::kable(
+  analysis$missingness,
+  digits = 2,
+  caption = "표 S1. 변수별 결측치 현황",
+  col.names = c("변수명", "결측치 수", "결측치 비율(%)")
+)
+```
+
+```{r}
+#| results: asis
+cat(supplement_intro_text(spec))
+```
+
+```{r}
+supp_figures <- make_supplement_figures(analysis, spec)
+render_figure_list(supp_figures)
+```

@@ -164,6 +164,79 @@ setup_kapae_local_project <- function(output_dir = getwd()) {
 }
 
 
+inject_report_helpers <- function(qmd_path) {
+  if (!file.exists(qmd_path)) return(invisible(FALSE))
+
+  x <- readLines(qmd_path, warn = FALSE, encoding = "UTF-8")
+
+  report_source <- paste0(
+    'source("',
+    kapae_repo_raw("projects/design_lab/R/report_helpers.R"),
+    '")'
+  )
+
+  if (any(grepl("report_helpers\\.R", x))) {
+    return(invisible(TRUE))
+  }
+
+  helper_hit <- grep(
+    "projects/design_lab/R/lab_helpers\\.R",
+    x
+  )
+
+  if (!length(helper_hit)) {
+    stop(
+      "생성된 Step 2 파일에서 lab_helpers.R source 줄을 찾지 못했습니다."
+    )
+  }
+
+  pos <- helper_hit[[1]]
+
+  x <- append(
+    x,
+    report_source,
+    after = pos
+  )
+
+  # These headings are useful while editing but should not appear as duplicate
+  # report sections in the rendered paper-style output.
+  x[x == "# 학생 입력 1. 연구 배경"] <-
+    "<!-- 학생 입력 1. 연구 배경: 아래 숨김 코드블록의 값을 수정하세요. -->"
+
+  x[x == "# 학생 입력 2. 데이터와 방법론"] <-
+    "<!-- 학생 입력 2. 데이터와 방법론: 아래 숨김 코드블록의 값을 수정하세요. -->"
+
+  x <- x[
+    !grepl(
+      "^각 항목은 \\*\\*1~3문장\\*\\*으로 짧게 작성하세요\\.",
+      x
+    )
+  ]
+
+  x <- x[
+    !grepl(
+      "^실제로 사용할 데이터를 \\*\\*직접 확인하거나 구체적으로 떠올리며\\*\\* 아래 질문에 답하세요\\.",
+      x
+    )
+  ]
+
+  x <- x[
+    !grepl(
+      "^이 질문에 답하는 과정 자체가 현재 데이터가 선택한 방법론에 적절한지 확인하는 과정입니다\\.",
+      x
+    )
+  ]
+
+  writeLines(
+    x,
+    qmd_path,
+    useBytes = TRUE
+  )
+
+  invisible(TRUE)
+}
+
+
 create_standalone_design_lab <- function(student_id,
                                          method,
                                          output_dir = getwd(),
@@ -215,6 +288,7 @@ create_standalone_design_lab <- function(student_id,
   # The older template submitted the source QMD from an R chunk.
   # Standalone mode uses only the rendered HTML, so remove that chunk.
   remove_legacy_qmd_submit(qmd_path)
+  inject_report_helpers(qmd_path)
 
   message("")
   message("준비 완료")

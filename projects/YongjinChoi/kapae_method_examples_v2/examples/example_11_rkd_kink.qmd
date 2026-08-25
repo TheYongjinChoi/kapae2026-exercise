@@ -1,0 +1,124 @@
+---
+title: "예시 11. RKD: 소득기준에서 예방서비스 보조율 변화"
+author: "ExRKD"
+student-id: "ExRKD"
+design-method: "rd"
+format:
+  html:
+    toc: true
+    embed-resources: true
+execute:
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/lab_helpers.R")
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/report_helpers.R")
+
+student_id <- "ExRKD"
+method <- "rd"
+```
+
+```{r}
+#| label: research-design-inputs
+#| include: false
+
+research_title <- "소득기준에서 보조금 감소율이 달라지는 정책이 예방서비스 이용에 미치는 영향"
+
+theoretical_background <- "일부 예방보건 지원정책은 가구소득이 특정 기준을 넘더라도 지원을 즉시 중단하지 않고, 기준점 이후부터 보조금이 더 빠르게 감소하도록 설계된다. 이 경우 정책수준의 점프보다 기준점에서 처치강도의 기울기가 바뀌는 구조가 나타난다."
+
+research_need <- "기준점에서 결과수준의 단순 불연속을 찾는 RD보다 정책강도의 slope change를 활용하는 regression kink design이 더 적절하다."
+
+research_question <- "가구소득 5천만원 기준에서 예방서비스 보조금의 감소율이 더 가팔라지는 정책은 기준점 주변 가구의 예방서비스 이용률 기울기를 변화시키는가?"
+
+expected_contribution <- "level discontinuity와 slope discontinuity의 차이를 시각적으로 보여주고 RKD에서 bandwidth와 placebo 진단이 어떻게 제시되는지 설명한다."
+
+data_name <- "가구소득-예방보건 서비스 이용 행정자료"
+unit_of_observation <- "가구 1개"
+
+outcome_var <- "preventive_service_use"
+outcome_label <- "예방보건 서비스 이용지수"
+outcome_type <- "continuous"
+
+running_var <- "household_income"
+running_label <- "가구소득(천만원)"
+
+cutoff <- 5
+cutoff_label <- "보조금 감소율 변경 기준(5천만원)"
+
+assignment_rule <- "가구소득 5천만원까지는 보조금이 완만하게 감소하지만 5천만원을 초과하면 소득 증가에 따른 보조금 감소율이 더 커져 처치강도의 기울기가 바뀐다."
+
+rd_type <- "kink"
+
+sample_size <- 4500
+
+spec <- build_spec_from_environment(environment())
+```
+
+# 1. 연구 배경과 연구질문
+
+```{r}
+#| results: asis
+cat(project_overview_text(spec))
+```
+
+# 2. 데이터와 방법론
+
+```{r}
+#| results: asis
+cat(data_structure_text(spec))
+cat(data_compatibility_text(spec))
+```
+
+# 3. 분석 방법
+
+```{r}
+#| results: asis
+cat(methods_text(spec))
+```
+
+```{r}
+#| label: simulate
+#| include: false
+analysis <- simulate_project(spec)
+```
+
+# 4. 주요 분석 결과
+
+```{r}
+#| results: asis
+cat(main_results_text(analysis, spec))
+```
+
+```{r}
+#| label: main-results
+main_figures <- make_main_figures(analysis, spec)
+render_figure_list(main_figures)
+```
+
+# 5. 부록 결과
+
+## 부록 1. 변수별 결측치
+
+```{r}
+knitr::kable(
+  analysis$missingness,
+  digits = 2,
+  caption = "표 S1. 변수별 결측치 현황",
+  col.names = c("변수명", "결측치 수", "결측치 비율(%)")
+)
+```
+
+```{r}
+#| results: asis
+cat(supplement_intro_text(spec))
+```
+
+```{r}
+supp_figures <- make_supplement_figures(analysis, spec)
+render_figure_list(supp_figures)
+```
