@@ -22,7 +22,7 @@ execute:
 ```{r}
 #| label: setup
 #| include: false
-source("/Users/mac/Library/CloudStorage/Dropbox/12_Teaching/202608_CausalML/KAPAE_Exercise/kapae2026-exercise/projects/design_lab/R/lab_helpers.R")
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/lab_helpers.R")
 student_id <- "dagyum"
 method <- "prediction"
 ```
