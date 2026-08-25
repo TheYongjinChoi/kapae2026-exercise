@@ -1,0 +1,215 @@
+---
+title: "연구설계 실습: 이중/디바이어스드 머신러닝(DML)"
+author: "eva_shinji"
+student-id: "eva_shinji"
+design-method: "dml"
+format:
+  html:
+    toc: true
+    embed-resources: true
+  docx:
+    toc: true
+  pdf:
+    toc: true
+  revealjs:
+    slide-number: true
+    scrollable: true
+execute:
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/lab_helpers.R")
+student_id <- "eva_shinji"
+method <- "dml"
+```
+
+# 학생 입력 1. 연구 배경
+
+각 항목은 **1~3문장**으로 짧게 작성하세요.
+
+```{r}
+#| label: research-background
+#| include: false
+
+research_title <- "
+지방정부의 자주재원 구성과 문화예술 지출의 관계:
+자체수입 중심 지역과 지방교부세 의존 지역의 비교
+"
+
+theoretical_background <- "
+재정자주도는 지방정부가 용도를 자율적으로 결정할 수 있는 재원의 비율을 나타내지만, 동일한 재정자주도라도 재원의 구성은 다를 수 있다. 어떤 지방정부는 지방세와 세외수입 등 자체수입을 중심으로 재원을 확보하는 반면, 다른 지방정부는 중앙정부의 지방교부세에 상대적으로 크게 의존한다.
+"
+
+research_need <- "
+지방교부세는 지방정부 간 재정격차를 완화하고 일정 수준의 행정서비스를 보장하기 위한 재원이다. 그러나 지방교부세 의존도가 높은 지방정부와 자체수입 중심 지방정부 사이에 문화예술 지출 수준의 차이가 있는지는 충분히 검토되지 않았다.
+"
+
+research_question <- "
+재정자주도가 유사한 기초지방자치단체 사이에서 자주재원 중 지방교부세 의존도가 높은 지역과 자체수입 비중이 높은 지역은 주민 1인당 문화예술 지출 수준에 차이가 있는가?
+"
+
+expected_contribution <- "
+본 연구는 지방정부가 자율적으로 사용할 수 있는 재원의 전체 규모뿐만 아니라 재원의 구성이 문화예술 지출과 어떻게 관련되는지를 검토한다. 이를 통해 지방교부세가 지역 간 문화서비스 격차를 완화하는 데 기여하는지에 관한 정책적 논의를 제공할 수 있다.
+"
+```
+
+# 학생 입력 2. 데이터와 방법론
+
+실제로 사용할 데이터를 구체적으로 떠올리며 아래 질문에 답합니다.
+
+```{r}
+#| label: method-data-inputs
+#| include: false
+
+# 1. 사용할 예정인 데이터
+data_name <- "
+지방재정365와 KOSIS를 결합한 전국 226개 기초지방자치단체의
+2019~2024년 연도별 패널자료(향후 수집 예정)
+"
+
+# 2. 관측단위
+unit_of_observation <- "특정 연도의 기초지방자치단체 1개"
+
+# 3. 결과변수
+outcome_var <- "culture_expenditure_per_capita"
+outcome_label <- "주민 1인당 문화예술 지출"
+outcome_type <- "continuous"
+
+# 4. 처치 또는 노출변수
+# 지방교부세 의존도 =
+# 지방교부세 / (자체수입 + 지방교부세 + 조정교부금 등)
+treatment_var <- "high_local_allocation_tax_dependence"
+treatment_label <- "높은 지방교부세 의존도 여부"
+
+# 5. 교란변수
+confounder_vars <- c(
+  "fiscal_autonomy_rate",
+  "population",
+  "aging_rate",
+  "total_budget",
+  "lagged_cultural_infrastructure",
+  "local_government_type"
+)
+
+confounder_labels <- c(
+  "재정자주도",
+  "인구",
+  "고령인구 비율",
+  "전체 예산규모",
+  "전년도 인구 대비 문화시설 수",
+  "지방정부 유형"
+)
+
+confounder_types <- c(
+  "continuous",
+  "continuous",
+  "continuous",
+  "continuous",
+  "continuous",
+  "categorical"
+)
+
+# 6. 교란변수 선정 이유
+confounding_set_justification <- "
+재정자주도는 지방정부가 자율적으로 사용할 수 있는 전체 재원 수준을 나타내므로 재원 구성이 유사한 조건에서 비교하기 위해 조정한다. 인구, 고령화율, 전체 예산규모, 기존 문화예술 인프라와 지방정부 유형은 지방교부세 의존도와 주민 1인당 문화예술 지출 모두에 관련될 수 있으므로 교란변수로 고려한다.
+"
+
+# 7. 전국 기초지방자치단체 226개 × 2019~2024년 6개 연도
+sample_size <- 1356
+
+spec <- build_spec_from_environment(environment())
+```
+
+# 1. 연구 배경과 연구질문
+
+# 1. 연구 배경과 연구질문
+
+```{r}
+#| results: asis
+cat(project_overview_text(spec))
+```
+
+# 2. 데이터와 방법론 적합성
+
+```{r}
+#| results: asis
+cat(data_structure_text(spec))
+cat(data_compatibility_text(spec))
+```
+
+# 3. 분석 방법
+
+```{r}
+#| results: asis
+cat(methods_text(spec))
+```
+
+```{r}
+#| label: simulate
+#| include: false
+analysis <- simulate_project(spec)
+```
+
+# 4. 주요 분석 결과
+
+```{r}
+#| results: asis
+cat(main_results_text(analysis, spec))
+```
+
+```{r}
+#| label: main-results
+main_figures <- make_main_figures(analysis, spec)
+render_figure_list(main_figures)
+```
+
+# 5. 부록 결과
+
+## 부록 1. 변수별 결측치
+
+```{r}
+knitr::kable(
+  analysis$missingness,
+  digits = 2,
+  caption = "표 S1. 변수별 결측치 현황",
+  col.names = c("변수명", "결측치 수", "결측치 비율(%)")
+)
+```
+
+```{r}
+#| results: asis
+cat(supplement_intro_text(spec))
+```
+
+```{r}
+supp_figures <- make_supplement_figures(analysis, spec)
+render_figure_list(supp_figures)
+```
+
+```{r}
+#| label: auto-submit
+#| include: false
+# HTML/Word/PDF/슬라이드로 렌더할 때마다 현재 QMD를 자동 제출합니다.
+submit_project(
+  qmd_path = knitr::current_input(),
+  endpoint = "",
+  course_key = ""
+)
+```
+
+```{r}
+#| label: optional-other-formats
+#| include: false
+#| eval: false
+# 필요할 때 QMD 소스에서 직접 실행하는 선택사항입니다.
+# PDF만 만들기:
+# render_project_outputs(knitr::current_input(), formats = "pdf")
+#
+# RevealJS 슬라이드만 만들기:
+# render_project_outputs(knitr::current_input(), formats = "revealjs")
+```
+
