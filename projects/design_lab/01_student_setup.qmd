@@ -11,7 +11,9 @@ execute:
 
 # 목적
 
-이 파일에서는 **학생 ID와 연구설계 유형만 입력**해 개인별 Step 2 QMD 작업파일을 자동 생성합니다. Step 2 파일에는 연구제목, 데이터 특성, 결과변수 유형, 예측변수 구조 등 해당 설계에 필요한 입력칸이 자동으로 만들어집니다.
+이 파일 하나로 실습을 시작합니다. **새 로컬 작업폴더**에 이 QMD를 저장한 뒤, 학생 ID와 연구설계 유형만 입력하면 개인별 Step 2 QMD와 HTML 자동 제출에 필요한 설정이 함께 생성됩니다.
+
+> 기존 Quarto 프로젝트의 설정과 충돌하지 않도록, 가능하면 이번 실습용으로 새 폴더를 만들어 사용하세요.
 
 # 1. 입력
 
@@ -23,27 +25,47 @@ execute:
 # 본인 식별 ID
 # - 영문자/숫자/_/-만 사용
 # - 3~30자
-# - 이름, 이메일, 학번처럼 직접 식별 가능한 정보는 피하고 수업용 ID를 사용하세요.
+# - 이름, 이메일, 학번과 같은 직접 식별정보보다는
+#   수업에서 사용할 별칭이나 임의의 ID를 권장합니다.
 # 예: "KAPAE_021"
 student_id <- "여기에_ID_입력"
 
 # 연구설계 유형: 아래 7개 중 정확히 하나를 입력합니다.
-# "prediction"     : 머신러닝 예측 비교 (RF, XGBoost, neural network)
-# "dml"            : Double/debiased machine learning + OLS robustness comparison
-# "did"            : Difference-in-differences + 사전 trend visual inspection
-# "iv"             : Instrumental variables + first-stage diagnostics
-# "matching"       : Propensity-score matching/weighting + overlap/balance diagnostics
+# "prediction"     : 머신러닝 예측 비교
+# "dml"            : Double/debiased machine learning
+# "did"            : Difference-in-differences
+# "iv"             : Instrumental variables
+# "matching"       : Propensity-score matching/weighting
 # "causal_forest"  : Causal forest / heterogeneous treatment effects
-# "rd"             : Regression discontinuity + cutoff 사전 visual inspection
+# "rd"             : Regression discontinuity / regression kink
 method <- "prediction"
 ```
 
-# 2. Step 2 작업파일 자동 생성
+# 2. Step 2 작업파일과 제출환경 자동 생성
 
-아래 한 셀을 실행하면 GitHub에 있는 최신 생성 함수를 한 줄로 불러와 현재 폴더에 개인별 QMD를 만듭니다.
+아래 코드블록을 한 번 실행합니다. GitHub에서 최신 실습 함수를 불러오고, 현재 폴더에 개인별 Step 2 QMD와 HTML 자동 제출에 필요한 숨김 설정파일을 만듭니다.
 
 ```{r}
-source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/lab_helpers.R"); create_design_qmd(student_id, method, output_dir = getwd())
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/lab_helpers.R")
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/standalone_setup.R")
+
+create_standalone_design_lab(
+  student_id = student_id,
+  method = method,
+  output_dir = getwd()
+)
 ```
 
-생성 파일명 예시는 `02_KAPAE_021_prediction_research_design.qmd`입니다. 생성된 파일을 열어 Step 2를 진행합니다.
+예를 들어 ID가 `KAPAE_021`이고 DML을 선택하면 다음 파일이 생성됩니다.
+
+```text
+02_KAPAE_021_dml_research_design.qmd
+```
+
+같은 폴더에는 `_quarto.yml`과 `.kapae/` 폴더도 자동으로 만들어집니다. 이 파일들은 **HTML 자동 제출을 위한 설정파일이므로 수정할 필요가 없습니다.**
+
+생성된 `02_..._research_design.qmd` 파일을 열어 Step 2를 진행합니다.
+
+Step 2에서 연구설계를 작성한 뒤 **HTML Preview/Render**를 실행하면, 렌더링이 끝난 HTML이 자동으로 수업 결과물 갤러리에 제출됩니다.
+
+[학생용 논문설계 결과물 갤러리](https://theyongjinchoi.github.io/kapae2026-exercise/)
