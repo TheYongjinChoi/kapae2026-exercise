@@ -1,0 +1,233 @@
+---
+title: "연구설계 실습: 머신러닝 예측"
+author: "snudh"
+student-id: "snudh"
+design-method: "prediction"
+format:
+  html:
+    toc: true
+    embed-resources: true
+  docx:
+    toc: true
+  pdf:
+    toc: true
+  revealjs:
+    slide-number: true
+    scrollable: true
+execute:
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/lab_helpers.R")
+student_id <- "snudh"
+method <- "prediction"
+```
+
+# 학생 입력 1. 연구 배경
+
+각 항목은 **1~3문장**으로 짧게 작성하세요. 수업 마지막 약 **30분 동안** 서로의 연구설계를 함께 살펴보고 토론합니다.
+
+```{r}
+#| label: research-background
+#| include: false
+
+research_title <- "지방자치단체의 인구감소 에측: 지역의 인구·경제·재정·생활환경 특성을 활용한 머신러닝 분석"
+
+theoretical_background <- "
+지역의 인구감소는 저출산과 고령화뿐만 아니라 청년층의 지역 간 이동, 지역경제와 일자리 여건, 지방재정, 교육·의료·생활서비스 접근성 등 다양한 지역적 요인의 복합적 결과로 나타날 수 있다. 특히 인구구조와 지역의 사회경제적 여건이 상호작용하면서 지역별 인구감소 속도의 차이를 발생시킬 가능성이 있다.
+"
+
+research_need <- "
+기존의 지방소멸 및 인구감소 연구는 특정 지표를 이용하여 지역의 소멸위험을 측정하거나 개별 요인과 인구감소 간의 관계를 설명하는데
+주로 초점을 두어 왔다. 그러나 실제 지방자치단체의 인구변화에는 다양한 요인의 비선형적 관계와 상호작용이 존재할 수 있으므로,머신러닝을 활용하여 미래의 인구감소를 예측하고 주요 예측요인을 탐색할 필요가 있다.
+"
+
+research_question <- "
+지방자치단체의 인구·경제·재정·생활환경 특성을 활용하여 차년도 인구감소를 어느 정도 정확하게 예측할 수 있는가? 또한 지방자치단체의 인구감소를 예측하는 데 상대적으로 중요한 지역 특성은 무엇인가?
+"
+
+expected_contribution <- "
+본 연구는 지방소멸 문제를 단순한 위험지수의 측정에서 벗어나 실제 관측되는 인구변화에 대한 예측 문제로 접근한다. 또한 머신러닝을 활용하여 인구감소를 예측하는 주요 지역 특성을 규명함으로써 지방자치단체별 인구감소 위험을 조기에 파악하고 지역 특성에 따른 정책적 대응방향을 설정하는 데 필요한 실증적 근거를 제공한다.
+"
+```
+
+# 학생 입력 2. 데이터와 방법론
+
+실제로 사용할 데이터를 **직접 확인하거나 구체적으로 떠올리며** 아래 질문에 답하세요.  
+이 질문에 답하는 과정 자체가 현재 데이터가 선택한 방법론에 적절한지 확인하는 과정입니다. 필수 질문에 답하기 어렵다면 다른 방법론이 더 적절할 수 있습니다.
+
+```{r}
+#| label: method-data-inputs
+#| include: false
+
+# 1. 어떤 데이터를 사용할 예정인가요?
+data_name <- "행정안전부 주민등록인구통계와 KOSIS e-지방지표를 결합한 시군구 연도별 패널자료(2015~2024년)"
+
+# 2. 데이터의 한 행(row)은 무엇을 의미하나요?
+unit_of_observation <- "특정 연도의 기초지방자치단체(시·군·구) 1개"
+
+# 3. 무엇을 예측하려고 하나요?
+outcome_var <- "next_pop_growth_rate"
+outcome_label <- "차년도 주민등록인구 증감률"
+
+# 4. 결과변수는 어떤 형태인가요? "binary" 또는 "continuous"
+outcome_type <- "continuous"
+
+# 5. 예측에 사용할 실제 변수명을 적으세요.
+predictor_vars <- c(
+  "pop_growth_lag1",
+  "youth_share",
+  "elderly_share",
+  "net_migration_rate",
+  "youth_net_migration_rate",
+  "total_fertility_rate",
+  "employment_rate",
+  "businesses_per_1000",
+  "doctors_per_1000",
+  "childcare_facilities_per_1000",
+  "population_density",
+  "fiscal_independence",
+  "capital_region",
+  "sigungu_type"
+)
+
+# 6. 위 변수들이 결과물에서 어떻게 표시되면 좋을지 같은 순서로 적으세요.
+predictor_labels <- c(
+   "pop_growth_lag1",
+  "youth_share",
+  "elderly_share",
+  "net_migration_rate",
+  "youth_net_migration_rate",
+  "total_fertility_rate",
+  "employment_rate",
+  "businesses_per_1000",
+  "doctors_per_1000",
+  "childcare_facilities_per_1000",
+  "population_density",
+  "fiscal_independence",
+  "capital_region",
+  "sigungu_type"
+)
+
+# 7. 각 변수의 형태를 같은 순서로 적으세요.
+# "continuous", "binary", "categorical" 중 하나를 사용합니다.
+predictor_types <- c(
+   "continuous",
+  "continuous",
+  "continuous",
+  "continuous",
+  "continuous",
+  "continuous",
+  "continuous",
+  "continuous",
+  "continuous",
+  "continuous",
+  "continuous",
+  "continuous",
+  "binary",
+  "categorical"
+)
+
+# 8. 대략 몇 개의 관측치가 있나요?
+sample_size <- 2000
+
+# 9. 최종 모델을 별도로 평가할 test/hold-out 자료가 있나요?
+has_test_set <- TRUE
+
+# 10. 이 예측 결과를 연구나 정책에서 어떻게 활용하고 싶나요?
+prediction_use <- "지방자치단체의 인구·이동·경제·재정·생활서비스 특성을 이용하여 향후 인구감소 가능성이 높은 지역을 조기에 식별하고, 어떤 지역 특성이 미래 인구감소 예측에 중요한지를 파악하여 지방소멸 대응정책의 우선순위 설정에 활용하고자 한다."
+
+spec <- build_spec_from_environment(environment())
+```
+
+# 1. 연구 배경과 연구질문
+
+```{r}
+#| results: asis
+cat(project_overview_text(spec))
+```
+
+# 2. 데이터와 방법론 적합성
+
+```{r}
+#| results: asis
+cat(data_structure_text(spec))
+cat(data_compatibility_text(spec))
+```
+
+# 3. 분석 방법
+
+```{r}
+#| results: asis
+cat(methods_text(spec))
+```
+
+```{r}
+#| label: simulate
+#| include: false
+analysis <- simulate_project(spec)
+```
+
+# 4. 주요 분석 결과
+
+```{r}
+#| results: asis
+cat(main_results_text(analysis, spec))
+```
+
+```{r}
+#| label: main-results
+main_figures <- make_main_figures(analysis, spec)
+render_figure_list(main_figures)
+```
+
+# 5. 부록 결과
+
+## 부록 1. 변수별 결측치
+
+```{r}
+knitr::kable(
+  analysis$missingness,
+  digits = 2,
+  caption = "표 S1. 변수별 결측치 현황",
+  col.names = c("변수명", "결측치 수", "결측치 비율(%)")
+)
+```
+
+```{r}
+#| results: asis
+cat(supplement_intro_text(spec))
+```
+
+```{r}
+supp_figures <- make_supplement_figures(analysis, spec)
+render_figure_list(supp_figures)
+```
+
+```{r}
+#| label: auto-submit
+#| include: false
+# HTML/Word/PDF/슬라이드로 렌더할 때마다 현재 QMD를 자동 제출합니다.
+submit_project(
+  qmd_path = knitr::current_input(),
+  endpoint = "",
+  course_key = ""
+)
+```
+
+```{r}
+#| label: optional-other-formats
+#| include: false
+#| eval: false
+# 필요할 때 QMD 소스에서 직접 실행하는 선택사항입니다.
+# PDF만 만들기:
+# render_project_outputs(knitr::current_input(), formats = "pdf")
+#
+# RevealJS 슬라이드만 만들기:
+# render_project_outputs(knitr::current_input(), formats = "revealjs")
+```
+
