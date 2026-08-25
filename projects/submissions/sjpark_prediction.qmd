@@ -25,7 +25,7 @@ execute:
 
 source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/lab_helpers.R")
 student_id <- "sjpark"
-method <- "prediction"
+method <- "dml"
 ```
 
 # 학생 입력 1. 연구 배경
