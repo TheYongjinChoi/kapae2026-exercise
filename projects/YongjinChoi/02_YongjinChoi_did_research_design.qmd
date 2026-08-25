@@ -1,8 +1,8 @@
 ---
-title: "Research Design Lab: Double/debiased machine learning (DML)"
-author: "EXAMPLE_01"
-student-id: "EXAMPLE_01"
-design-method: "dml"
+title: "Research Design Lab: Difference-in-differences (DID)"
+author: "YongjinChoi"
+student-id: "YongjinChoi"
+design-method: "did"
 format:
   html:
     toc: true
@@ -30,34 +30,32 @@ source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main
 # 학생 입력 영역: 아래 값만 수정하세요.
 # ============================================================
 
-student_id <- "EXAMPLE_01"
-method <- "dml"
+student_id <- "YongjinChoi"
+method <- "did"
 
 # 연구 제목 예시: "Predicting ...", "The effect of X on Y ..."
-research_title <- "예방접종 인식"
+research_title <- "여기에 연구 제목을 입력하세요"
 
 # 데이터셋 이름 또는 출처 예시: "Korea Community Health Survey 2025"
-data_name <- "VCI"
+data_name <- "여기에 데이터셋 이름을 입력하세요"
 
 # 데이터의 관측단위와 핵심 특성을 1~3문장으로 적습니다.
 # 예: "개인 단위 횡단면 자료이며 지역 식별자가 있다."
-data_description <- "데이터 특성"
+data_description <- "여기에 데이터 특성을 간략히 입력하세요"
 
-# 결과변수 유형: "continuous" "binary" 중 하나 입력하세요.
+# 패널의 개체 수와 시점 수. 최소 4개 시점을 권장합니다.
+n_units <- 400
+n_periods <- 8
+# 처치가 시작되는 시점. 1 < treatment_start <= n_periods
+treatment_start <- 5
+# 처치집단 비율: 0.1~0.9 권장
+treated_share <- 0.45
+
 outcome_type <- "continuous"
-# 결과변수 값의 범위: "continuous"는 값의 실제 범위. 정확하지 않아도 됩니다. "binary" 인 경우 c(0, 1)을  입력.
 outcome_range <- c(0, 100)
-
-# 교란변수의 대략적인 구성
-n_continuous_predictors <- 8
-n_binary_predictors <- 4
-n_categorical_predictors <- 2
-n_obs <- 1500
-
-# 처치는 이 예제에서 binary treatment로 가정합니다.
-treatment_type <- "binary"
-# 교차적합 fold 수: 보통 2~10, 여기서는 5 권장
-n_folds <- 5
+n_continuous_predictors <- 4
+n_binary_predictors <- 2
+n_categorical_predictors <- 1
 
 # 변수별 결측률을 교육용으로 재현하기 위한 최대값입니다. 0~0.20 권장.
 max_missing_rate <- 0.08
@@ -108,7 +106,6 @@ analysis <- simulate_project(spec)
 
 ```{r}
 #| label: main-results
-#| results: asis
 main_figures <- make_main_figures(analysis, spec)
 render_figure_list(main_figures)
 ```
@@ -137,7 +134,6 @@ knitr::kable(analysis$cleaning_flow)
 ## A3. Design-specific diagnostics
 
 ```{r}
-#| results: asis
 supp_figures <- make_supplement_figures(analysis, spec)
 render_figure_list(supp_figures)
 ```

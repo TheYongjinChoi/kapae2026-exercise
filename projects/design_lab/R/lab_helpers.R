@@ -342,8 +342,48 @@ build_spec_from_environment <- function(env = parent.frame()) {
     student_id = sanitize_id(getv("student_id")),
     method = method,
     research_title = getv("research_title", "Untitled study"),
+    theoretical_background = getv("theoretical_background", ""),
+    research_need = getv("research_need", ""),
+    research_question = getv("research_question", ""),
+    expected_contribution = getv("expected_contribution", ""),
+    unit_of_observation = getv("unit_of_observation", ""),
     data_name = getv("data_name", "Unspecified data"),
     data_description = getv("data_description", ""),
+    outcome_var = getv("outcome_var", "outcome"),
+    outcome_label = getv("outcome_label", "Outcome"),
+    treatment_var = getv("treatment_var", "treatment"),
+    treatment_label = getv("treatment_label", "Treatment"),
+    instrument_var = getv("instrument_var", "instrument"),
+    instrument_label = getv("instrument_label", "Instrument"),
+    running_var = getv("running_var", "running_variable"),
+    running_label = getv("running_label", "Running variable"),
+    covariate_names = getv("covariate_names", character()),
+    covariate_labels = getv("covariate_labels", character()),
+    modifier_names = getv("modifier_names", character()),
+    modifier_labels = getv("modifier_labels", character()),
+    did_design = getv("did_design", "standard"),
+    rd_design = getv("rd_design", "discontinuity"),
+    unit_id_var = getv("unit_id_var", "unit_id"),
+    unit_id_label = getv("unit_id_label", "Unit"),
+    time_var = getv("time_var", "time"),
+    time_label = getv("time_label", "Time"),
+    treatment_group_var = getv("treatment_group_var", "treated"),
+    treatment_group_label = getv("treatment_group_label", "Treatment group"),
+    treated_definition = getv("treated_definition", ""),
+    control_definition = getv("control_definition", ""),
+    time_values = getv("time_values", character()),
+    treatment_start_label = getv("treatment_start_label", ""),
+    cohort_var = getv("cohort_var", "first_treated_period"),
+    cohort_label = getv("cohort_label", "First treatment period"),
+    assignment_rule = getv("assignment_rule", ""),
+    cutoff_label = getv("cutoff_label", ""),
+    instrument_justification = getv("instrument_justification", ""),
+    confounding_set_justification = getv("confounding_set_justification", ""),
+    covariate_timing_note = getv("covariate_timing_note", ""),
+    heterogeneity_rationale = getv("heterogeneity_rationale", ""),
+    prediction_use = getv("prediction_use", ""),
+    has_independent_test = isTRUE(getv("has_independent_test", FALSE)),
+    ps_method = getv("ps_method", "matching"),
     outcome_type = outcome_type,
     outcome_range = getv("outcome_range", if (outcome_type == "binary") c(0, 1) else c(0, 100)),
     n_cont = as.integer(getv("n_continuous_predictors", 6)),
@@ -387,9 +427,37 @@ ensure_packages <- function(extra = character()) {
 }
 
 project_overview_text <- function(spec) {
-  sprintf(
-    "## Proposed study\n\n**Title.** %s  \n**Design.** %s  \n**Data.** %s\n\n이 템플릿은 연구질문 → 데이터 구조 → 식별/예측 전략 → 진단 → 핵심 결과 → robustness → supplement의 순서를 강제합니다. 실제 논문에서는 연구질문과 추정대상(estimand)을 먼저 확정한 뒤 모델 specification을 고정합니다.\n\n",
-    spec$research_title, method_label(spec$method), spec$data_name
+  paste0(
+    "## Proposed study
+
+",
+    "**Title.** ", spec$research_title, "  
+",
+    "**Design.** ", method_label(spec$method), "  
+",
+    "**Data.** ", spec$data_name, "  
+",
+    if (nzchar(spec$unit_of_observation %||% "")) paste0("**Unit of observation.** ", spec$unit_of_observation, "  
+") else "",
+    "
+### Research background
+
+",
+    if (nzchar(spec$theoretical_background %||% "")) paste0("**Theoretical/policy background.** ", spec$theoretical_background, "
+
+") else "",
+    if (nzchar(spec$research_need %||% "")) paste0("**Why this study is needed.** ", spec$research_need, "
+
+") else "",
+    if (nzchar(spec$research_question %||% "")) paste0("**Research question.** ", spec$research_question, "
+
+") else "",
+    if (nzchar(spec$expected_contribution %||% "")) paste0("**Expected contribution.** ", spec$expected_contribution, "
+
+") else "",
+    "수업 마지막 약 **30분 동안** 각 연구설계를 함께 살펴보고 데이터-방법론 적합성, 식별가정, 필요한 진단을 중심으로 토론합니다.
+
+"
   )
 }
 
@@ -410,6 +478,69 @@ data_structure_text <- function(spec) {
     spec$data_description, spec$outcome_type, spec$n_cont, spec$n_bin, spec$n_cat, extra
   )
 }
+
+
+data_compatibility_text <- function(spec) {
+  bullet <- function(ok, yes, no) {
+    if (isTRUE(ok)) paste0("- ✓ ", yes, "\n") else paste0("- ⚠ ", no, "\n")
+  }
+  has_text <- function(x) !is.null(x) && length(x) > 0 && any(nzchar(trimws(as.character(x))))
+  has_covs <- length(spec$covariate_names %||% character()) > 0
+
+  intro <- paste0(
+    "### Method-data compatibility check\n\n",
+    "아래 항목은 입력한 답변을 바탕으로 한 **설계 점검용 안내**입니다. ",
+    "경고가 있다고 해서 분석이 불가능하다는 뜻은 아니지만, 해당 질문에 답하기 어렵다면 현재 데이터가 이 방법론의 핵심 식별조건을 충족하는지 다시 확인해야 합니다.\n\n"
+  )
+
+  body <- switch(
+    spec$method,
+    prediction = paste0(
+      bullet(has_text(spec$outcome_label), "예측할 결과가 명확히 정의되어 있습니다.", "예측할 결과변수와 실질적 의미를 명확히 정의하세요."),
+      bullet(has_covs, "후보 예측변수가 정의되어 있습니다.", "실제 연구에서 사용 가능한 예측변수 목록을 확인하세요."),
+      bullet(isTRUE(spec$has_independent_test), "독립적인 test/hold-out 평가 계획이 있습니다.", "가능하면 최종 성능을 확인할 독립 test set 또는 명시적인 resampling 전략을 계획하세요.")
+    ),
+    dml = paste0(
+      bullet(has_text(spec$treatment_label), "처치/노출이 명확히 정의되어 있습니다.", "처치 또는 노출변수를 명확히 정의하세요."),
+      bullet(has_covs, "측정된 교란변수 집합이 정의되어 있습니다.", "처치와 결과를 함께 설명할 교란변수 집합을 확인하세요."),
+      bullet(has_text(spec$confounding_set_justification), "교란변수 선택 근거가 작성되어 있습니다.", "왜 이 변수들이 교란변수인지 인과적으로 설명할 수 있어야 합니다."),
+      bullet(spec$n_folds >= 2, "cross-fitting을 위한 fold 수가 설정되어 있습니다.", "DML에는 표본분할/cross-fitting 계획이 필요합니다.")
+    ),
+    did = paste0(
+      bullet(has_text(spec$unit_id_var) && has_text(spec$time_var), "반복 관측되는 unit과 time 변수가 정의되어 있습니다.", "DID에는 unit과 time을 구분할 수 있는 패널/반복횡단면 구조가 필요합니다."),
+      bullet(has_text(spec$treated_definition) && has_text(spec$control_definition), "처치집단과 비교집단이 구체적으로 정의되어 있습니다.", "누가 treated이고 누가 comparison group인지 데이터에서 구분할 수 있어야 합니다."),
+      bullet(spec$n_periods >= 4 && spec$treatment_start > 1, "처치 전후 여러 시점이 확보되어 있습니다.", "처치 이전 추세를 점검할 수 있도록 충분한 pre-treatment 시점이 필요합니다."),
+      if (identical(spec$did_design, "staggered")) bullet(has_text(spec$cohort_var), "최초 처치시점(cohort) 변수가 정의되어 있습니다.", "Staggered DID에는 unit별 최초 처치시점을 식별할 수 있어야 합니다.") else ""
+    ),
+    iv = paste0(
+      bullet(has_text(spec$instrument_label), "도구변수가 정의되어 있습니다.", "도구변수를 명확히 정의하세요."),
+      bullet(has_text(spec$treatment_label), "내생적 처치/노출이 정의되어 있습니다.", "instrument가 변화시키는 처치/노출을 명확히 정의하세요."),
+      bullet(has_text(spec$instrument_justification), "relevance와 exclusion restriction을 검토할 근거가 작성되어 있습니다.", "왜 instrument가 처치에는 영향을 주지만 결과에는 직접 영향을 주지 않는지 설명할 수 있어야 합니다.")
+    ),
+    matching = paste0(
+      bullet(has_text(spec$treatment_label), "처치/노출이 정의되어 있습니다.", "매칭/가중치를 위한 처치변수가 필요합니다."),
+      bullet(has_covs, "balance를 맞출 pretreatment covariates가 정의되어 있습니다.", "처치 이전 공변량 집합이 필요합니다."),
+      bullet(has_text(spec$covariate_timing_note), "공변량의 측정시점에 대한 확인이 작성되어 있습니다.", "처치 이후 변수나 mediator를 propensity model에 넣지 않는지 확인하세요."),
+      bullet(spec$estimand %in% c("ATE","ATT"), "estimand가 명시되어 있습니다.", "ATE 또는 ATT 등 목표 estimand를 먼저 정하세요.")
+    ),
+    causal_forest = paste0(
+      bullet(has_text(spec$treatment_label), "처치가 정의되어 있습니다.", "CATE를 정의할 처치변수가 필요합니다."),
+      bullet(has_covs, "이질성을 학습할 공변량이 정의되어 있습니다.", "효과 이질성을 학습할 pretreatment covariates가 필요합니다."),
+      bullet(length(spec$modifier_names %||% character()) > 0, "사전에 관심 있는 effect modifier가 지정되어 있습니다.", "데이터 주도적 탐색과 별도로 이론적으로 중요한 effect modifier를 사전에 지정하는 것이 좋습니다."),
+      bullet(isTRUE(spec$honesty), "honesty를 사용하는 설계입니다.", "가능하면 honesty 또는 이에 준하는 sample-splitting 전략을 사용하세요.")
+    ),
+    rd = paste0(
+      bullet(has_text(spec$running_label), "running variable이 정의되어 있습니다.", "cutoff를 기준으로 하는 running variable이 필요합니다."),
+      bullet(is.finite(spec$cutoff), "cutoff가 명시되어 있습니다.", "정책/배정 규칙의 cutoff를 명확히 확인하세요."),
+      bullet(has_text(spec$assignment_rule), "cutoff와 처치배정 규칙의 관계가 설명되어 있습니다.", "왜 cutoff에서 처치 또는 처치강도가 달라지는지 설명해야 합니다."),
+      if (identical(spec$rd_design, "kink")) "- ✓ 이 설계는 level discontinuity가 아니라 **slope change (regression kink)** 를 대상으로 합니다.\n"
+      else "- ✓ 이 설계는 cutoff에서의 **level discontinuity** 를 대상으로 합니다.\n"
+    )
+  )
+
+  paste0(intro, body, "\n")
+}
+
 
 methods_text <- function(spec) {
   common <- "모든 specification은 결과를 본 뒤 임의로 선택하지 않는다는 원칙을 둡니다. 결측자료 처리, 표본 제외, 변수 coding, 주요 hyperparameter 또는 bandwidth/caliper를 Methods 또는 supplement에 명시합니다."

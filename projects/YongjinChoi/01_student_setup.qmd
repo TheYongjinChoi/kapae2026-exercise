@@ -35,7 +35,7 @@ student_id <- "YongjinChoi"
 # "matching"       : Propensity-score matching/weighting + overlap/balance diagnostics
 # "causal_forest"  : Causal forest / heterogeneous treatment effects
 # "rd"             : Regression discontinuity + cutoff 사전 visual inspection
-method <- "rd"
+method <- "prediction"
 
 source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/lab_helpers.R"); create_design_qmd(student_id, method, output_dir = getwd())
 ```

@@ -1,0 +1,192 @@
+---
+title: "Research Design Lab: Causal forest"
+author: "YongjinChoi"
+student-id: "YongjinChoi"
+design-method: "causal_forest"
+format:
+  html:
+    toc: true
+    embed-resources: true
+  docx:
+    toc: true
+  pdf:
+    toc: true
+    keep-tex: false
+  revealjs:
+    slide-number: true
+    scrollable: true
+execute:
+  warning: false
+  message: false
+---
+
+```{r}
+#| label: setup
+#| include: false
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/projects/design_lab/R/lab_helpers.R")
+student_id <- "YongjinChoi"
+method <- "causal_forest"
+```
+
+# 학생 입력 영역
+
+이 파일은 **두 단계**로 작성합니다. 답변은 논문 초안이 아니라 수업에서 빠르게 공유할 연구설계 메모입니다. 각 서술형 항목은 가능하면 **1--3문장**으로 짧게 작성하세요. 수업 마지막 약 **30분 동안 서로의 설계를 함께 살펴보고 토론**합니다.
+
+## 1단계. 연구 배경과 연구질문
+
+```{r}
+#| label: research-background
+#| include: false
+
+research_title <- "Heterogeneous effects of a trusted-messenger vaccine communication intervention"
+
+theoretical_background <- "Vaccine communication interventions may work differently across caregivers because baseline confidence, political orientation, institutional trust, and information environments vary."
+
+research_need <- "Reporting only an average treatment effect can conceal substantively important heterogeneity and may lead to poorly targeted communication strategies."
+
+research_question <- "For whom does a trusted-healthcare-worker vaccine message have larger or smaller effects on vaccine confidence?"
+
+expected_contribution <- "A causal forest can explore conditional average treatment effects while requiring calibration, stability, uncertainty, and theory-guided interpretation of effect modifiers."
+```
+
+## 2단계. 방법론과 실제 데이터 구조 확인
+
+여러분이 실제 연구에 사용할 데이터를 **직접 확인하거나 구체적으로 떠올려보며** 아래 질문에 답하세요. 이 질문들은 단순 입력란이 아니라, 선택한 방법론의 식별전략 또는 예측전략이 현재 데이터에서 가능한지를 점검하는 체크리스트입니다. **필수 질문에 답하기 어렵다면 그 방법론이 현재 데이터에 적절하지 않을 수 있습니다.**
+
+```{r}
+#| label: method-data-inputs
+#| include: false
+
+data_name <- "Randomised vaccine communication experiment"
+unit_of_observation <- "Caregiver"
+
+outcome_var <- "post_message_confidence"
+outcome_label <- "Post-message vaccine confidence"
+
+covariate_names <- c("baseline_confidence", "age", "education", "income", "political_orientation", "gov_trust", "misinformation_discernment", "healthcare_trust", "child_age", "region")
+covariate_labels <- c("Baseline vaccine confidence", "Age", "Education", "Household income", "Political orientation", "Trust in government", "Misinformation discernment", "Trust in healthcare workers", "Child age", "Region")
+
+treatment_var <- "trusted_messenger_message"
+treatment_label <- "Trusted-healthcare-worker message"
+
+modifier_names <- c("baseline_confidence", "political_orientation", "healthcare_trust")
+modifier_labels <- c("Baseline vaccine confidence", "Political orientation", "Trust in healthcare workers")
+
+heterogeneity_rationale <- "The intervention may be more effective among caregivers with lower baseline confidence but sufficient trust in healthcare workers; political orientation may also modify receptivity to institutional messages."
+
+n_obs <- 3000
+outcome_type <- "continuous"
+outcome_range <- c(0, 10)
+n_continuous_predictors <- 10
+n_binary_predictors <- 4
+n_categorical_predictors <- 2
+
+num_trees <- 2000
+honesty <- TRUE
+
+max_missing_rate <- 0.08
+seed <- 2026
+
+submission_endpoint <- ""
+course_key <- ""
+
+spec <- build_spec_from_environment(environment())
+```
+
+# 1. Research background and question
+
+```{r}
+#| results: asis
+cat(project_overview_text(spec))
+```
+
+# 2. Data-method compatibility check
+
+```{r}
+#| results: asis
+cat(data_structure_text(spec))
+cat(data_compatibility_text(spec))
+```
+
+# 3. Methods
+
+```{r}
+#| results: asis
+cat(methods_text(spec))
+```
+
+# 4. Simulated analysis
+
+아래 결과는 입력한 연구설계와 데이터 구조를 바탕으로 만든 **교육용 가상 결과**입니다. 실제 분석 결과가 아닙니다.
+
+```{r}
+#| label: simulate
+analysis <- simulate_project(spec)
+```
+
+## Main results
+
+```{r}
+#| label: main-results
+main_figures <- make_main_figures(analysis, spec)
+render_figure_list(main_figures)
+```
+
+## Automatic basic interpretation
+
+```{r}
+#| results: asis
+cat(interpretation_text(analysis, spec))
+```
+
+# Supplementary material
+
+## Supplement 1. Missing records by variable
+
+```{r}
+knitr::kable(analysis$missingness, digits = 2)
+```
+
+## Supplement 2. Data-cleaning flow
+
+```{r}
+knitr::kable(analysis$cleaning_flow)
+```
+
+## Supplement 3. Full design-specific diagnostics and sensitivity analyses
+
+```{r}
+supp_figures <- make_supplement_figures(analysis, spec)
+render_figure_list(supp_figures)
+```
+
+## Supplement 4. Required robustness and sensitivity checklist
+
+```{r}
+#| results: asis
+cat(supplement_checklist_text(spec))
+```
+
+## Supplement 5. Reproducibility record
+
+```{r}
+sessionInfo()
+```
+
+# 5. Render outputs
+
+```{r}
+#| eval: false
+render_project_outputs(knitr::current_input())
+```
+
+# Submission
+
+```{r}
+#| eval: false
+submit_project(
+  qmd_path = knitr::current_input(),
+  endpoint = submission_endpoint,
+  course_key = course_key
+)
+```
