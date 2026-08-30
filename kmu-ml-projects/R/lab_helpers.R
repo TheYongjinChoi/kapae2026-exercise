@@ -296,8 +296,8 @@ execute:
 #| label: setup
 #| include: false
 
-source("https://raw.githubusercontent.com/TheYongjinChoi/kmu-ml-projects/main/standalone/R/lab_helpers.R")
-source("https://raw.githubusercontent.com/TheYongjinChoi/kmu-ml-projects/main/standalone/R/report_helpers.R")
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/kmu-ml-projects/R/lab_helpers.R")
+source("https://raw.githubusercontent.com/TheYongjinChoi/kapae2026-exercise/main/kmu-ml-projects/R/report_helpers.R")
 
 student_id <- "%s"
 method <- "%s"
